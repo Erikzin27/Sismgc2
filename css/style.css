@@ -1,0 +1,56 @@
+:root {
+    --verde: #27ae60;
+    --azul: #2c3e50;
+    --fundo: #f4f4f9;
+    --vermelho: #c0392b;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--fundo);
+    padding: 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+h1, h2 { text-align: center; color: var(--azul); }
+
+/* Grid do formulário para ficar lado a lado */
+.grid-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+.form-group input, .form-group select {
+    width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;
+}
+
+button[type="submit"] {
+    width: 100%; margin-top: 15px; padding: 12px;
+    background-color: var(--verde); color: white;
+    border: none; border-radius: 5px; cursor: pointer; font-size: 16px;
+}
+button[type="submit"]:hover { background-color: #219150; }
+
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+th { background-color: var(--azul); color: white; }
+
+/* Cores para os tipos */
+.tipo-producao { color: var(--verde); font-weight: bold; }
+.tipo-despesa { color: var(--vermelho); font-weight: bold; }
+.tipo-venda { color: #2980b9; font-weight: bold; }
+
+.btn-delete {
+    background-color: var(--vermelho); color: white;
+    border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;
+}
