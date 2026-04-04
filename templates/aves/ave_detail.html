@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Ave{% endblock %}
+{% block page_subtitle %}Perfil operacional com valor estimado, linhagem, sanidade, histórico e relação genética da ave.{% endblock %}
+{% block content %}
+<div class="page-panel">
+    <div class="row g-3 align-items-center">
+        <div class="col-12 col-md-auto">
+            {% if ave.foto %}
+                <a href="{{ ave.foto.url }}" target="_blank" rel="noopener">
+                    <img src="{{ ave.foto.url }}" alt="Foto da ave" class="img-fluid rounded-4" style="width:140px; height:140px; object-fit:cover;">
+                </a>
+            {% else %}
+                <div class="empty-state d-flex align-items-center justify-content-center rounded-4" style="width:140px; height:140px;">
+                    <span class="small text-muted">Sem foto</span>
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-12 col-md">
+            <div class="section-heading mb-2">
+                <div>
+                    <h6 class="section-heading__title">{{ ave.codigo_interno }} · {{ ave.nome }}</h6>
+                    <p class="section-heading__subtitle">{{ ave.linhagem }} · {{ ave.get_finalidade_display }} · {{ ave.get_status_display }}</p>
+                </div>
+                <span class="badge-soft"><i class="bi bi-cash-stack"></i>{% if ave.valor_referencia %}{{ ave.valor_referencia|brl }}{% else %}Valor não informado{% endif %}</span>
+            </div>
+            <div class="info-grid">
+                <div class="info-chip"><span class="info-chip__label">Lote atual</span><span class="info-chip__value">{{ ave.lote_atual|default:"-" }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Origem</span><span class="info-chip__value">{{ ave.origem|default:"-" }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Peso atual</span><span class="info-chip__value">{{ ave.peso_atual|default:"-" }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Valor estimado</span><span class="info-chip__value">{% if ave.valor_referencia %}{{ ave.valor_referencia|brl }}{% else %}Não informado{% endif %}</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-5">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Árvore genética</h6>
+                    <p class="section-heading__subtitle">Leitura simples de pai, mãe e descendentes diretos.</p>
+                </div>
+            </div>
+            <div class="info-grid mb-3">
+                <div class="info-chip">
+                    <span class="info-chip__label">Pai</span>
+                    <span class="info-chip__value">
+                        {% if arvore_genetica.pai %}
+                            <a href="{% url 'aves:detail' arvore_genetica.pai.pk %}">{{ arvore_genetica.pai }}</a>
+                        {% else %}
+                            Não informado
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-chip">
+                    <span class="info-chip__label">Ave atual</span>
+                    <span class="info-chip__value">{{ ave }}</span>
+                </div>
+                <div class="info-chip">
+                    <span class="info-chip__label">Mãe</span>
+                    <span class="info-chip__value">
+                        {% if arvore_genetica.mae %}
+                            <a href="{% url 'aves:detail' arvore_genetica.mae.pk %}">{{ arvore_genetica.mae }}</a>
+                        {% else %}
+                            Não informado
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="metric-card__label mb-2">Descendentes diretos</div>
+            <div class="d-flex flex-wrap gap-2">
+                {% for filho in arvore_genetica.descendentes %}
+                    <a class="badge-soft text-decoration-none" href="{% url 'aves:detail' filho.pk %}">{{ filho }}</a>
+                {% empty %}
+                    <span class="text-muted">Sem descendentes diretos registrados.</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xl-7">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Resumo rápido</h6>
+                    <p class="section-heading__subtitle">Informações essenciais para atendimento, venda, sanidade e reprodução.</p>
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-chip"><span class="info-chip__label">Finalidade</span><span class="info-chip__value">{{ ave.get_finalidade_display }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Status</span><span class="info-chip__value">{{ ave.get_status_display }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Linhagem</span><span class="info-chip__value">{{ ave.linhagem|default:"-" }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Valor estimado</span><span class="info-chip__value">{% if ave.valor_referencia %}{{ ave.valor_referencia|brl }}{% else %}Não informado{% endif %}</span></div>
+                <div class="info-chip" style="grid-column: 1 / -1;"><span class="info-chip__label">Observações</span><span class="info-chip__value">{{ ave.observacoes|default:"-" }}</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-resumo">Resumo</button></li>
+    {% if can_view_historico %}
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-historico">Histórico</button></li>
+    {% endif %}
+    {% if can_view_sanidade %}
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-sanidade">Sanidade</button></li>
+    {% endif %}
+    {% if can_view_vendas %}
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-vendas">Vendas</button></li>
+    {% endif %}
+    {% if can_view_abates %}
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-abates">Abates</button></li>
+    {% endif %}
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="tab-resumo">
+        <div class="page-panel">
+            <div class="info-grid">
+                <div class="info-chip"><span class="info-chip__label">Origem</span><span class="info-chip__value">{{ ave.origem|default:"-" }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Peso atual</span><span class="info-chip__value">{{ ave.peso_atual|default:"-" }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Valor estimado</span><span class="info-chip__value">{% if ave.valor_referencia %}{{ ave.valor_referencia|brl }}{% else %}Não informado{% endif %}</span></div>
+                <div class="info-chip" style="grid-column: 1 / -1;"><span class="info-chip__label">Observações</span><span class="info-chip__value">{{ ave.observacoes|default:"-" }}</span></div>
+            </div>
+        </div>
+    </div>
+    {% if can_view_historico %}
+        <div class="tab-pane fade" id="tab-historico">
+            <div class="page-panel">
+                <ul class="list-group list-group-flush list-soft timeline-list">
+                    {% for item in timeline_ave %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between flex-wrap gap-2">
+                                <strong>{{ item.tipo }}</strong>
+                                <span class="record-card__meta">{{ item.data }}</span>
+                            </div>
+                            <div>{{ item.descricao }}</div>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Sem histórico.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+    {% if can_view_sanidade %}
+        <div class="tab-pane fade" id="tab-sanidade">
+            <div class="page-panel">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-4">
+                        <div class="surface-muted p-3 h-100">
+                            <h6 class="mb-3">Vacinas</h6>
+                            <ul class="list-group list-group-flush list-soft">
+                                {% for v in vacinas %}
+                                    <li class="list-group-item">{{ v.vacina }} <span class="record-card__meta d-block">{{ v.data_programada }}</span></li>
+                                {% empty %}
+                                    <li class="list-group-item empty-state">Sem vacinas.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <div class="surface-muted p-3 h-100">
+                            <h6 class="mb-3">Tratamentos</h6>
+                            <ul class="list-group list-group-flush list-soft">
+                                {% for t in tratamentos %}
+                                    <li class="list-group-item">{{ t.doenca }} <span class="record-card__meta d-block">{{ t.medicamento }} · {{ t.data_inicio }}</span></li>
+                                {% empty %}
+                                    <li class="list-group-item empty-state">Sem tratamentos.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <div class="surface-muted p-3 h-100">
+                            <h6 class="mb-3">Carência sanitária</h6>
+                            <ul class="list-group list-group-flush list-soft">
+                                {% for c in carencias_ativas %}
+                                    <li class="list-group-item">{{ c.tipo }} <span class="record-card__meta d-block">{{ c.descricao }}</span></li>
+                                {% empty %}
+                                    <li class="list-group-item empty-state">Sem carências ativas.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    {% if can_view_vendas %}
+        <div class="tab-pane fade" id="tab-vendas">
+            <div class="page-panel">
+                <ul class="list-group list-group-flush list-soft">
+                    {% for v in vendas %}
+                        <li class="list-group-item">{{ v.produto }} <span class="record-card__meta d-block">{{ v.data }} · {{ v.valor_total|brl }}</span></li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Sem vendas.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+    {% if can_view_abates %}
+        <div class="tab-pane fade" id="tab-abates">
+            <div class="page-panel">
+                <ul class="list-group list-group-flush list-soft">
+                    {% for a in abates %}
+                        <li class="list-group-item">{{ a.peso_total }} kg <span class="record-card__meta d-block">{{ a.data }}</span></li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Sem abates.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

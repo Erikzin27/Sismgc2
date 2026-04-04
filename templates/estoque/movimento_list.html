@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Movimentações de Estoque{% endblock %}
+{% block content %}
+<div class="list-actions mb-2">
+    <div class="list-actions__left">
+        {% if perms.estoque.add_movimentoestoque %}
+            <a class="btn btn-primary" href="{% url 'estoque:mov_create' %}">Nova movimentação</a>
+        {% endif %}
+    </div>
+    <div class="list-actions__center">
+        <form method="get" class="d-flex gap-2 flex-wrap">
+            <select class="form-select form-select-sm" name="tipo">
+                <option value="">Tipo</option>
+                {% for val,label in movimentos.model.TIPOS %}
+                    <option value="{{ val }}" {% if request.GET.tipo == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select class="form-select form-select-sm" name="motivo">
+                <option value="">Motivo</option>
+                {% for val,label in movimentos.model.MOTIVOS %}
+                    <option value="{{ val }}" {% if request.GET.motivo == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <input class="form-control form-control-sm" type="search" name="fornecedor" value="{{ request.GET.fornecedor }}" placeholder="Fornecedor">
+            <input class="form-control form-control-sm" type="date" name="inicio" value="{{ request.GET.inicio }}">
+            <input class="form-control form-control-sm" type="date" name="fim" value="{{ request.GET.fim }}">
+            <button class="btn btn-outline-secondary btn-sm" type="submit">Filtrar</button>
+        </form>
+    </div>
+    <div class="list-actions__right"></div>
+</div>
+<div class="table-responsive">
+    <table class="table table-striped table-hover card-table align-middle">
+        <thead><tr><th>Data</th><th>Item</th><th>Tipo</th><th>Motivo</th><th>Quantidade</th><th>Lote</th><th>Anexo</th></tr></thead>
+        <tbody>
+        {% for m in movimentos %}
+            <tr>
+                <td>{{ m.data }}</td>
+                <td>{{ m.item }}</td>
+                <td>{{ m.get_tipo_display }}</td>
+                <td>{{ m.get_motivo_display }}</td>
+                <td>{{ m.quantidade|qty:m.item.unidade }}</td>
+                <td>{{ m.lote_relacionado }}</td>
+                <td>
+                    {% if m.anexo %}
+                        <a href="{{ m.anexo.url }}" target="_blank" rel="noopener">Ver arquivo</a>
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="7">Nenhuma movimentação.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% include "pagination.html" with page_obj=page_obj %}
+{% endblock %}

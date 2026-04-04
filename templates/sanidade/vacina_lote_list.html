@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block page_title %}Calendário de Vacinação{% endblock %}
+{% block content %}
+<div class="card card-table p-3 mb-3">
+    <h6 class="mb-2">Lote: {{ lote.nome }} ({{ lote.codigo }})</h6>
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">
+            <label class="form-label">Data de nascimento</label>
+            {{ form.data_nascimento }}
+        </div>
+        <div class="col-12 col-md-3">
+            <button class="btn btn-primary btn-sm" type="submit">Gerar calendário</button>
+        </div>
+    </form>
+    <small class="text-muted">Se não informar, o sistema usa a data de criação do lote.</small>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover card-table align-middle">
+        <thead><tr><th>Vacina</th><th>Data prevista</th><th>Status</th><th>Ação</th></tr></thead>
+        <tbody>
+        {% for v in vacinas %}
+            <tr class="{% if not v.aplicada and v.data_prevista < hoje %}table-danger{% endif %}">
+                <td>{{ v.nome_vacina }}</td>
+                <td>{{ v.data_prevista }}</td>
+                <td>
+                    {% if v.aplicada %}
+                        <span class="badge bg-success">OK</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Pendente</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not v.aplicada %}
+                        <form method="post" action="{% url 'sanidade:vacina_lote_ok' lote.pk v.pk %}">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-primary" type="submit">Marcar como OK</button>
+                        </form>
+                    {% else %}
+                        <span class="text-muted">Aplicada em {{ v.data_aplicacao }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="4">Nenhuma vacina gerada.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

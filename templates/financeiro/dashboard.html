@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Dashboard Financeiro{% endblock %}
+{% block page_subtitle %}Visão financeira limpa com caixa, indicadores do período e leitura rápida de entradas, saídas e planejamento.{% endblock %}
+{% block content %}
+<div class="page-panel">
+    <div class="list-actions">
+        <div class="list-actions__left d-flex gap-2 flex-wrap">
+            {% if perms.financeiro.add_lancamentofinanceiro %}
+                <a class="btn btn-primary" href="{% url 'financeiro:create' %}">Novo lançamento</a>
+            {% endif %}
+            <a class="btn btn-outline-secondary" href="{% url 'financeiro:list' %}">Ver lançamentos</a>
+            {% if perms.financeiro.view_orcamentofuturo %}
+                <a class="btn btn-outline-primary" href="{% url 'financeiro:orcamento_list' %}">Planejamento</a>
+            {% endif %}
+        </div>
+        <div class="list-actions__center">
+            <form method="get" class="d-flex gap-2 flex-wrap w-100">
+                <input class="form-control form-control-sm" type="date" name="inicio" value="{{ request.GET.inicio }}">
+                <input class="form-control form-control-sm" type="date" name="fim" value="{{ request.GET.fim }}">
+                <select class="form-select form-select-sm" name="tipo">
+                    <option value="">Tipo</option>
+                    <option value="entrada" {% if request.GET.tipo == "entrada" %}selected{% endif %}>Entrada</option>
+                    <option value="saida" {% if request.GET.tipo == "saida" %}selected{% endif %}>Saída</option>
+                </select>
+                <select class="form-select form-select-sm" name="categoria">
+                    <option value="">Categoria</option>
+                    {% for val,label in categorias %}
+                        <option value="{{ val }}" {% if request.GET.categoria == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-outline-secondary btn-sm" type="submit">Filtrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-table metric-card">
+            <div class="d-flex justify-content-between gap-3">
+                <div>
+                    <div class="metric-card__label">Entradas</div>
+                    <div class="metric-card__value text-success">{{ total_entradas|brl }}</div>
+                    <div class="metric-card__meta">Receitas do período filtrado</div>
+                </div>
+                <div class="metric-card__icon"><i class="bi bi-arrow-down-left-circle"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-table metric-card">
+            <div class="d-flex justify-content-between gap-3">
+                <div>
+                    <div class="metric-card__label">Saídas</div>
+                    <div class="metric-card__value text-danger">{{ total_saidas|brl }}</div>
+                    <div class="metric-card__meta">Despesas do período filtrado</div>
+                </div>
+                <div class="metric-card__icon"><i class="bi bi-arrow-up-right-circle"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-table metric-card">
+            <div class="d-flex justify-content-between gap-3">
+                <div>
+                    <div class="metric-card__label">Saldo atual</div>
+                    <div class="metric-card__value">{{ saldo_atual|brl }}</div>
+                    <div class="metric-card__meta">Resultado líquido do período</div>
+                </div>
+                <div class="metric-card__icon"><i class="bi bi-wallet2"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-table metric-card">
+            <div class="d-flex justify-content-between gap-3">
+                <div>
+                    <div class="metric-card__label">Caixa atual</div>
+                    <div class="metric-card__value">{{ caixa_atual|brl }}</div>
+                    <div class="metric-card__meta">Referência real da granja</div>
+                </div>
+                <div class="metric-card__icon"><i class="bi bi-piggy-bank"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-8">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Resumo do mês</h6>
+                    <p class="section-heading__subtitle">Leitura compacta para entender ritmo de caixa, volume e extremos.</p>
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-chip">
+                    <span class="info-chip__label">Entradas do mês</span>
+                    <span class="info-chip__value">{{ entradas_mes|brl }}</span>
+                </div>
+                <div class="info-chip">
+                    <span class="info-chip__label">Saídas do mês</span>
+                    <span class="info-chip__value">{{ saidas_mes|brl }}</span>
+                </div>
+                <div class="info-chip">
+                    <span class="info-chip__label">Saldo do mês</span>
+                    <span class="info-chip__value">{{ saldo_mes|brl }}</span>
+                </div>
+                <div class="info-chip">
+                    <span class="info-chip__label">Total de lançamentos</span>
+                    <span class="info-chip__value">{{ total_lancamentos }}</span>
+                </div>
+                <div class="info-chip">
+                    <span class="info-chip__label">Maior entrada</span>
+                    <span class="info-chip__value">{% if maior_entrada %}{{ maior_entrada.valor|brl }}{% else %}-{% endif %}</span>
+                </div>
+                <div class="info-chip">
+                    <span class="info-chip__label">Maior saída</span>
+                    <span class="info-chip__value">{% if maior_saida %}{{ maior_saida.valor|brl }}{% else %}-{% endif %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xl-4">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Leitura rápida</h6>
+                    <p class="section-heading__subtitle">Resumo visual das pressões de caixa.</p>
+                </div>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <span class="badge-soft"><i class="bi bi-plus-circle"></i>Entradas no mês: {{ entradas_mes|brl }}</span>
+                <span class="badge-soft"><i class="bi bi-dash-circle"></i>Saídas no mês: {{ saidas_mes|brl }}</span>
+                <span class="badge-soft"><i class="bi bi-wallet"></i>Saldo do mês: {{ saldo_mes|brl }}</span>
+                <span class="badge-soft"><i class="bi bi-bank"></i>Caixa atual: {{ caixa_atual|brl }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-6">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Movimentações recentes</h6>
+                    <p class="section-heading__subtitle">Últimos lançamentos sem precisar abrir a listagem completa.</p>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Descrição</th>
+                            <th>Tipo</th>
+                            <th>Valor</th>
+                            {% if perms.financeiro.view_lancamentofinanceiro or perms.financeiro.change_lancamentofinanceiro or perms.financeiro.delete_lancamentofinanceiro %}
+                                <th class="text-end">Ações</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for r in recentes %}
+                        <tr>
+                            <td>{{ r.data }}</td>
+                            <td>{{ r.descricao }}</td>
+                            <td><span class="badge-soft">{{ r.get_tipo_display }}</span></td>
+                            <td>{{ r.valor|brl }}</td>
+                            {% if perms.financeiro.view_lancamentofinanceiro or perms.financeiro.change_lancamentofinanceiro or perms.financeiro.delete_lancamentofinanceiro %}
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                        {% if perms.financeiro.view_lancamentofinanceiro %}
+                                            <a class="btn btn-sm btn-outline-primary" href="{% url 'financeiro:detail' r.pk %}">Ver</a>
+                                        {% endif %}
+                                        {% if perms.financeiro.change_lancamentofinanceiro %}
+                                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'financeiro:update' r.pk %}">Editar</a>
+                                        {% endif %}
+                                        {% if perms.financeiro.delete_lancamentofinanceiro %}
+                                            <a class="btn btn-sm btn-outline-danger" href="{% url 'financeiro:delete' r.pk %}">Excluir</a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            {% endif %}
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="{% if perms.financeiro.view_lancamentofinanceiro or perms.financeiro.change_lancamentofinanceiro or perms.financeiro.delete_lancamentofinanceiro %}5{% else %}4{% endif %}">
+                                Sem movimentações.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Distribuição financeira</h6>
+                    <p class="section-heading__subtitle">Gráficos leves para comparar mês a mês e proporção do período.</p>
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="surface-muted p-3">
+                        <h6 class="mb-3">Entradas x saídas por mês</h6>
+                        <div style="height: 280px;">
+                            <canvas id="chartFinanceiro"></canvas>
+                        </div>
+                        <div id="chartFinanceiroFallback" class="empty-state p-3 mt-3 text-center small" style="display:none;">
+                            Não foi possível carregar o gráfico agora.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="surface-muted p-3">
+                        <h6 class="mb-3">Proporção entradas/saídas</h6>
+                        <div style="height: 260px;">
+                            <canvas id="chartDoughnut"></canvas>
+                        </div>
+                        <div id="chartDoughnutFallback" class="empty-state p-3 mt-3 text-center small" style="display:none;">
+                            Não foi possível carregar o gráfico agora.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{{ labels_mes|json_script:"financeiro-labels" }}
+{{ series_entradas|json_script:"financeiro-entradas" }}
+{{ series_saidas|json_script:"financeiro-saidas" }}
+{{ chart_totais|json_script:"financeiro-totais" }}
+<script>
+(() => {
+  const labelsMes = JSON.parse(document.getElementById('financeiro-labels').textContent);
+  const entradas = JSON.parse(document.getElementById('financeiro-entradas').textContent);
+  const saidas = JSON.parse(document.getElementById('financeiro-saidas').textContent);
+  const totais = JSON.parse(document.getElementById('financeiro-totais').textContent);
+  const fallbackBar = document.getElementById('chartFinanceiroFallback');
+  const fallbackDoughnut = document.getElementById('chartDoughnutFallback');
+  const bodyTheme = document.body.getAttribute('data-bs-theme');
+  const labelColor = bodyTheme === 'light' ? '#55627a' : '#cdd8f5';
+  const gridColor = bodyTheme === 'light' ? 'rgba(85,98,122,0.12)' : 'rgba(255,255,255,0.05)';
+
+  if (typeof Chart === 'undefined') {
+    if (fallbackBar) fallbackBar.style.display = 'block';
+    if (fallbackDoughnut) fallbackDoughnut.style.display = 'block';
+    console.error('Chart.js não carregou no dashboard financeiro.');
+    return;
+  }
+
+  const ctx = document.getElementById('chartFinanceiro');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labelsMes,
+        datasets: [
+          { label: 'Entradas', data: entradas, backgroundColor: '#3fb950', borderRadius: 8 },
+          { label: 'Saídas', data: saidas, backgroundColor: '#f85149', borderRadius: 8 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: labelColor } } },
+        scales: {
+          x: { ticks: { color: labelColor }, grid: { color: gridColor } },
+          y: { ticks: { color: labelColor }, grid: { color: gridColor } }
+        }
+      }
+    });
+  }
+
+  const ctx2 = document.getElementById('chartDoughnut');
+  if (ctx2) {
+    new Chart(ctx2, {
+      type: 'doughnut',
+      data: {
+        labels: ['Entradas', 'Saídas'],
+        datasets: [{
+          data: totais,
+          backgroundColor: ['#3fb950', '#f85149'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { color: labelColor } } }
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

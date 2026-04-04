@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Lotes{% endblock %}
+{% block content %}
+<div class="list-actions mb-2">
+    <div class="list-actions__left">
+        {% if perms.lotes.add_lote %}
+            <a class="btn btn-primary" href="{% url 'lotes:create' %}">Novo lote</a>
+        {% endif %}
+    </div>
+    <div class="list-actions__center">
+        <form method="get" class="d-flex gap-2 flex-wrap">
+            <select class="form-select form-select-sm" name="finalidade">
+                <option value="">Finalidade</option>
+                {% for val,label in lotes.model.FINALIDADE_CHOICES %}
+                    <option value="{{ val }}" {% if request.GET.finalidade == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select class="form-select form-select-sm" name="status">
+                <option value="">Status</option>
+                {% for val,label in lotes.model.STATUS_CHOICES %}
+                    <option value="{{ val }}" {% if request.GET.status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select class="form-select form-select-sm" name="linhagem_principal">
+                <option value="">Linhagem</option>
+                {% for linhagem in linhagens_filtro %}
+                    <option value="{{ linhagem.id }}" {% if request.GET.linhagem_principal == linhagem.id|stringformat:"s" %}selected{% endif %}>
+                        {{ linhagem.nome }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-outline-secondary btn-sm" type="submit">Filtrar</button>
+        </form>
+    </div>
+    <div class="list-actions__right"></div>
+</div>
+{% if comparativo %}
+<div class="d-flex gap-2 flex-wrap mb-2">
+    <span class="badge bg-info text-dark">Média quantidade: {{ comparativo.media_quantidade|int_if_whole }}</span>
+    <span class="badge bg-info text-dark">Média custo: {{ comparativo.media_custo|brl }}</span>
+</div>
+{% endif %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover card-table align-middle">
+        <thead><tr><th>Nome</th><th>Código</th><th>Finalidade</th><th>Quantidade</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        {% for l in lotes %}
+            <tr>
+                <td><a href="{% url 'lotes:detail' l.pk %}">{{ l.nome }}</a></td>
+                <td>{{ l.codigo }}</td>
+                <td>{{ l.get_finalidade_display }}</td>
+                <td>{{ l.quantidade_atual|int_if_whole }}</td>
+                <td>{{ l.get_status_display }}</td>
+                <td class="text-end">
+                    {% if perms.lotes.change_lote %}
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'lotes:update' l.pk %}">Editar</a>
+                    {% endif %}
+                    {% if perms.lotes.delete_lote %}
+                        <a class="btn btn-sm btn-outline-danger" href="{% url 'lotes:delete' l.pk %}">Excluir</a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6">Nenhum lote.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% include "pagination.html" with page_obj=page_obj %}
+{% endblock %}

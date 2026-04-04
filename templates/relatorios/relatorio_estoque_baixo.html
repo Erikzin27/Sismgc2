@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Relatório de Estoque Baixo{% endblock %}
+{% block content %}
+<div class="d-flex gap-2 mb-2 align-items-center flex-wrap">
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'relatorios:export_excel' %}?report=estoque_baixo">Excel</a>
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'relatorios:export_pdf' %}?report=estoque_baixo">PDF</a>
+</div>
+<div class="table-responsive">
+    <table class="table table-striped card-table">
+        <thead><tr><th>Item</th><th>Categoria</th><th>Qtd</th><th>Mínimo</th></tr></thead>
+        <tbody>
+        {% for i in itens %}
+            <tr><td>{{ i.nome }}</td><td>{{ i.get_categoria_display }}</td><td>{{ i.quantidade_atual|qty:i.unidade }}</td><td>{{ i.estoque_minimo|qty:i.unidade }}</td></tr>
+        {% empty %}
+            <tr><td colspan="4">Sem dados.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

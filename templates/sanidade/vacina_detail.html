@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block page_title %}Vacina{% endblock %}
+{% block page_subtitle %}Detalhe da vacina com fabricante, dose, carência e receita em uma leitura mais clara.{% endblock %}
+{% block content %}
+<div class="page-panel page-panel--hero">
+    {% include "includes/section_header.html" with title=vacina.nome subtitle=vacina.fabricante %}
+    <div class="info-grid">
+        <div class="info-chip"><span class="info-chip__label">Fabricante</span><span class="info-chip__value">{{ vacina.fabricante|default:"-" }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Dose recomendada</span><span class="info-chip__value">{{ vacina.dose_recomendada|default:"-" }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Carência</span><span class="info-chip__value">{{ vacina.carencia_dias }} dias</span></div>
+        <div class="info-chip" style="grid-column: 1 / -1;"><span class="info-chip__label">Observações</span><span class="info-chip__value">{{ vacina.observacoes|default:"-" }}</span></div>
+        <div class="info-chip" style="grid-column: 1 / -1;"><span class="info-chip__label">Receita</span><span class="info-chip__value">{% if vacina.receita_anexo %}<a href="{{ vacina.receita_anexo.url }}" target="_blank" rel="noopener">Ver arquivo</a>{% else %}-{% endif %}</span></div>
+    </div>
+    <div class="action-bar mt-3">
+        {% if perms.sanidade.change_vacina %}
+            <a class="btn btn-outline-secondary" href="{% url 'sanidade:vacina_update' vacina.pk %}">Editar</a>
+        {% endif %}
+        {% if perms.sanidade.delete_vacina %}
+            <a class="btn btn-outline-danger" href="{% url 'sanidade:vacina_delete' vacina.pk %}">Excluir</a>
+        {% endif %}
+        <a class="btn btn-outline-secondary" href="{% url 'sanidade:vacina_list' %}">Voltar</a>
+    </div>
+</div>
+{% endblock %}

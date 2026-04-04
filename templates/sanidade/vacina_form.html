@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block page_title %}Vacina{% endblock %}
+{% block page_subtitle %}Cadastro de vacina com campos agrupados para leitura mais clara e upload de receita sem ruído visual.{% endblock %}
+{% block content %}
+<form method="post" class="page-panel form-shell" enctype="multipart/form-data">{% csrf_token %}
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Não foi possível salvar.</strong> Verifique os campos abaixo.
+        </div>
+    {% endif %}
+    <div class="form-section">
+        <h6 class="form-section__title">Dados da vacina</h6>
+        <p class="form-section__subtitle">Informações principais, carência, dose recomendada e documentação de apoio.</p>
+        <div class="row g-3 mt-1">
+            {% for field in form %}
+                <div class="col-12 {% if field.name == 'observacoes' %}{% else %}col-md-6{% endif %}">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<small class="field-help">{{ field.help_text }}</small>{% endif %}
+                    {% if field.errors %}<div class="field-error">{{ field.errors|join:", " }}</div>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="action-bar">
+        <button class="btn btn-primary" type="submit">Salvar</button>
+        <a class="btn btn-outline-secondary" href="{% url 'sanidade:vacina_list' %}">Voltar</a>
+    </div>
+</form>
+{% endblock %}

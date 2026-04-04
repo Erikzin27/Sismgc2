@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Relatorio de Usuarios</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; color: #111; }
+        h1 { font-size: 16px; margin: 0 0 12px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        th { background: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Relatorio de Usuarios</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Perfil</th>
+                <th>Status</th>
+                <th>Ultimo acesso</th>
+                <th>Telefone</th>
+                <th>Setor</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.username }}</td>
+                <td>{{ u.get_full_name|default:"-" }}</td>
+                <td>{{ u.email|default:"-" }}</td>
+                <td>{{ u.get_role_display }}</td>
+                <td>{% if u.is_active %}Ativo{% else %}Inativo{% endif %}</td>
+                <td>{{ u.last_login|default:"-" }}</td>
+                <td>{{ u.profile.telefone|default:"-" }}</td>
+                <td>{{ u.profile.setor|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8">Nenhum usuario.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block page_title %}Ave{% endblock %}
+{% block page_subtitle %}Cadastro da ave com foto, identificação, dados zootécnicos e valor de referência em uma leitura mais leve.{% endblock %}
+{% block content %}
+<form method="post" class="page-panel form-shell" enctype="multipart/form-data">{% csrf_token %}
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Não foi possível salvar.</strong> Verifique os campos abaixo.
+        </div>
+    {% endif %}
+    <div class="form-section">
+    <div class="row g-3 align-items-stretch">
+        <div class="col-12 col-md-4">
+            <div class="surface-muted p-3 text-center h-100">
+                {% if form.instance.foto %}
+                    <a href="{{ form.instance.foto.url }}" target="_blank" rel="noopener">
+                        <img src="{{ form.instance.foto.url }}" class="img-fluid rounded-circle mb-2" style="max-width:140px; max-height:140px; object-fit:cover;">
+                    </a>
+                {% else %}
+                    <div class="empty-state d-flex align-items-center justify-content-center rounded-circle mb-2" style="width:140px; height:140px; margin: 0 auto;">
+                        <span class="small text-muted">Sem foto</span>
+                    </div>
+                {% endif %}
+                <div class="form-section__title fs-6 mt-2">Foto da ave</div>
+                <div class="form-section__subtitle">Imagem opcional para identificar a ave com mais rapidez.</div>
+                <div class="mt-2">{{ form.foto }}</div>
+                {% if form.foto.errors %}
+                    <div class="field-error mt-1">{{ form.foto.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-12 col-md-8">
+            <div class="mb-3">
+                <h6 class="form-section__title">Dados da ave</h6>
+                <div class="form-section__subtitle">Campos principais organizados em grade para facilitar preenchimento no desktop e no celular.</div>
+            </div>
+            <div class="row g-3">
+                {% for field in form %}
+                    {% if field.name != "foto" %}
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <small class="field-help">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="action-bar">
+        <button class="btn btn-primary" type="submit">Salvar</button>
+        <a class="btn btn-outline-secondary" href="{% url 'aves:list' %}">Voltar</a>
+    </div>
+</form>
+{% endblock %}

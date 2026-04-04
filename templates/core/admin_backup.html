@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block page_title %}Backup e Exportação{% endblock %}
+{% block content %}
+<div class="card card-table p-4">
+    <h4 class="mb-2">Backup & Exportação</h4>
+    <p class="text-muted">Área reservada para operações críticas e exportações globais.</p>
+    <div class="row g-3">
+        <div class="col-12 col-md-6">
+            <div class="card card-table p-3 h-100">
+                <h6 class="mb-1">Backup completo</h6>
+                <p class="text-muted mb-3">Baixe uma cópia do banco de dados (SQLite).</p>
+                <form method="post" action="{% url 'core:admin_backup_db' %}">
+                    {% csrf_token %}
+                    <button class="btn btn-primary w-100" type="submit">Baixar banco</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="card card-table p-3 h-100">
+                <h6 class="mb-1">Exportação de Mídia</h6>
+                <p class="text-muted mb-3">Baixe anexos e arquivos enviados.</p>
+                <form method="post" action="{% url 'core:admin_backup_media' %}">
+                    {% csrf_token %}
+                    <button class="btn btn-primary w-100" type="submit">Baixar mídia</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

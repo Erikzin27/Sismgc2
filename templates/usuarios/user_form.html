@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block page_title %}Usuário{% endblock %}
+{% block page_subtitle %}Cadastro de usuário com melhor organização entre identidade, acesso e permissões administrativas.{% endblock %}
+{% block content %}
+<form method="post" class="page-panel form-shell">{% csrf_token %}
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Não foi possível salvar.</strong> Verifique os campos abaixo.
+            {% if form.non_field_errors %}
+                <div class="small mt-2">{{ form.non_field_errors|join:", " }}</div>
+            {% endif %}
+        </div>
+    {% endif %}
+    <div class="form-section">
+        <h6 class="form-section__title">Dados do usuário</h6>
+        <p class="form-section__subtitle">Informações de identificação e contato visíveis nas rotinas administrativas.</p>
+        <div class="row g-3 mt-1">
+            {% for field in form %}
+                <div class="col-12 {% if field.name == 'is_staff' or field.name == 'is_superuser' or field.name == 'is_active' %}col-md-4{% else %}col-md-6{% endif %}">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<small class="field-help">{{ field.help_text }}</small>{% endif %}
+                    {% if field.errors %}<div class="field-error">{{ field.errors|join:", " }}</div>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="action-bar">
+        <button class="btn btn-primary" type="submit">Salvar</button>
+        <a class="btn btn-outline-secondary" href="{% url 'usuarios:list' %}">Voltar</a>
+    </div>
+</form>
+{% endblock %}

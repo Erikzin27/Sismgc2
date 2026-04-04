@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Abates{% endblock %}
+{% block content %}
+<div class="list-actions mb-2">
+    <div class="list-actions__left">
+        {% if perms.abate.add_abate %}
+            <a class="btn btn-primary" href="{% url 'abate:create' %}">Novo abate</a>
+        {% endif %}
+    </div>
+    <div class="list-actions__center"></div>
+    <div class="list-actions__right"></div>
+</div>
+<div class="table-responsive">
+    <table class="table table-striped table-hover card-table align-middle">
+        <thead><tr><th>Data</th><th>Lote</th><th>Qtd</th><th>Peso total</th><th></th></tr></thead>
+        <tbody>
+        {% for a in abates %}
+            <tr>
+                <td><a href="{% url 'abate:detail' a.pk %}">{{ a.data }}</a></td>
+                <td>{{ a.lote }}</td>
+                <td>{{ a.quantidade_abatida|int_if_whole }}</td>
+                <td>{{ a.peso_total|num }}</td>
+                <td class="text-end">
+                    {% if perms.abate.change_abate %}
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'abate:update' a.pk %}">Editar</a>
+                    {% endif %}
+                    {% if perms.abate.delete_abate %}
+                        <a class="btn btn-sm btn-outline-danger" href="{% url 'abate:delete' a.pk %}">Excluir</a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5">Nenhum abate.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% include "pagination.html" with page_obj=page_obj %}
+{% endblock %}

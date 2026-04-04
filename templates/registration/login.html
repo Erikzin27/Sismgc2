@@ -1,0 +1,68 @@
+{% extends "public_base.html" %}
+{% block content %}
+<div class="row w-100 g-0">
+    <div class="col-12 col-lg-6 auth-visual">
+        <div class="text-center">
+            <div class="icon-pill mb-3"><i class="bi bi-feather"></i></div>
+            <h2 class="brand-title mb-2">SISMGC</h2>
+            <p class="muted mb-4">Sistema de Gestão de Granja</p>
+            <svg class="auth-illustration" viewBox="0 0 640 420" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#d6a354"/>
+                        <stop offset="100%" stop-color="#f0c06b"/>
+                    </linearGradient>
+                </defs>
+                <rect x="20" y="40" width="600" height="320" rx="28" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)"/>
+                <circle cx="210" cy="210" r="90" fill="rgba(214,163,84,0.15)"/>
+                <circle cx="390" cy="210" r="90" fill="rgba(76,141,255,0.12)"/>
+                <path d="M160 250c40-60 120-60 160 0" stroke="url(#g1)" stroke-width="10" fill="none"/>
+                <path d="M320 250c40-60 120-60 160 0" stroke="#4c8dff" stroke-width="10" fill="none"/>
+                <ellipse cx="260" cy="230" rx="40" ry="28" fill="#f0c06b" opacity=".9"/>
+                <ellipse cx="380" cy="230" rx="40" ry="28" fill="#9fb0d1" opacity=".9"/>
+                <path d="M255 165c10-18 40-18 50 0" stroke="#d6a354" stroke-width="8" fill="none"/>
+                <path d="M365 165c10-18 40-18 50 0" stroke="#4c8dff" stroke-width="8" fill="none"/>
+                <text x="50%" y="360" text-anchor="middle" fill="#9fb0d1" font-size="14">Ambiente interno de operacao</text>
+            </svg>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6 d-flex align-items-center justify-content-center p-4">
+        <div class="auth-card p-4 p-lg-5 w-100" style="max-width:440px;">
+            <div class="mb-3">
+                <h4 class="mb-1">Acesso ao ambiente interno</h4>
+                <p class="muted mb-0">Entre com suas credenciais para continuar.</p>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                {% if form.errors %}
+                    <div class="alert alert-danger">Credenciais invalidas. Tente novamente.</div>
+                {% endif %}
+                <div class="mb-3">
+                    <label class="form-label">Usuario</label>
+                    {{ form.username }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Senha</label>
+                    <div class="input-group">
+                        {{ form.password }}
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword"><i class="bi bi-eye"></i></button>
+                    </div>
+                </div>
+                <button class="btn btn-accent w-100">Entrar</button>
+            </form>
+            <div class="text-center mt-3 muted">Grupo REC</div>
+        </div>
+    </div>
+</div>
+<script>
+  (function() {
+    const btn = document.getElementById("togglePassword");
+    const pwd = document.getElementById("id_password");
+    if (btn && pwd) {
+      btn.addEventListener("click", () => {
+        pwd.type = pwd.type === "password" ? "text" : "password";
+      });
+    }
+  })();
+</script>
+{% endblock %}

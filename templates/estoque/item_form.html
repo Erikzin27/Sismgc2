@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block page_title %}Item de Estoque{% endblock %}
+{% block page_subtitle %}Cadastro do item com foco em categoria, quantidade, validade e anexo em uma experiência mais organizada.{% endblock %}
+{% block content %}
+<form method="post" class="page-panel form-shell" enctype="multipart/form-data">{% csrf_token %}
+    {% if form.errors %}
+        <div class="alert alert-danger"><strong>Não foi possível salvar.</strong> Verifique os campos abaixo.</div>
+    {% endif %}
+    <div class="form-section">
+        {% include "includes/section_header.html" with title="Dados do item" subtitle="Preencha os dados principais de estoque, fornecedor, validade e arquivo de apoio." %}
+        <div class="row g-3 mt-1">
+            {{ form.as_p }}
+        </div>
+    </div>
+    <div class="action-bar">
+        <button class="btn btn-primary" type="submit">Salvar</button>
+        <a class="btn btn-outline-secondary" href="{% url 'estoque:list' %}">Voltar</a>
+    </div>
+</form>
+{% endblock %}

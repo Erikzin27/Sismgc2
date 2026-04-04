@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Linhagem{% endblock %}
+{% block page_subtitle %}Visão da linhagem com dados cadastrais e indicadores produtivos em leitura rápida.{% endblock %}
+{% block content %}
+<div class="page-panel page-panel--hero">
+    {% include "includes/section_header.html" with title=linhagem.nome subtitle=linhagem.origem %}
+    <div class="info-grid">
+        <div class="info-chip"><span class="info-chip__label">Descrição</span><span class="info-chip__value">{{ linhagem.descricao|default:"-" }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Origem</span><span class="info-chip__value">{{ linhagem.origem|default:"-" }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Status</span><span class="info-chip__value">{{ linhagem.ativo|yesno:"Ativa,Inativa" }}</span></div>
+    </div>
+</div>
+<div class="row g-3">
+    <div class="col-12 col-md-6 col-xl-3"><div class="card card-table metric-card"><div class="metric-card__label">Fertilidade</div><div class="metric-card__value">{{ indicadores.fertilidade|num }}%</div></div></div>
+    <div class="col-12 col-md-6 col-xl-3"><div class="card card-table metric-card"><div class="metric-card__label">Taxa de eclosão</div><div class="metric-card__value">{{ indicadores.taxa_eclosao|num }}%</div></div></div>
+    <div class="col-12 col-md-6 col-xl-3"><div class="card card-table metric-card"><div class="metric-card__label">Nascidos</div><div class="metric-card__value">{{ indicadores.total_nascidos|int_if_whole }}</div></div></div>
+    <div class="col-12 col-md-6 col-xl-3"><div class="card card-table metric-card"><div class="metric-card__label">Produtividade</div><div class="metric-card__value">{{ indicadores.produtividade|num }}</div></div></div>
+    <div class="col-12 col-md-6 col-xl-3"><div class="card card-table metric-card"><div class="metric-card__label">Aves</div><div class="metric-card__value">{{ indicadores.total_aves|int_if_whole }}</div></div></div>
+    <div class="col-12 col-md-6 col-xl-3"><div class="card card-table metric-card"><div class="metric-card__label">Lotes</div><div class="metric-card__value">{{ indicadores.total_lotes|int_if_whole }}</div></div></div>
+    <div class="col-12 col-md-6 col-xl-3"><div class="card card-table metric-card"><div class="metric-card__label">Consumo médio</div><div class="metric-card__value">{{ indicadores.consumo_medio|num }} kg</div></div></div>
+    <div class="col-12 col-md-6 col-xl-3"><div class="card card-table metric-card"><div class="metric-card__label">Custo total</div><div class="metric-card__value">{{ indicadores.custo_total|brl }}</div></div></div>
+</div>
+{% endblock %}

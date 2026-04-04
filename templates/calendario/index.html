@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block page_title %}Calendário Operacional{% endblock %}
+{% block page_subtitle %}Agenda visual de vacinas, eclosões, sanidade, vendas, pagamentos e planejamento com fallback seguro para ambiente local.{% endblock %}
+{% block content %}
+<div class="page-panel">
+    <div class="section-heading">
+        <div>
+            <h6 class="section-heading__title">Legenda da agenda</h6>
+            <p class="section-heading__subtitle">Cada cor representa um tipo de evento operacional ou financeiro.</p>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <span class="badge-soft" style="background:#f5b53e;color:#1b1406;border-color:transparent;">Vacinas</span>
+        <span class="badge-soft" style="background:#2aa6ff;color:#08131d;border-color:transparent;">Eclosões</span>
+        <span class="badge-soft" style="background:#3fb950;color:#08130c;border-color:transparent;">Nascimentos</span>
+        <span class="badge-soft" style="background:#f85149;color:#1b0808;border-color:transparent;">Abates</span>
+        <span class="badge-soft" style="background:#d6a354;color:#1b1406;border-color:transparent;">Carências / vencimentos</span>
+        {% if perms.vendas.view_venda %}
+            <span class="badge-soft" style="background:#0ea5a4;color:#081414;border-color:transparent;">Vendas</span>
+        {% endif %}
+        {% if perms.financeiro.view_lancamentofinanceiro %}
+            <span class="badge-soft" style="background:#ff7b72;color:#1b0808;border-color:transparent;">Pagamentos</span>
+        {% endif %}
+        {% if perms.financeiro.view_orcamentofuturo %}
+            <span class="badge-soft" style="background:#8a6a3f;color:#140f08;border-color:transparent;">Planejamento</span>
+        {% endif %}
+    </div>
+    <div id="calendar-empty" class="empty-state p-4 text-center mb-3" style="display:none;">
+        <div class="mb-2"><i class="bi bi-calendar2-event" style="font-size:1.6rem;"></i></div>
+        <div class="fw-semibold">Nenhum evento no período</div>
+        <div class="text-muted small">
+            Cadastre vacinas, nascimentos{% if perms.financeiro.view_orcamentofuturo %}, planejamentos{% endif %}{% if perms.financeiro.view_lancamentofinanceiro %} ou pagamentos{% endif %} para visualizar aqui.
+        </div>
+    </div>
+    <div id="calendar" class="surface-muted p-2" style="min-height: 480px;"></div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales-all.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var calendarEl = document.getElementById('calendar');
+  var emptyEl = document.getElementById('calendar-empty');
+  var fallbackList = function(events) {
+    if (!calendarEl) return;
+    if (!events || !events.length) {
+      if (emptyEl) emptyEl.style.display = "block";
+      return;
+    }
+    var html = '<ul class="list-group list-group-flush">';
+    events.forEach(function(e) {
+      html += '<li class="list-group-item bg-transparent border-secondary">' +
+              '<strong>' + (e.start || '-') + '</strong> — ' + (e.title || 'Evento') +
+              '</li>';
+    });
+    html += '</ul>';
+    calendarEl.innerHTML = html;
+  };
+
+  if (typeof FullCalendar === 'undefined') {
+    console.error('FullCalendar não carregou (provável falta de acesso ao CDN).');
+    fetch("{% url 'calendario:eventos' %}?start=" + new Date().toISOString())
+      .then(r => r.json())
+      .then(data => fallbackList(data))
+      .catch(() => { if (emptyEl) emptyEl.style.display = "block"; });
+    return;
+  }
+  var calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    height: "auto",
+    locale: 'pt-br',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,listWeek'
+    },
+    buttonText: {
+      today: 'Hoje',
+      month: 'Mês',
+      week: 'Semana',
+      list: 'Agenda'
+    },
+    events: function(info, success, failure) {
+      fetch("{% url 'calendario:eventos' %}?start=" + info.startStr + "&end=" + info.endStr)
+        .then(r => r.json())
+        .then(data => {
+          if (emptyEl) emptyEl.style.display = data.length ? "none" : "block";
+          success(data);
+        })
+        .catch(err => {
+          console.error("Erro ao carregar eventos:", err);
+          if (emptyEl) emptyEl.style.display = "block";
+          failure(err);
+        });
+    },
+  });
+  calendar.render();
+});
+</script>
+{% endblock %}

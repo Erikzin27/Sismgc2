@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block page_title %}Identidade Visual{% endblock %}
+{% block content %}
+<div class="card card-table p-4">
+    <h4 class="mb-2">Identidade Visual</h4>
+    <p class="text-muted">Área reservada para ajustes de marca e tema padrão.</p>
+    {% if saved %}
+        <div class="alert alert-success">Configurações atualizadas com sucesso.</div>
+    {% endif %}
+    <form method="post" class="row g-3">
+        {% csrf_token %}
+        <div class="col-12 col-md-6">
+            <label class="form-label">Nome do Sistema</label>
+            {{ form.nome_sistema }}
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label">Nome da Granja</label>
+            {{ form.nome_granja }}
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label">Tema padrão</label>
+            {{ form.tema_padrao }}
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label">Logo ativa</label>
+            {{ form.logo_ativa }}
+        </div>
+        <div class="col-12">
+            <label class="form-label">Observações</label>
+            {{ form.observacoes }}
+        </div>
+        <div class="col-12 d-flex justify-content-end">
+            <button class="btn btn-primary" type="submit">Salvar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

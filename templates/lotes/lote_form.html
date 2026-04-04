@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block page_title %}Lote{% endblock %}
+{% block page_subtitle %}Formulário organizado por contexto operacional: identificação, reprodução e custos do lote.{% endblock %}
+{% block content %}
+<form method="post" class="page-panel form-shell">
+    {% csrf_token %}
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Não foi possível salvar.</strong> Verifique os campos abaixo.
+            {% if form.non_field_errors %}
+                <div class="small mt-2">{{ form.non_field_errors|join:", " }}</div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="form-section">
+    <div class="row g-3">
+        <div class="col-12">
+            <h6 class="form-section__title">Dados principais</h6>
+            <div class="form-section__subtitle">Informações gerais do lote e sua identificação operacional.</div>
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.nome.id_for_label }}">Nome</label>
+            {{ form.nome }}
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.codigo.id_for_label }}">Código</label>
+            {{ form.codigo }}
+            <small class="text-muted">{{ form.codigo.help_text }}</small>
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="{{ form.data_criacao.id_for_label }}">Data</label>
+            {{ form.data_criacao }}
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="{{ form.finalidade.id_for_label }}">Finalidade</label>
+            {{ form.finalidade }}
+            {% if form.finalidade.errors %}<div class="text-danger small">{{ form.finalidade.errors|join:", " }}</div>{% endif %}
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="{{ form.linhagem_principal.id_for_label }}">Linhagem principal</label>
+            {{ form.linhagem_principal }}
+            <small class="text-muted">{{ form.linhagem_principal.help_text }}</small>
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="{{ form.quantidade_inicial.id_for_label }}">Quantidade inicial</label>
+            {{ form.quantidade_inicial }}
+            <small class="text-muted">{{ form.quantidade_inicial.help_text }}</small>
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="{{ form.quantidade_atual.id_for_label }}">Quantidade atual</label>
+            {{ form.quantidade_atual }}
+            <small class="text-muted">{{ form.quantidade_atual.help_text }}</small>
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="{{ form.status.id_for_label }}">Status</label>
+            {{ form.status }}
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.local.id_for_label }}">Local</label>
+            {{ form.local }}
+        </div>
+        <div class="col-12 col-md-6 d-flex align-items-end">
+            <div class="form-check form-switch">
+                {{ form.ativo }}
+                <label class="form-check-label" for="{{ form.ativo.id_for_label }}">Lote ativo</label>
+            </div>
+        </div>
+        <div class="col-12">
+            <label class="form-label" for="{{ form.observacoes.id_for_label }}">Observações gerais</label>
+            {{ form.observacoes }}
+        </div>
+    </div>
+    </div>
+
+    <div class="form-section">
+    <div class="row g-3">
+        <div class="col-12">
+            <h6 class="form-section__title">Reprodução</h6>
+            <div class="form-section__subtitle">Use esta seção quando o lote participar de reprodução e incubação.</div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="form-check form-switch mt-4">
+                {{ form.reprodutivo }}
+                <label class="form-check-label" for="{{ form.reprodutivo.id_for_label }}">Lote reprodutivo</label>
+            </div>
+            <small class="text-muted">{{ form.reprodutivo.help_text }}</small>
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="{{ form.quantidade_machos.id_for_label }}">Machos</label>
+            {{ form.quantidade_machos }}
+            <small class="text-muted">{{ form.quantidade_machos.help_text }}</small>
+            {% if form.quantidade_machos.errors %}<div class="text-danger small">{{ form.quantidade_machos.errors|join:", " }}</div>{% endif %}
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="{{ form.quantidade_femeas.id_for_label }}">Fêmeas</label>
+            {{ form.quantidade_femeas }}
+            <small class="text-muted">{{ form.quantidade_femeas.help_text }}</small>
+            {% if form.quantidade_femeas.errors %}<div class="text-danger small">{{ form.quantidade_femeas.errors|join:", " }}</div>{% endif %}
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.data_inicio_reproducao.id_for_label }}">Início reprodutivo</label>
+            {{ form.data_inicio_reproducao }}
+            <small class="text-muted">{{ form.data_inicio_reproducao.help_text }}</small>
+            {% if form.data_inicio_reproducao.errors %}<div class="text-danger small">{{ form.data_inicio_reproducao.errors|join:", " }}</div>{% endif %}
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.status_reprodutivo.id_for_label }}">Status da reprodução</label>
+            {{ form.status_reprodutivo }}
+            <small class="text-muted">{{ form.status_reprodutivo.help_text }}</small>
+        </div>
+        <div class="col-12">
+            <label class="form-label" for="{{ form.observacoes_reproducao.id_for_label }}">Observações reprodutivas</label>
+            {{ form.observacoes_reproducao }}
+        </div>
+    </div>
+    </div>
+
+    <div class="form-section">
+    <div class="row g-3">
+        <div class="col-12">
+            <h6 class="form-section__title">Custos e consumo</h6>
+            <div class="form-section__subtitle">Custos acumulados e consumo operacional consolidados no mesmo ponto.</div>
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.custo_acumulado.id_for_label }}">Custo acumulado</label>
+            {{ form.custo_acumulado }}
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.consumo_acumulado.id_for_label }}">Consumo acumulado</label>
+            {{ form.consumo_acumulado }}
+        </div>
+    </div>
+    </div>
+
+    <div class="action-bar">
+        <button class="btn btn-primary" type="submit">Salvar</button>
+        <a class="btn btn-outline-secondary" href="{% url 'lotes:list' %}">Voltar</a>
+    </div>
+</form>
+{% endblock %}

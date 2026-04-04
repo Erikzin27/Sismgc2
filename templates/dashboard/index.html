@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Resumo operacional da granja com alertas, atalhos e indicadores para leitura rápida em qualquer tela.{% endblock %}
+{% block content %}
+<div class="page-panel">
+    <div class="section-heading">
+        <div>
+            <h6 class="section-heading__title">Ações rápidas</h6>
+            <p class="section-heading__subtitle">As tarefas mais usadas ficam à mão sem poluir o restante da tela.</p>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        {% if perms.aves.add_ave %}
+            <a class="btn btn-primary" href="{% url 'aves:create' %}"><i class="bi bi-feather me-1"></i>Nova ave</a>
+        {% endif %}
+        {% if perms.lotes.add_lote %}
+            <a class="btn btn-outline-primary" href="{% url 'lotes:create' %}"><i class="bi bi-boxes me-1"></i>Novo lote</a>
+        {% endif %}
+        {% if perms.estoque.add_itemestoque %}
+            <a class="btn btn-outline-primary" href="{% url 'estoque:create' %}"><i class="bi bi-archive me-1"></i>Novo item</a>
+        {% endif %}
+        {% if perms.vendas.add_venda %}
+            <a class="btn btn-outline-primary" href="{% url 'vendas:create' %}"><i class="bi bi-cart3 me-1"></i>Nova venda</a>
+        {% endif %}
+        {% if user.is_manager %}
+            <a class="btn btn-outline-secondary" href="{% url 'relatorios:index' %}"><i class="bi bi-graph-up me-1"></i>Relatórios</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-table metric-card">
+            <div class="d-flex justify-content-between gap-3">
+                <div>
+                    <div class="metric-card__label">Aves</div>
+                    <div class="metric-card__value">{{ total_aves|int_if_whole }}</div>
+                    <div class="metric-card__meta">Base viva cadastrada</div>
+                </div>
+                <div class="metric-card__icon"><i class="bi bi-feather"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-table metric-card">
+            <div class="d-flex justify-content-between gap-3">
+                <div>
+                    <div class="metric-card__label">Lotes ativos</div>
+                    <div class="metric-card__value">{{ lotes_ativos|int_if_whole }}</div>
+                    <div class="metric-card__meta">Operação em andamento</div>
+                </div>
+                <div class="metric-card__icon"><i class="bi bi-boxes"></i></div>
+            </div>
+        </div>
+    </div>
+    {% if can_view_financeiro %}
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card card-table metric-card">
+                <div class="d-flex justify-content-between gap-3">
+                    <div>
+                        <div class="metric-card__label">Saldo atual</div>
+                        <div class="metric-card__value">{{ saldo_atual|brl }}</div>
+                        <div class="metric-card__meta">Financeiro consolidado</div>
+                    </div>
+                    <div class="metric-card__icon"><i class="bi bi-cash-coin"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card card-table metric-card">
+                <div class="d-flex justify-content-between gap-3">
+                    <div>
+                        <div class="metric-card__label">Lucro do mês</div>
+                        <div class="metric-card__value">{{ lucro_mes|brl }}</div>
+                        <div class="metric-card__meta">Entradas menos saídas</div>
+                    </div>
+                    <div class="metric-card__icon"><i class="bi bi-graph-up-arrow"></i></div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-8">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Panorama operacional</h6>
+                    <p class="section-heading__subtitle">Números do mês, custo relevante e qualidade de conversão.</p>
+                </div>
+            </div>
+            <div class="info-grid mb-3">
+                {% if can_view_vendas %}
+                    <div class="info-chip">
+                        <span class="info-chip__label">Vendas do mês</span>
+                        <span class="info-chip__value">{{ total_vendas_mes|brl }}</span>
+                    </div>
+                {% endif %}
+                {% if can_view_financeiro %}
+                    <div class="info-chip">
+                        <span class="info-chip__label">Gastos do mês</span>
+                        <span class="info-chip__value">{{ total_gastos_mes|brl }}</span>
+                    </div>
+                {% endif %}
+                <div class="info-chip">
+                    <span class="info-chip__label">Incubações em andamento</span>
+                    <span class="info-chip__value">{{ incubacoes_andamento_count|int_if_whole }}</span>
+                </div>
+                <div class="info-chip">
+                    <span class="info-chip__label">Nascimentos 7 dias</span>
+                    <span class="info-chip__value">{{ nascimentos_recentes_count|int_if_whole }}</span>
+                </div>
+                <div class="info-chip">
+                    <span class="info-chip__label">Vacinas pendentes</span>
+                    <span class="info-chip__value">{{ vacinas_pendentes_count|int_if_whole }}</span>
+                </div>
+                <div class="info-chip">
+                    <span class="info-chip__label">Itens vencidos</span>
+                    <span class="info-chip__value">{{ medicamentos_vencendo_count|int_if_whole }}</span>
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-12 col-lg-6">
+                    <div class="surface-muted p-3 h-100">
+                        <div class="metric-card__label">Lote com maior custo</div>
+                        <div class="fw-semibold fs-5">{{ lote_maior_custo|default:"-" }}</div>
+                        <div class="metric-card__meta">{{ lote_maior_custo_valor|brl }}</div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <div class="surface-muted p-3 h-100">
+                        <div class="metric-card__label">Pior conversão</div>
+                        <div class="fw-semibold fs-5">{{ lote_pior_conversao|default:"-" }}</div>
+                        <div class="metric-card__meta">CA {{ lote_pior_conversao_valor|num }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xl-4">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Alertas críticos</h6>
+                    <p class="section-heading__subtitle">Janela de {{ janela_dias }} dias para priorização rápida.</p>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <span class="badge-soft"><i class="bi bi-exclamation-triangle"></i>Estoque baixo {{ estoque_baixo_count }}</span>
+                <span class="badge-soft"><i class="bi bi-shield-exclamation"></i>Vacinas {{ vacinas_pendentes_count }}</span>
+                <span class="badge-soft"><i class="bi bi-capsule-pill"></i>Medicamentos {{ medicamentos_vencendo_count }}</span>
+                <span class="badge-soft"><i class="bi bi-egg"></i>Incubações {{ incubacoes_proximas_count }}</span>
+                <span class="badge-soft"><i class="bi bi-baby"></i>Nascimentos {{ nascimentos_previstos_count }}</span>
+                <span class="badge-soft"><i class="bi bi-clock-history"></i>Carências {{ carencias_ativas_count }}</span>
+                {% if can_view_vendas %}
+                    <span class="badge-soft"><i class="bi bi-receipt"></i>Pendências {{ contas_pendentes_count }}</span>
+                {% endif %}
+                <span class="badge-soft"><i class="bi bi-heart-pulse"></i>Lotes {{ lotes_problema_count }}</span>
+                <span class="badge-soft"><i class="bi bi-calendar-event"></i>Eventos {{ eventos_importantes_count }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    {% if can_view_vendas %}
+        <div class="col-12 col-lg-6 col-xxl-4">
+            <div class="page-panel h-100">
+                <div class="section-heading">
+                    <div>
+                        <h6 class="section-heading__title">Contas pendentes</h6>
+                        <p class="section-heading__subtitle">Vendas aguardando pagamento.</p>
+                    </div>
+                </div>
+                <ul class="list-group list-group-flush list-soft">
+                    {% for venda in contas_pendentes %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between gap-2 flex-wrap">
+                                <strong>{{ venda.cliente }}</strong>
+                                <span class="badge-soft">{{ venda.valor_total|brl }}</span>
+                            </div>
+                            <div class="record-card__meta">{{ venda.data }}</div>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Nenhuma conta pendente.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+    <div class="col-12 col-lg-6 col-xxl-4">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Lotes com problema</h6>
+                    <p class="section-heading__subtitle">Pontos de atenção para ação imediata.</p>
+                </div>
+            </div>
+            <ul class="list-group list-group-flush list-soft">
+                {% for alerta in lotes_problema %}
+                    <li class="list-group-item">
+                        <strong>{{ alerta.lote }}</strong>
+                        <div class="record-card__meta">{{ alerta.problemas }}</div>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item empty-state">Nenhum lote com alerta operacional.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-12 col-xxl-4">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Eventos próximos</h6>
+                    <p class="section-heading__subtitle">Agenda essencial dos próximos dias.</p>
+                </div>
+            </div>
+            <ul class="list-group list-group-flush list-soft">
+                {% for evento in eventos_importantes %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between gap-2 flex-wrap">
+                            <strong>{{ evento.tipo }}</strong>
+                            <span class="record-card__meta">{{ evento.data }}</span>
+                        </div>
+                        <div>{{ evento.descricao }}</div>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item empty-state">Nenhum evento importante próximo.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-6">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Estoque e sanidade</h6>
+                    <p class="section-heading__subtitle">O que pede reposição, atenção ou acompanhamento.</p>
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-12 col-lg-6">
+                    <div class="surface-muted p-3 h-100">
+                        <div class="metric-card__label mb-2">Estoque baixo</div>
+                        <ul class="list-group list-group-flush list-soft">
+                            {% for item in estoque_baixo %}
+                                <li class="list-group-item d-flex justify-content-between gap-2">
+                                    <span>{{ item.nome }}</span>
+                                    <span class="badge-soft">{{ item.quantidade_atual|qty:item.unidade }}</span>
+                                </li>
+                            {% empty %}
+                                <li class="list-group-item empty-state">Nenhum alerta.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <div class="surface-muted p-3 h-100">
+                        <div class="metric-card__label mb-2">Vacinas pendentes</div>
+                        <ul class="list-group list-group-flush list-soft">
+                            {% for v in vacinas_pendentes %}
+                                <li class="list-group-item">{{ v.vacina }} <span class="record-card__meta d-block">{{ v.data_programada }}</span></li>
+                            {% empty %}
+                                <li class="list-group-item empty-state">Nenhuma vacina pendente.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <div class="surface-muted p-3 h-100">
+                        <div class="metric-card__label mb-2">Medicamentos vencendo</div>
+                        <ul class="list-group list-group-flush list-soft">
+                            {% for m in medicamentos_vencendo %}
+                                <li class="list-group-item">{{ m.nome }} <span class="record-card__meta d-block">{{ m.validade }}</span></li>
+                            {% empty %}
+                                <li class="list-group-item empty-state">Nenhum medicamento vencendo.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <div class="surface-muted p-3 h-100">
+                        <div class="metric-card__label mb-2">Carências ativas</div>
+                        <ul class="list-group list-group-flush list-soft">
+                            {% for c in carencias_ativas %}
+                                <li class="list-group-item">{{ c.doenca }} <span class="record-card__meta d-block">Até {{ c.data_fim }}</span></li>
+                            {% empty %}
+                                <li class="list-group-item empty-state">Nenhuma carência ativa.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xl-6">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Produção recente</h6>
+                    <p class="section-heading__subtitle">Eventos produtivos e financeiros da operação.</p>
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-12 col-lg-6">
+                    <div class="surface-muted p-3 h-100">
+                        <div class="metric-card__label mb-2">Incubações e nascimentos</div>
+                        <ul class="list-group list-group-flush list-soft">
+                            {% for inc in incubacoes_andamento %}
+                                <li class="list-group-item">{{ inc.codigo }} <span class="record-card__meta d-block">Eclosão {{ inc.previsao_eclosao }}</span></li>
+                            {% empty %}
+                                <li class="list-group-item empty-state">Nenhuma incubação em andamento.</li>
+                            {% endfor %}
+                            {% for n in nascimentos_recentes %}
+                                <li class="list-group-item">{{ n.quantidade_nascida|int_if_whole }} aves <span class="record-card__meta d-block">{{ n.data }}</span></li>
+                            {% empty %}{% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <div class="surface-muted p-3 h-100">
+                        <div class="metric-card__label mb-2">Vendas e despesas</div>
+                        <ul class="list-group list-group-flush list-soft">
+                            {% if can_view_vendas %}
+                                {% for v in vendas_recentes %}
+                                    <li class="list-group-item">{{ v.cliente }} <span class="record-card__meta d-block">{{ v.data }} · {{ v.valor_total|brl }}</span></li>
+                                {% empty %}
+                                    {% if not can_view_financeiro %}
+                                        <li class="list-group-item empty-state">Nenhuma movimentação liberada para o seu perfil.</li>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                            {% if can_view_financeiro %}
+                                {% for d in despesas_recentes %}
+                                    <li class="list-group-item">{{ d.descricao }} <span class="record-card__meta d-block">{{ d.data }} · {{ d.valor|brl }}</span></li>
+                                {% empty %}
+                                    {% if not can_view_vendas %}
+                                        <li class="list-group-item empty-state">Nenhuma movimentação liberada para o seu perfil.</li>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                            {% if not can_view_vendas and not can_view_financeiro %}
+                                <li class="list-group-item empty-state">Seu perfil não acessa vendas ou financeiro no dashboard.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Lote{% endblock %}
+{% block page_subtitle %}Painel operacional com visão produtiva, sanitária, reprodutiva e financeira do lote.{% endblock %}
+{% block content %}
+<div class="page-panel">
+    <div class="section-heading">
+        <div>
+            <h6 class="section-heading__title">{{ lote.nome }} <span class="record-card__meta">({{ lote.codigo }})</span></h6>
+            <p class="section-heading__subtitle">Finalidade {{ lote.get_finalidade_display }} · Linhagem {{ lote.linhagem_principal|default:"-" }}</p>
+        </div>
+        <span class="badge-soft"><i class="bi bi-flag"></i>{{ lote.get_status_display }}</span>
+    </div>
+    <div class="info-grid">
+        <div class="info-chip">
+            <span class="info-chip__label">Quantidade inicial</span>
+            <span class="info-chip__value">{{ lote.quantidade_inicial|int_if_whole }}</span>
+        </div>
+        <div class="info-chip">
+            <span class="info-chip__label">Quantidade atual</span>
+            <span class="info-chip__value">{{ lote.quantidade_atual|int_if_whole }}</span>
+        </div>
+        <div class="info-chip">
+            <span class="info-chip__label">Mortalidade</span>
+            <span class="info-chip__value">{{ resumo.mortalidade|num }}%</span>
+        </div>
+        <div class="info-chip">
+            <span class="info-chip__label">Custo total</span>
+            <span class="info-chip__value">{{ lote.custo_acumulado|brl }}</span>
+        </div>
+        <div class="info-chip">
+            <span class="info-chip__label">Custo por ave</span>
+            <span class="info-chip__value">{{ lote.custo_por_ave|brl }}</span>
+        </div>
+        <div class="info-chip">
+            <span class="info-chip__label">Consumo de ração</span>
+            <span class="info-chip__value">{{ resumo.consumo_racao|num }} kg</span>
+        </div>
+        <div class="info-chip">
+            <span class="info-chip__label">Conversão alimentar</span>
+            <span class="info-chip__value">{{ resumo.conversao|num }}</span>
+        </div>
+        <div class="info-chip">
+            <span class="info-chip__label">Receita</span>
+            <span class="info-chip__value">{{ lote.receita_vendas|brl }}</span>
+        </div>
+        <div class="info-chip">
+            <span class="info-chip__label">Lucro final</span>
+            <span class="info-chip__value">{{ lote.lucro_final|brl }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-7">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Painel do lote</h6>
+                    <p class="section-heading__subtitle">Indicadores de produção e rotina já consolidados na base.</p>
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-chip"><span class="info-chip__label">Aves</span><span class="info-chip__value">{{ painel_operacional.aves|int_if_whole }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Vacinas pendentes</span><span class="info-chip__value">{{ painel_operacional.vacinas_pendentes|int_if_whole }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Tratamentos</span><span class="info-chip__value">{{ painel_operacional.tratamentos_ativos|int_if_whole }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Incubações</span><span class="info-chip__value">{{ painel_operacional.incubacoes|int_if_whole }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Nascimentos</span><span class="info-chip__value">{{ painel_operacional.nascimentos|int_if_whole }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Movimentações</span><span class="info-chip__value">{{ painel_operacional.movimentos|int_if_whole }}</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xl-5">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Reprodução</h6>
+                    <p class="section-heading__subtitle">Resumo do lote e vínculo com incubação já cadastrada.</p>
+                </div>
+                {% if lote.reprodutivo %}
+                    <span class="badge-soft">
+                        <i class="bi bi-heart-pulse"></i>{{ lote.get_status_reprodutivo_display|default:"Reprodutivo" }}
+                    </span>
+                {% else %}
+                    <span class="badge-soft"><i class="bi bi-slash-circle"></i>Não reprodutivo</span>
+                {% endif %}
+            </div>
+            {% if lote.reprodutivo %}
+                <div class="info-grid mb-3">
+                    <div class="info-chip"><span class="info-chip__label">Machos</span><span class="info-chip__value">{{ lote.quantidade_machos|int_if_whole }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Fêmeas</span><span class="info-chip__value">{{ lote.quantidade_femeas|int_if_whole }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Proporção</span><span class="info-chip__value">{{ lote.proporcao_reprodutiva }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Início</span><span class="info-chip__value">{{ lote.data_inicio_reproducao|default:"-" }}</span></div>
+                </div>
+            {% else %}
+                <div class="empty-state p-3 mb-3">Este lote não está marcado como reprodutivo.</div>
+            {% endif %}
+            <div class="info-grid">
+                <div class="info-chip"><span class="info-chip__label">Incubações</span><span class="info-chip__value">{{ resumo_reproducao.total_incubacoes }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Ovos incubados</span><span class="info-chip__value">{{ resumo_reproducao.total_ovos|int_if_whole }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Nascidos</span><span class="info-chip__value">{{ resumo_reproducao.total_nascidos|int_if_whole }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Taxa de eclosão</span><span class="info-chip__value">{{ resumo_reproducao.taxa_eclosao|num }}%</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-resumo">Resumo</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-reproducao">Reprodução</button></li>
+    {% if can_view_historico %}
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-historico">Histórico</button></li>
+    {% endif %}
+    {% if can_view_sanidade %}
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-sanidade">Sanidade</button></li>
+    {% endif %}
+    {% if can_view_vendas %}
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-vendas">Vendas</button></li>
+    {% endif %}
+    {% if can_view_abates %}
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-abates">Abates</button></li>
+    {% endif %}
+    {% if can_view_incubacao %}
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-incubacao">Incubação</button></li>
+    {% endif %}
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-consumo">Consumo</button></li>
+    {% if can_view_movimentos %}
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-movimentos">Movimentações</button></li>
+    {% endif %}
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="tab-resumo">
+        <div class="page-panel">
+            <div class="info-grid">
+                <div class="info-chip"><span class="info-chip__label">Local</span><span class="info-chip__value">{{ lote.local|default:"-" }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Status</span><span class="info-chip__value">{{ lote.get_status_display }}</span></div>
+                <div class="info-chip" style="grid-column: 1 / -1;"><span class="info-chip__label">Observações</span><span class="info-chip__value">{{ lote.observacoes|default:"-" }}</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="tab-reproducao">
+        <div class="page-panel">
+            {% if lote.reprodutivo %}
+                <div class="info-grid">
+                    <div class="info-chip"><span class="info-chip__label">Lote reprodutivo</span><span class="info-chip__value">Sim</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Machos</span><span class="info-chip__value">{{ lote.quantidade_machos|int_if_whole }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Fêmeas</span><span class="info-chip__value">{{ lote.quantidade_femeas|int_if_whole }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Proporção</span><span class="info-chip__value">{{ lote.proporcao_reprodutiva }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Início</span><span class="info-chip__value">{{ lote.data_inicio_reproducao|default:"-" }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Status</span><span class="info-chip__value">{{ lote.get_status_reprodutivo_display|default:"-" }}</span></div>
+                    <div class="info-chip" style="grid-column: 1 / -1;"><span class="info-chip__label">Observações</span><span class="info-chip__value">{{ lote.observacoes_reproducao|default:"-" }}</span></div>
+                </div>
+            {% else %}
+                <div class="empty-state p-3">Sem dados reprodutivos para este lote.</div>
+            {% endif %}
+        </div>
+    </div>
+    {% if can_view_historico %}
+        <div class="tab-pane fade" id="tab-historico">
+            <div class="page-panel">
+                <ul class="list-group list-group-flush list-soft timeline-list">
+                    {% for item in timeline_lote %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between flex-wrap gap-2">
+                                <strong>{{ item.tipo }}</strong>
+                                <span class="record-card__meta">{{ item.data }}</span>
+                            </div>
+                            <div>{{ item.descricao }}</div>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Sem histórico.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+    {% if can_view_sanidade %}
+        <div class="tab-pane fade" id="tab-sanidade">
+            <div class="page-panel">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-4">
+                        <div class="surface-muted p-3 h-100">
+                            <h6 class="mb-3">Vacinas</h6>
+                            <ul class="list-group list-group-flush list-soft">
+                                {% for v in vacinas %}
+                                    <li class="list-group-item">{{ v.vacina }} <span class="record-card__meta d-block">{{ v.data_programada }}</span></li>
+                                {% empty %}
+                                    <li class="list-group-item empty-state">Sem vacinas.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <div class="surface-muted p-3 h-100">
+                            <h6 class="mb-3">Tratamentos</h6>
+                            <ul class="list-group list-group-flush list-soft">
+                                {% for t in tratamentos %}
+                                    <li class="list-group-item">{{ t.doenca }} <span class="record-card__meta d-block">{{ t.medicamento }} · {{ t.data_inicio }}</span></li>
+                                {% empty %}
+                                    <li class="list-group-item empty-state">Sem tratamentos.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <div class="surface-muted p-3 h-100">
+                            <h6 class="mb-3">Carência sanitária</h6>
+                            <ul class="list-group list-group-flush list-soft">
+                                {% for c in carencias_ativas %}
+                                    <li class="list-group-item">{{ c.tipo }} <span class="record-card__meta d-block">{{ c.descricao }}</span></li>
+                                {% empty %}
+                                    <li class="list-group-item empty-state">Sem carências ativas.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    {% if can_view_vendas %}
+        <div class="tab-pane fade" id="tab-vendas">
+            <div class="page-panel">
+                <ul class="list-group list-group-flush list-soft">
+                    {% for v in vendas %}
+                        <li class="list-group-item">{{ v.produto }} <span class="record-card__meta d-block">{{ v.data }} · {{ v.valor_total|brl }}</span></li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Sem vendas.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+    {% if can_view_abates %}
+        <div class="tab-pane fade" id="tab-abates">
+            <div class="page-panel">
+                <ul class="list-group list-group-flush list-soft">
+                    {% for a in abates %}
+                        <li class="list-group-item">{{ a.peso_total }} kg <span class="record-card__meta d-block">{{ a.data }}</span></li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Sem abates.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+    {% if can_view_incubacao %}
+        <div class="tab-pane fade" id="tab-incubacao">
+            <div class="page-panel">
+                <ul class="list-group list-group-flush list-soft">
+                    {% for i in incubacoes %}
+                        <li class="list-group-item">{{ i.codigo }} <span class="record-card__meta d-block">Eclosão {{ i.previsao_eclosao }}</span></li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Sem incubação.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+    <div class="tab-pane fade" id="tab-consumo">
+        <div class="page-panel">
+            <div class="info-grid">
+                <div class="info-chip"><span class="info-chip__label">Consumo total de ração</span><span class="info-chip__value">{{ resumo.consumo_racao|num }} kg</span></div>
+                <div class="info-chip"><span class="info-chip__label">Conversão alimentar</span><span class="info-chip__value">{{ resumo.conversao|num }}</span></div>
+            </div>
+        </div>
+    </div>
+    {% if can_view_movimentos %}
+        <div class="tab-pane fade" id="tab-movimentos">
+            <div class="page-panel">
+                <ul class="list-group list-group-flush list-soft">
+                    {% for m in movimentos %}
+                        <li class="list-group-item">{{ m.get_tipo_display }} <span class="record-card__meta d-block">{{ m.data }} · {{ m.quantidade|qty:m.item.unidade }} {{ m.item.unidade }}</span></li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Sem movimentações.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

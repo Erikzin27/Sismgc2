@@ -1,0 +1,214 @@
+{% load formatting %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Relatorio</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; color: #0f172a; margin: 24px; }
+        .report-header { margin-bottom: 18px; border-bottom: 2px solid #1d4ed8; padding-bottom: 10px; }
+        .report-title { margin: 0 0 4px; font-size: 24px; }
+        .report-meta { margin: 0; color: #475569; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #cbd5e1; padding: 7px 8px; vertical-align: top; }
+        th { background: #1d4ed8; color: #fff; text-align: left; }
+        tbody tr:nth-child(even) { background: #f8fafc; }
+        .empty { padding: 14px; border: 1px dashed #cbd5e1; background: #f8fafc; color: #64748b; }
+    </style>
+</head>
+<body>
+    <div class="report-header">
+        {% if _pdf_meta.logo_pdf_url %}
+            <div style="margin-bottom: 10px;">
+                <img src="{{ _pdf_meta.logo_pdf_url }}" alt="Logo" style="height: 56px;">
+            </div>
+        {% endif %}
+        <h2 style="margin: 0 0 4px; color: #1e293b;">{{ _pdf_meta.nome_granja_pdf|default:"SISMGC" }}</h2>
+        <h1 class="report-title">{{ _pdf_meta.titulo_relatorio|default:report }}</h1>
+        <p class="report-meta">Gerado em {{ _pdf_meta.gerado_em_pdf|date:"d/m/Y H:i" }} pelo SISMGC.</p>
+        {% if _pdf_meta.filtros_pdf %}
+            <p class="report-meta">
+                {% for item in _pdf_meta.filtros_pdf %}
+                    <strong>{{ item.0 }}:</strong> {{ item.1 }}{% if not forloop.last %} | {% endif %}
+                {% endfor %}
+            </p>
+        {% endif %}
+    </div>
+    {% if _pdf_meta.resumo_pdf %}
+        <table style="width: auto; margin-bottom: 16px;">
+            <tbody>
+            {% for item in _pdf_meta.resumo_pdf %}
+                <tr>
+                    <th style="background: #eff6ff; color: #0f172a;">{{ item.0 }}</th>
+                    <td style="background: #f8fafc;">{{ item.1 }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    {% if report == "lotes" %}
+    <table>
+        <thead><tr><th>Nome</th><th>Codigo</th><th>Finalidade</th><th>Qtd</th><th>Custo</th></tr></thead>
+        <tbody>
+        {% for l in lotes %}<tr><td>{{ l.nome }}</td><td>{{ l.codigo }}</td><td>{{ l.get_finalidade_display }}</td><td>{{ l.quantidade_atual|int_if_whole }}</td><td>{{ l.custo_acumulado|brl }}</td></tr>{% endfor %}
+        </tbody>
+    </table>
+    {% elif report == "aves" %}
+    <table>
+        <thead><tr><th>Codigo</th><th>Nome</th><th>Linhagem</th><th>Finalidade</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for a in aves %}<tr><td>{{ a.codigo_interno }}</td><td>{{ a.nome }}</td><td>{{ a.linhagem }}</td><td>{{ a.get_finalidade_display }}</td><td>{{ a.get_status_display }}</td></tr>{% endfor %}
+        </tbody>
+    </table>
+    {% elif report == "vacinas" %}
+    <table>
+        <thead><tr><th>Vacina</th><th>Alvo</th><th>Data</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for v in vacinas %}<tr><td>{{ v.vacina }}</td><td>{{ v.ave|default_if_none:v.lote }}</td><td>{{ v.data_programada }}</td><td>{{ v.get_status_display }}</td></tr>{% endfor %}
+        </tbody>
+    </table>
+    {% elif report == "financeiro" %}
+    <table>
+        <thead><tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Descricao</th><th>Valor</th></tr></thead>
+        <tbody>
+        {% for l in lancamentos %}<tr><td>{{ l.data }}</td><td>{{ l.get_tipo_display }}</td><td>{{ l.get_categoria_display }}</td><td>{{ l.descricao }}</td><td>{{ l.valor|brl }}</td></tr>{% endfor %}
+        </tbody>
+    </table>
+    {% elif report == "incubacao" %}
+    <table>
+        <thead><tr><th>Codigo</th><th>Tipo</th><th>Entrada</th><th>Previsao</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for i in incubacoes %}<tr><td>{{ i.codigo }}</td><td>{{ i.get_tipo_display }}</td><td>{{ i.data_entrada }}</td><td>{{ i.previsao_eclosao }}</td><td>{{ i.get_status_display }}</td></tr>{% endfor %}
+        </tbody>
+    </table>
+    {% elif report == "estoque_baixo" %}
+    <table>
+        <thead><tr><th>Item</th><th>Categoria</th><th>Qtd</th><th>Minimo</th></tr></thead>
+        <tbody>
+        {% for i in itens %}<tr><td>{{ i.nome }}</td><td>{{ i.get_categoria_display }}</td><td>{{ i.quantidade_atual|qty:i.unidade }}</td><td>{{ i.estoque_minimo|qty:i.unidade }}</td></tr>{% endfor %}
+        </tbody>
+    </table>
+    {% elif report == "reproducao" %}
+    <table>
+        <thead><tr><th>Incubacao</th><th>Lote</th><th>Linhagem</th><th>Ovos</th><th>Nascidos</th><th>Perdas</th><th>Taxa eclosao</th></tr></thead>
+        <tbody>
+        {% for i in incubacoes %}
+            <tr>
+                <td>{{ i.codigo }}</td>
+                <td>{{ i.lote_relacionado|default:"-" }}</td>
+                <td>{% if i.matriz_responsavel and i.matriz_responsavel.linhagem %}{{ i.matriz_responsavel.linhagem }}{% elif i.lote_relacionado and i.lote_relacionado.linhagem_principal %}{{ i.lote_relacionado.linhagem_principal }}{% else %}-{% endif %}</td>
+                <td>{{ i.quantidade_ovos|int_if_whole }}</td>
+                <td>{{ i.quantidade_nascida|int_if_whole }}</td>
+                <td>{{ i.perdas|int_if_whole }}</td>
+                <td>{{ i.taxa_eclosao|num }}%</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% elif report == "consumo_custo_lote" %}
+    <table>
+        <thead><tr><th>Lote</th><th>Qtd</th><th>Consumo racao</th><th>Custo racao</th><th>Custo sanitario</th><th>Custo acumulado</th></tr></thead>
+        <tbody>
+        {% for linha in linhas_lote %}
+            <tr>
+                <td>{{ linha.lote }}</td>
+                <td>{{ linha.quantidade_atual|int_if_whole }}</td>
+                <td>{{ linha.consumo_racao_total|num }}</td>
+                <td>{{ linha.custo_racao|brl }}</td>
+                <td>{{ linha.custo_sanitario|brl }}</td>
+                <td>{{ linha.custo_acumulado|brl }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% elif report == "previsao_estoque" %}
+    <table>
+        <thead><tr><th>Item</th><th>Qtd atual</th><th>Consumo medio</th><th>Duracao estimada</th><th>Reposicao</th></tr></thead>
+        <tbody>
+        {% for item in itens_previsao %}
+            <tr>
+                <td>{{ item.item }}</td>
+                <td>{{ item.item.quantidade_atual|qty:item.item.unidade }}</td>
+                <td>{{ item.consumo_medio|num }}</td>
+                <td>{% if item.duracao_estimada %}{{ item.duracao_estimada|num }} dias{% else %}-{% endif %}</td>
+                <td>{% if item.reposicao_proxima %}Proxima{% else %}Normal{% endif %}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% elif report == "comparacao_lotes" %}
+    <table>
+        <thead><tr><th>Lote</th><th>Qtd atual</th><th>Custo</th><th>Consumo</th><th>Mortalidade</th><th>Reprodução</th><th>Desempenho</th></tr></thead>
+        <tbody>
+        {% for linha in linhas_lote %}
+            <tr>
+                <td>{{ linha.lote }}</td>
+                <td>{{ linha.quantidade_atual|int_if_whole }}</td>
+                <td>{{ linha.custo_acumulado|brl }}</td>
+                <td>{{ linha.consumo_racao_total|num }} kg</td>
+                <td>{{ linha.mortalidade_percentual|num }}%</td>
+                <td>{% if linha.reprodutivo %}{{ linha.status_reprodutivo_display|default:"Reprodutivo" }}{% else %}Não{% endif %}</td>
+                <td>CA {{ linha.conversao_alimentar|num }} / Lucro {{ linha.lucro_final|brl }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="7">Sem dados.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% elif report == "lucro_lote" %}
+    <table>
+        <thead><tr><th>Lote</th><th>Receita</th><th>Custo ração</th><th>Despesas extras</th><th>Lucro</th></tr></thead>
+        <tbody>
+        {% for linha in linhas_lote %}
+            <tr>
+                <td>{{ linha.lote }}</td>
+                <td>{{ linha.receita_vendas|brl }}</td>
+                <td>{{ linha.custo_racao|brl }}</td>
+                <td>{{ linha.despesas_extras|brl }}</td>
+                <td>{{ linha.lucro_final|brl }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5">Sem dados.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% elif report == "ranking_lotes" %}
+    <table>
+        <thead><tr><th>#</th><th>Lote</th><th>Lucro</th><th>Mortalidade</th><th>CA</th></tr></thead>
+        <tbody>
+        {% for linha in ranking_lotes %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ linha.lote }}</td>
+                <td>{{ linha.lucro_final|brl }}</td>
+                <td>{{ linha.mortalidade_percentual|num }}%</td>
+                <td>{{ linha.conversao_alimentar|num }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5">Sem dados.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% elif report == "ranking_reprodutores" %}
+    <table>
+        <thead><tr><th>#</th><th>Ave</th><th>Filhos</th><th>Incubações</th><th>Nascidos</th><th>Eficiência</th></tr></thead>
+        <tbody>
+        {% for item in ranking_reprodutores %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.ave }}</td>
+                <td>{{ item.filhos|int_if_whole }}</td>
+                <td>{{ item.incubacoes|int_if_whole }}</td>
+                <td>{{ item.nascidos|int_if_whole }}</td>
+                <td>{{ item.eficiencia|num }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6">Sem dados reprodutivos suficientes.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">Sem layout específico para este relatório.</div>
+    {% endif %}
+</body>
+</html>

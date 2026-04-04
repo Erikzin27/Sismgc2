@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block page_title %}Medicamento{% endblock %}
+{% block page_subtitle %}Cadastro de medicamento com validade, categoria e observações em uma estrutura mais confortável.{% endblock %}
+{% block content %}
+<form method="post" class="page-panel form-shell">{% csrf_token %}
+    <div class="form-section">
+        {% include "includes/section_header.html" with title="Dados do medicamento" subtitle="Preencha nome, categoria, validade e observações do item sanitário." %}
+        <div class="row g-3 mt-1">
+            {{ form.as_p }}
+        </div>
+    </div>
+    <div class="action-bar">
+        <button class="btn btn-primary">Salvar</button>
+        <a class="btn btn-outline-secondary" href="{% url 'sanidade:medicamento_list' %}">Voltar</a>
+    </div>
+</form>
+{% endblock %}

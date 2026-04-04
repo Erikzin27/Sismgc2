@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block page_title %}Planejamento de Compras{% endblock %}
+{% block page_subtitle %}Cadastro do planejamento com foto, prioridade, status e valores organizados em blocos claros.{% endblock %}
+{% block content %}
+<form method="post" class="page-panel form-shell" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Não foi possível salvar.</strong> Verifique os campos abaixo.
+            {% if form.non_field_errors %}
+                <div class="small mt-2">{{ form.non_field_errors|join:", " }}</div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="form-section">
+        {% include "includes/section_header.html" with title="Imagem e apresentação" subtitle="Foto opcional para identificar rapidamente o investimento ou compra futura." %}
+        <div class="row g-3 mt-1 align-items-stretch">
+            <div class="col-12 col-lg-4">
+                <div class="surface-muted p-3 h-100 text-center">
+                    {% if form.instance.foto %}
+                        <a href="{{ form.instance.foto.url }}" target="_blank" rel="noopener">
+                            <img src="{{ form.instance.foto.url }}" alt="{{ form.instance.titulo }}" class="img-fluid rounded-4 mb-3" style="max-height:240px;object-fit:cover;width:100%;">
+                        </a>
+                    {% else %}
+                        <div class="empty-state d-flex align-items-center justify-content-center mb-3 rounded-4" style="min-height:220px;">Sem foto</div>
+                    {% endif %}
+                    <label class="form-label text-start w-100" for="{{ form.foto.id_for_label }}">Foto do planejamento</label>
+                    {{ form.foto }}
+                    {% if form.foto.errors %}<div class="field-error text-start mt-1">{{ form.foto.errors|join:", " }}</div>{% endif %}
+                </div>
+            </div>
+            <div class="col-12 col-lg-8">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="{{ form.titulo.id_for_label }}">Título</label>
+                        {{ form.titulo }}
+                        <small class="field-help">{{ form.titulo.help_text }}</small>
+                        {% if form.titulo.errors %}<div class="field-error">{{ form.titulo.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="{{ form.categoria.id_for_label }}">Categoria</label>
+                        {{ form.categoria }}
+                        {% if form.categoria.help_text %}<small class="field-help">{{ form.categoria.help_text }}</small>{% endif %}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="{{ form.data_planejada.id_for_label }}">Data planejada</label>
+                        {{ form.data_planejada }}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="{{ form.valor_previsto.id_for_label }}">Valor previsto</label>
+                        {{ form.valor_previsto }}
+                        <small class="field-help">{{ form.valor_previsto.help_text }}</small>
+                        {% if form.valor_previsto.errors %}<div class="field-error">{{ form.valor_previsto.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="{{ form.valor_ja_reservado.id_for_label }}">Valor já reservado</label>
+                        {{ form.valor_ja_reservado }}
+                        <small class="field-help">{{ form.valor_ja_reservado.help_text }}</small>
+                        {% if form.valor_ja_reservado.errors %}<div class="field-error">{{ form.valor_ja_reservado.errors|join:", " }}</div>{% endif %}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="{{ form.status.id_for_label }}">Status</label>
+                        {{ form.status }}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="{{ form.prioridade.id_for_label }}">Prioridade</label>
+                        {{ form.prioridade }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        {% include "includes/section_header.html" with title="Contexto do planejamento" subtitle="Descrição, observações e status ativo do orçamento futuro." %}
+        <div class="row g-3 mt-1">
+            <div class="col-12">
+                <label class="form-label" for="{{ form.descricao.id_for_label }}">Descrição</label>
+                {{ form.descricao }}
+            </div>
+            <div class="col-12">
+                <label class="form-label" for="{{ form.observacoes.id_for_label }}">Observações</label>
+                {{ form.observacoes }}
+            </div>
+            <div class="col-12">
+                <div class="form-check form-switch">
+                    {{ form.ativo }}
+                    <label class="form-check-label" for="{{ form.ativo.id_for_label }}">Planejamento ativo</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <button class="btn btn-primary" type="submit">Salvar</button>
+        <a class="btn btn-outline-secondary" href="{% url 'financeiro:orcamento_list' %}">Voltar</a>
+    </div>
+</form>
+{% endblock %}

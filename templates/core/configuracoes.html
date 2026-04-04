@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block page_title %}Configurações do Sistema{% endblock %}
+{% block page_subtitle %}Ajustes gerais do ambiente, tema e alertas operacionais com uma experiência administrativa mais limpa.{% endblock %}
+{% block content %}
+<form method="post" class="page-panel form-shell">
+    {% csrf_token %}
+    <div class="form-section">
+        {% include "includes/section_header.html" with title="Identidade do ambiente" subtitle="Defina o nome do sistema e da granja exibidos para os usuários." %}
+        <div class="row g-3 mt-1">
+            <div class="col-12 col-md-6">
+                <label class="form-label">Nome do Sistema</label>
+                {{ form.nome_sistema }}
+                {% if form.nome_sistema.help_text %}<small class="field-help">{{ form.nome_sistema.help_text }}</small>{% endif %}
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label">Nome da Granja</label>
+                {{ form.nome_granja }}
+                {% if form.nome_granja.help_text %}<small class="field-help">{{ form.nome_granja.help_text }}</small>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        {% include "includes/section_header.html" with title="Aparência e operação" subtitle="Controle de tema padrão, logo ativa e janela de alerta para vencimentos." %}
+        <div class="row g-3 mt-1">
+            <div class="col-12 col-md-4">
+                <label class="form-label">Tema padrão</label>
+                {{ form.tema_padrao }}
+                {% if form.tema_padrao.help_text %}<small class="field-help">{{ form.tema_padrao.help_text }}</small>{% endif %}
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label">Logo ativa</label>
+                {{ form.logo_ativa }}
+                {% if form.logo_ativa.help_text %}<small class="field-help">{{ form.logo_ativa.help_text }}</small>{% endif %}
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label">Dias para alerta de vencimento</label>
+                {{ form.dias_alerta_vencimento }}
+                {% if form.dias_alerta_vencimento.help_text %}<small class="field-help">{{ form.dias_alerta_vencimento.help_text }}</small>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        {% include "includes/section_header.html" with title="Observações" subtitle="Anotações administrativas ou orientações internas do ambiente." %}
+        <div class="row g-3 mt-1">
+            <div class="col-12">
+                <label class="form-label">Observações</label>
+                {{ form.observacoes }}
+                {% if form.observacoes.help_text %}<small class="field-help">{{ form.observacoes.help_text }}</small>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <button class="btn btn-primary" type="submit">Salvar</button>
+    </div>
+</form>
+{% endblock %}

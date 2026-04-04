@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Relatório de Aves{% endblock %}
+{% block content %}
+<form class="row g-2 align-items-end mb-2" method="get">
+    <div class="col-12 col-md-3">
+        <label class="form-label">Início</label>
+        <input type="date" name="inicio" class="form-control form-control-sm" value="{{ request.GET.inicio }}">
+    </div>
+    <div class="col-12 col-md-3">
+        <label class="form-label">Fim</label>
+        <input type="date" name="fim" class="form-control form-control-sm" value="{{ request.GET.fim }}">
+    </div>
+    <div class="col-12 col-md-6 d-flex gap-2 align-items-center flex-wrap">
+        <button class="btn btn-primary btn-sm">Filtrar</button>
+        <a class="btn btn-outline-secondary btn-sm" href="{% url 'relatorios:export_excel' %}?report=aves&inicio={{ request.GET.inicio }}&fim={{ request.GET.fim }}">Excel</a>
+        <a class="btn btn-outline-secondary btn-sm" href="{% url 'relatorios:export_pdf' %}?report=aves&inicio={{ request.GET.inicio }}&fim={{ request.GET.fim }}">PDF</a>
+    </div>
+</form>
+<div class="table-responsive">
+    <table class="table table-striped card-table">
+        <thead><tr><th>Código</th><th>Nome</th><th>Linhagem</th><th>Finalidade</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for a in aves %}
+            <tr><td>{{ a.codigo_interno }}</td><td>{{ a.nome }}</td><td>{{ a.linhagem }}</td><td>{{ a.get_finalidade_display }}</td><td>{{ a.get_status_display }}</td></tr>
+        {% empty %}
+            <tr><td colspan="5">Sem dados.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

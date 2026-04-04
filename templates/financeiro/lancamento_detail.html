@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Lançamento{% endblock %}
+{% block page_subtitle %}Detalhe financeiro com origem, forma de pagamento e comprovante destacados para auditoria rápida.{% endblock %}
+{% block content %}
+<div class="page-panel page-panel--hero">
+    <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-3">
+        <div>
+            <h6 class="section-heading__title mb-1">{{ lancamento.descricao }}</h6>
+            <p class="section-heading__subtitle">{{ lancamento.data }} · {{ lancamento.get_categoria_display }}</p>
+        </div>
+        <span class="status-badge {% if lancamento.tipo == 'entrada' %}status-badge--success{% else %}status-badge--danger{% endif %}">
+            {{ lancamento.get_tipo_display }}
+        </span>
+    </div>
+    <div class="info-grid">
+        <div class="info-chip"><span class="info-chip__label">Data</span><span class="info-chip__value">{{ lancamento.data }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Tipo</span><span class="info-chip__value">{{ lancamento.get_tipo_display }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Categoria</span><span class="info-chip__value">{{ lancamento.get_categoria_display }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Valor</span><span class="info-chip__value">{{ lancamento.valor|brl }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Forma de pagamento</span><span class="info-chip__value">{{ lancamento.forma_pagamento|default:"Não informada" }}</span></div>
+        <div class="info-chip">
+            <span class="info-chip__label">Origem</span>
+            <span class="info-chip__value">
+                {% if lancamento.venda %}
+                    {% if perms.vendas.view_venda %}
+                        <a href="{% url 'vendas:detail' lancamento.venda.pk %}">Venda #{{ lancamento.venda.pk }}</a>
+                    {% else %}
+                        Venda #{{ lancamento.venda.pk }}
+                    {% endif %}
+                {% else %}
+                    Lançamento manual
+                {% endif %}
+            </span>
+        </div>
+        <div class="info-chip" style="grid-column: 1 / -1;">
+            <span class="info-chip__label">Comprovante</span>
+            <span class="info-chip__value">
+                {% if lancamento.comprovante %}
+                    <a href="{{ lancamento.comprovante.url }}" target="_blank" rel="noopener">Ver comprovante</a>
+                {% else %}
+                    Sem comprovante.
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+{% endblock %}

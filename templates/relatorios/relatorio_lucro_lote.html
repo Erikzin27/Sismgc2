@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Lucro por Lote{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-end gap-2 mb-3">
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'relatorios:export_pdf' %}?report=lucro_lote&inicio={{ request.GET.inicio }}&fim={{ request.GET.fim }}">PDF</a>
+    <a class="btn btn-outline-success btn-sm" href="{% url 'relatorios:export_excel' %}?report=lucro_lote&inicio={{ request.GET.inicio }}&fim={{ request.GET.fim }}">Excel</a>
+</div>
+<div class="table-responsive">
+    <table class="table table-striped card-table">
+        <thead><tr><th>Lote</th><th>Receita</th><th>Custo ração</th><th>Despesas extras</th><th>Lucro</th></tr></thead>
+        <tbody>
+        {% for linha in linhas_lote %}
+            <tr>
+                <td>{{ linha.lote }}</td>
+                <td>{{ linha.receita_vendas|brl }}</td>
+                <td>{{ linha.custo_racao|brl }}</td>
+                <td>{{ linha.despesas_extras|brl }}</td>
+                <td>{{ linha.lucro_final|brl }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5">Sem dados.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

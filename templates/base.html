@@ -1,0 +1,898 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SISMGC</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fraunces:wght@600;700&display=swap">
+    <style>
+        /* Tema escuro moderno */
+        body { background: #0e1424; color: #e5ecff; }
+        a { color: #7db3ff; }
+        .sidebar { min-height: 100vh; background: linear-gradient(180deg,#0b1a33,#0a1430); color: #e9eefc; }
+        .offcanvas-lg { background: linear-gradient(180deg,#0b1a33,#0a1430); color: #e9eefc; }
+        .sidebar nav a { color: #f2f5ff; text-decoration: none; display:block; padding: .65rem 1rem; font-weight: 500; }
+        .sidebar nav a:hover { background: rgba(255,255,255,.12); color: #fff; }
+        .sidebar nav a:focus { outline: none; background: rgba(255,255,255,.18); }
+        .sidebar nav a i { opacity: .95; }
+        .content { padding: 1.2rem; }
+        .card-table { background: #121b2f; border: 1px solid #1f2a44; box-shadow: 0 6px 16px rgba(0,0,0,0.35); color: #e5ecff; }
+        .table { color: #e5ecff; }
+        .table-striped>tbody>tr:nth-of-type(odd) { --bs-table-accent-bg: rgba(255,255,255,0.03); }
+        .alert { background: #1b2540; border-color: #2b3b63; color: #e5ecff; }
+        input, select, textarea { background: #0f1a2f !important; color: #e5ecff !important; border-color: #243456 !important; }
+        input:focus, select:focus, textarea:focus { border-color: #4c8dff !important; box-shadow: 0 0 0 0.2rem rgba(76,141,255,0.25); }
+        .btn-primary { background-color: #4c8dff; border-color: #4c8dff; }
+        .btn-primary:hover { background-color: #3b76d8; border-color: #3b76d8; }
+        .btn-outline-secondary, .btn-outline-danger { color: #e5ecff; }
+        .navbar { background: #0b1222 !important; }
+        /* Placeholder (empty states) cards */
+        .empty-state {
+            background: #161f35;
+            border: 1px dashed #304166;
+            color: #cdd8f5;
+            border-radius: .75rem;
+        }
+    </style>
+    <!-- Overrides e modo claro/escuro -->
+    <style id="theme-overrides">
+        .list-group-item { background: transparent; color: inherit; }
+        .empty-state { background: #161f35; border: 1px dashed #304166; color: #cdd8f5; border-radius: .75rem; }
+        body[data-bs-theme="light"] { background: #f7f9fb; color: #0d1117; }
+        body[data-bs-theme="light"] .sidebar, body[data-bs-theme="light"] .offcanvas-lg { background: #f8f9fa; color: #0d1117; }
+        body[data-bs-theme="light"] .sidebar nav a { color: #0d1117; }
+        body[data-bs-theme="light"] .card-table { background: #ffffff; color: #0d1117; border: 1px solid #e5e7eb; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+        body[data-bs-theme="light"] .alert { background: #f1f5f9; color: #0d1117; border-color: #e2e8f0; }
+        body[data-bs-theme="light"] input, body[data-bs-theme="light"] select, body[data-bs-theme="light"] textarea { background: #fff !important; color: #0d1117 !important; border-color: #ced4da !important; }
+        body[data-bs-theme="light"] .btn-outline-secondary, body[data-bs-theme="light"] .btn-outline-danger { color: #0d1117; }
+        body[data-bs-theme="light"] .list-group-item { color: #0d1117; border-color: #e5e7eb; }
+        body[data-bs-theme="light"] .empty-state { background: #f8fafc; border: 1px dashed #cbd5e1; color: #475569; }
+        body[data-bs-theme="light"] .navbar { background: #ffffff !important; }
+        body[data-bs-theme="light"] .text-light { color: inherit !important; }
+    </style>
+    <style id="premium-ui">
+        :root {
+            --app-bg: #0c1220;
+            --app-surface: #121b2f;
+            --app-surface-2: #0f182b;
+            --app-border: #1e2a45;
+            --app-text: #e6edf9;
+            --app-muted: #9fb0d1;
+            --app-accent: #d6a354;
+            --app-accent-2: #4c8dff;
+        }
+        body {
+            font-family: "Manrope", system-ui, -apple-system, Segoe UI, sans-serif;
+            background: radial-gradient(1200px 600px at 10% 10%, #1b2a4a 0%, transparent 60%), var(--app-bg);
+            color: var(--app-text);
+        }
+        h1, h2, h3, h4, h5, h6 { font-family: "Fraunces", serif; letter-spacing: .2px; }
+        .navbar {
+            background: rgba(12,18,32,0.9) !important;
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--app-border);
+        }
+        .navbar .brand-stack { line-height: 1.05; }
+        .navbar .search-wrap { max-width: 520px; width: 100%; }
+        .navbar .search-wrap { margin-left: auto; margin-right: auto; }
+        @media (min-width: 992px) {
+            .navbar .container-fluid {
+                display: grid;
+                grid-template-columns: auto minmax(320px, 1fr) auto;
+                align-items: center;
+                column-gap: 1rem;
+            }
+            .navbar .navbar-brand { justify-self: start; }
+            .navbar .search-wrap { justify-self: center; max-width: 640px; }
+            .navbar .navbar-actions { justify-self: end; }
+        }
+        .navbar .search-wrap .form-control { height: 42px; }
+        .navbar .search-wrap .input-group-text {
+            border-radius: 12px 0 0 12px;
+            padding: .45rem .65rem;
+        }
+        .navbar .search-wrap .form-control {
+            border-radius: 0 12px 12px 0;
+        }
+        .navbar .navbar-actions small { opacity: .85; }
+        .navbar .search-wrap .form-control { width: 100%; }
+        .navbar .search-wrap .input-group-text {
+            background: var(--app-surface-2);
+            border: 1px solid var(--app-border);
+            color: var(--app-muted);
+            border-right: 0;
+        }
+        .navbar .search-wrap .form-control {
+            border-left: 0;
+        }
+        .sidebar {
+            background: linear-gradient(180deg,#0b1a33,#0a1430);
+            border-right: 1px solid var(--app-border);
+        }
+        .sidebar nav a {
+            border-radius: 12px;
+            margin: 0 .5rem .25rem .5rem;
+            padding: .65rem .9rem;
+            font-weight: 600;
+        }
+        .sidebar nav a:hover { background: rgba(255,255,255,.08); }
+        .sidebar nav a.nav-active {
+            background: linear-gradient(135deg, rgba(214,163,84,.18), rgba(76,141,255,.12));
+            border: 1px solid rgba(214,163,84,.35);
+        }
+        .card-table {
+            background: var(--app-surface);
+            border: 1px solid var(--app-border);
+            border-radius: 16px;
+            box-shadow: 0 12px 28px rgba(0,0,0,.25);
+        }
+        .table thead th {
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            font-size: .72rem;
+            color: var(--app-muted);
+            border-bottom: 1px solid var(--app-border);
+        }
+        .table tbody td { border-color: rgba(255,255,255,0.06); }
+        .table-striped>tbody>tr:nth-of-type(odd) { background: rgba(255,255,255,0.02); }
+        .table-hover>tbody>tr:hover { background: rgba(214,163,84,0.06); }
+        .row-alert { background: rgba(214, 73, 73, 0.12); }
+        .row-alert-warning { background: rgba(245, 181, 62, 0.12); }
+        .row-alert-danger { background: rgba(214, 73, 73, 0.12); }
+        .row-alert td, .row-alert a { color: var(--app-text) !important; }
+        .row-alert .btn { border-color: rgba(255,255,255,0.4); color: var(--app-text); }
+        .row-alert .btn-outline-danger { border-color: rgba(255,100,100,0.65); color: #ffb3b3; }
+        body[data-bs-theme="light"] .row-alert-danger { background: #fde8e8; }
+        body[data-bs-theme="light"] .row-alert-warning { background: #fff4db; }
+        body[data-bs-theme="light"] .row-alert td,
+        body[data-bs-theme="light"] .row-alert a { color: #0b1020 !important; }
+        .alert-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f5b53e;
+            box-shadow: 0 0 0 3px rgba(245,181,62,.15);
+            vertical-align: middle;
+        }
+        .badge { border-radius: 10px; }
+        .pagination .page-link {
+            border-radius: 10px;
+            border: 1px solid var(--app-border);
+            background: var(--app-surface-2);
+            color: var(--app-text);
+        }
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(135deg, var(--app-accent) 0%, #f0c06b 100%);
+            color: #1b1406;
+            border: none;
+        }
+        .form-control, .form-select {
+            background: var(--app-surface-2);
+            border: 1px solid var(--app-border);
+            color: var(--app-text);
+            padding: .65rem .85rem;
+            border-radius: 12px;
+            min-height: 44px;
+            width: 100%;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--app-accent-2);
+            box-shadow: 0 0 0 .2rem rgba(76,141,255,.2);
+        }
+        form p { display: flex; flex-direction: column; gap: .35rem; margin-bottom: 1rem; }
+        form label { font-size: .85rem; color: var(--app-muted); font-weight: 600; }
+        form input[type="checkbox"] { width: auto; min-height: auto; }
+        /* List action bar (left / center / right) */
+        .list-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: .75rem;
+        }
+        .list-actions__left { flex: 0 0 auto; }
+        .list-actions__center { flex: 1 1 360px; min-width: 260px; }
+        .list-actions__right { flex: 0 0 auto; margin-left: auto; }
+        .list-actions__center form { width: 100%; }
+        .list-actions__center .form-control,
+        .list-actions__center .form-select { min-width: 160px; }
+        @media (max-width: 1199.98px) {
+            .list-actions__right { margin-left: 0; }
+        }
+        @media (max-width: 991.98px) {
+            .list-actions__center { flex: 1 1 100%; min-width: 0; }
+            .list-actions__right { flex: 1 1 100%; }
+        }
+        /* Remove spinners from number inputs for cleaner UI */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--app-accent) 0%, #f0c06b 100%);
+            border: none;
+            color: #1b1406;
+            font-weight: 700;
+            border-radius: 12px;
+        }
+        .btn-outline-secondary {
+            border-radius: 12px;
+        }
+        body[data-bs-theme="light"] {
+            --app-bg: #f2f4f8;
+            --app-surface: #ffffff;
+            --app-surface-2: #f7f9fc;
+            --app-border: #e3e7ef;
+            --app-text: #0b1020;
+            --app-muted: #55627a;
+            --app-accent: #b87822;
+            --app-accent-2: #1f4bb3;
+        }
+        body[data-bs-theme="light"] .navbar { background: rgba(255,255,255,0.9) !important; }
+        body[data-bs-theme="light"] .sidebar { background: #f7f9fc; }
+        body[data-bs-theme="light"] .table thead th { color: #6b7280; }
+        body, .table, .card, .list-group-item { transition: background-color .2s ease, color .2s ease, border-color .2s ease; }
+        body { overflow-x: hidden; }
+        .content { position: relative; }
+        .page-body {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .page-panel {
+            background: linear-gradient(180deg, rgba(18,27,47,.92), rgba(14,21,38,.92));
+            border: 1px solid rgba(159,176,209,.14);
+            border-radius: 20px;
+            padding: 1rem 1.1rem;
+            box-shadow: 0 18px 42px rgba(0,0,0,.20);
+            position: relative;
+            overflow: hidden;
+        }
+        .page-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(214,163,84,0), rgba(214,163,84,.35), rgba(76,141,255,.28), rgba(76,141,255,0));
+            pointer-events: none;
+        }
+        body[data-bs-theme="light"] .page-panel {
+            background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(246,248,252,.98));
+            border-color: rgba(85,98,122,.12);
+            box-shadow: 0 16px 32px rgba(15,23,42,.08);
+        }
+        .page-panel--hero {
+            background:
+                radial-gradient(circle at top right, rgba(76,141,255,.12), transparent 32%),
+                radial-gradient(circle at top left, rgba(214,163,84,.1), transparent 28%),
+                linear-gradient(180deg, rgba(18,27,47,.95), rgba(14,21,38,.94));
+        }
+        .page-header {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 1rem;
+            align-items: end;
+        }
+        .page-header__eyebrow {
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            color: var(--app-muted);
+            font-weight: 700;
+        }
+        /* Mobile layout tweaks */
+        @media (max-width: 991.98px) {
+            .navbar .search-wrap { order: 3; max-width: 100%; }
+            .navbar .brand-stack strong { font-size: 1rem; }
+            .navbar .brand-stack small { font-size: .8rem; }
+            .navbar .navbar-brand { padding-right: .25rem; }
+            .navbar .navbar-actions { width: 100%; justify-content: space-between; gap: .5rem; }
+            .navbar .navbar-actions .form-check { margin-bottom: 0; }
+            .content { padding: .9rem; }
+            .navbar .brand-stack small { display: none; }
+            .navbar .navbar-toggler { padding: .35rem .5rem; }
+            .navbar .navbar-toggler-icon { width: 1.4rem; height: 1.4rem; }
+            .navbar .search-wrap .form-control { min-height: 40px; }
+            .navbar .search-wrap { margin-top: .5rem; }
+            .page-panel { border-radius: 16px; padding: .9rem; }
+            .page-header { grid-template-columns: 1fr; align-items: start; }
+        }
+        .page-header__title { font-weight: 700; font-size: clamp(1.4rem, 2vw, 2rem); }
+        .page-header__subtitle { color: var(--app-muted); max-width: 72ch; }
+        .surface-muted {
+            background: rgba(255,255,255,.03);
+            border: 1px solid rgba(255,255,255,.06);
+            border-radius: 16px;
+            transition: border-color .18s ease, background-color .18s ease;
+        }
+        body[data-bs-theme="light"] .surface-muted {
+            background: rgba(15,23,42,.03);
+            border-color: rgba(85,98,122,.12);
+        }
+        .surface-muted:hover {
+            border-color: rgba(214,163,84,.18);
+        }
+        .metric-card {
+            height: 100%;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(214,163,84,.22);
+            box-shadow: 0 18px 36px rgba(0,0,0,.24);
+        }
+        .metric-card__label {
+            color: var(--app-muted);
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            font-weight: 700;
+        }
+        .metric-card__value {
+            font-size: clamp(1.2rem, 2vw, 2rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-top: .35rem;
+        }
+        .metric-card__meta {
+            margin-top: .5rem;
+            font-size: .86rem;
+            color: var(--app-muted);
+        }
+        .metric-card__icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(214,163,84,.22), rgba(76,141,255,.18));
+            border: 1px solid rgba(214,163,84,.2);
+            color: var(--app-text);
+            flex-shrink: 0;
+        }
+        .section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: .9rem;
+        }
+        .section-heading__title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+        .section-heading__subtitle {
+            margin: .15rem 0 0;
+            color: var(--app-muted);
+            font-size: .86rem;
+        }
+        .form-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .form-section {
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,.08);
+            background: rgba(255,255,255,.03);
+        }
+        body[data-bs-theme="light"] .form-section {
+            background: rgba(15,23,42,.03);
+            border-color: rgba(85,98,122,.12);
+        }
+        .form-section__title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+        .form-section__subtitle {
+            margin: .2rem 0 0;
+            color: var(--app-muted);
+            font-size: .86rem;
+        }
+        .field-error,
+        .errorlist {
+            margin: .35rem 0 0;
+            padding: 0;
+            list-style: none;
+            color: #ff9b9b;
+            font-size: .85rem;
+        }
+        .field-help {
+            color: var(--app-muted);
+            font-size: .82rem;
+            margin-top: .3rem;
+            display: block;
+        }
+        .action-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem;
+            justify-content: flex-start;
+            align-items: center;
+            padding-top: .25rem;
+        }
+        .filter-bar {
+            display: flex;
+            flex-direction: column;
+            gap: .85rem;
+        }
+        .filter-bar__summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: .85rem;
+        }
+        .info-chip {
+            padding: .85rem .95rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,.08);
+            background: rgba(255,255,255,.03);
+        }
+        body[data-bs-theme="light"] .info-chip {
+            background: rgba(15,23,42,.03);
+            border-color: rgba(85,98,122,.12);
+        }
+        .info-chip__label {
+            display: block;
+            font-size: .76rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--app-muted);
+            margin-bottom: .35rem;
+            font-weight: 700;
+        }
+        .info-chip__value {
+            font-weight: 700;
+            line-height: 1.25;
+        }
+        .list-soft .list-group-item {
+            border-color: rgba(255,255,255,.06);
+            padding-left: 0;
+            padding-right: 0;
+        }
+        body[data-bs-theme="light"] .list-soft .list-group-item {
+            border-color: rgba(85,98,122,.12);
+        }
+        .timeline-list .list-group-item {
+            position: relative;
+            padding-left: 1rem;
+        }
+        .timeline-list .list-group-item::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 1rem;
+            width: .55rem;
+            height: .55rem;
+            border-radius: 50%;
+            background: var(--app-accent);
+            box-shadow: 0 0 0 4px rgba(214,163,84,.15);
+        }
+        .nav-tabs {
+            border-bottom-color: rgba(255,255,255,.08);
+            gap: .35rem;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: .2rem;
+            scrollbar-width: thin;
+        }
+        .nav-tabs .nav-link {
+            border: 1px solid transparent;
+            border-radius: 999px;
+            color: var(--app-muted);
+            font-weight: 700;
+            white-space: nowrap;
+            padding: .6rem .95rem;
+        }
+        .nav-tabs .nav-link:hover {
+            border-color: rgba(255,255,255,.08);
+            color: var(--app-text);
+        }
+        .nav-tabs .nav-link.active {
+            background: linear-gradient(135deg, rgba(214,163,84,.2), rgba(76,141,255,.14));
+            border-color: rgba(214,163,84,.28);
+            color: var(--app-text);
+        }
+        .table-responsive {
+            border-radius: 18px;
+        }
+        .mobile-stack {
+            display: flex;
+            flex-direction: column;
+            gap: .85rem;
+        }
+        .record-card {
+            padding: 1rem;
+            border-radius: 18px;
+            transition: transform .18s ease, border-color .18s ease;
+        }
+        .record-card:hover {
+            transform: translateY(-1px);
+        }
+        .record-card__meta {
+            color: var(--app-muted);
+            font-size: .86rem;
+        }
+        .record-card__actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            margin-top: .85rem;
+        }
+        .badge-soft {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .42rem .72rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,.08);
+            background: rgba(255,255,255,.05);
+            color: var(--app-text);
+            font-weight: 700;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .38rem .68rem;
+            border-radius: 999px;
+            font-size: .82rem;
+            font-weight: 700;
+            border: 1px solid transparent;
+        }
+        .status-badge--success { background: rgba(63,185,80,.16); color: #8fe2a0; border-color: rgba(63,185,80,.22); }
+        .status-badge--warning { background: rgba(245,181,62,.16); color: #ffd479; border-color: rgba(245,181,62,.22); }
+        .status-badge--danger { background: rgba(248,81,73,.16); color: #ffaaa5; border-color: rgba(248,81,73,.22); }
+        .status-badge--info { background: rgba(42,166,255,.16); color: #8fd0ff; border-color: rgba(42,166,255,.22); }
+        .status-badge--muted { background: rgba(159,176,209,.12); color: #dbe6ff; border-color: rgba(159,176,209,.18); }
+        body[data-bs-theme="light"] .status-badge--success { color: #146c2e; }
+        body[data-bs-theme="light"] .status-badge--warning { color: #9a6400; }
+        body[data-bs-theme="light"] .status-badge--danger { color: #a61c1c; }
+        body[data-bs-theme="light"] .status-badge--info { color: #0f4da8; }
+        body[data-bs-theme="light"] .status-badge--muted { color: #4c5c77; }
+        .table-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: .45rem;
+        }
+        body[data-bs-theme="light"] .badge-soft {
+            background: rgba(15,23,42,.04);
+            border-color: rgba(85,98,122,.14);
+        }
+        .btn {
+            min-height: 42px;
+        }
+        .btn-sm {
+            min-height: 34px;
+        }
+        .btn-outline-primary {
+            color: var(--app-accent-2);
+            border-color: rgba(76,141,255,.45);
+            border-radius: 12px;
+        }
+        .btn-outline-primary:hover {
+            background: rgba(76,141,255,.12);
+            color: var(--app-text);
+            border-color: rgba(76,141,255,.6);
+        }
+        .btn-outline-secondary:hover,
+        .btn-outline-danger:hover {
+            transform: translateY(-1px);
+        }
+        .alert {
+            border-radius: 16px;
+        }
+        .offcanvas.sidebar {
+            width: min(88vw, 320px);
+        }
+        @media (max-width: 991.98px) {
+            .page-header { gap: .5rem; }
+            .page-header__subtitle { font-size: .85rem; }
+            .list-actions {
+                gap: .65rem;
+            }
+            .list-actions__left,
+            .list-actions__center,
+            .list-actions__right {
+                flex: 1 1 100%;
+                min-width: 0;
+            }
+            .list-actions__left .btn,
+            .list-actions__right .btn,
+            .record-card__actions .btn {
+                flex: 1 1 auto;
+            }
+            .table-actions {
+                justify-content: flex-start;
+            }
+            .action-bar .btn {
+                flex: 1 1 auto;
+            }
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100" data-bs-theme="dark" data-default-theme="{{ user_theme }}">
+<header class="navbar navbar-expand-lg shadow-sm sticky-top" id="mainNavbar">
+    <div class="container-fluid">
+        <button class="navbar-toggler d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'dashboard:index' %}">
+            <i class="bi bi-egg-fried me-1 text-primary"></i>
+            <div class="d-flex flex-column brand-stack">
+                <strong>SISMGC</strong>
+                <small class="text-muted">Grupo REC</small>
+            </div>
+        </a>
+        <form class="search-wrap ms-2 me-auto" role="search" action="{% url 'core:search' %}" method="get">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input class="form-control" type="search" name="q" placeholder="Buscar no sistema..." aria-label="Buscar">
+            </div>
+        </form>
+        <div class="navbar-actions d-none d-lg-flex ms-auto align-items-center gap-3">
+            <div class="form-check form-switch text-light">
+                <input class="form-check-input" type="checkbox" role="switch" id="themeSwitch">
+                <label class="form-check-label" for="themeSwitch">Tema</label>
+            </div>
+            {% if user.is_authenticated %}
+                <small class="text-muted me-3">Olá, {{ user.get_full_name|default:user.username }}</small>   
+                <form method="post" action="{% url 'logout' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button class="btn btn-outline-secondary btn-sm" type="submit">Sair</button>
+                </form>
+            {% endif %}
+        </div>
+        <div class="navbar-actions d-flex d-lg-none ms-auto align-items-center gap-2"></div>
+    </div>
+</header>
+
+<div class="container-fluid flex-grow-1">
+    <div class="row g-0">
+        <div class="d-none d-lg-block col-lg-2 px-0">
+            <div class="sidebar h-100">
+                <nav class="py-3">
+                    <a href="{% url 'dashboard:index' %}" class="{% if request.path == '/' %}nav-active{% endif %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+                    {% if perms.linhagens.view_linhagem %}
+                        <a href="{% url 'linhagens:list' %}" class="{% if '/linhagens/' in request.path %}nav-active{% endif %}"><i class="bi bi-diagram-3 me-2"></i>Linhagens</a>
+                    {% endif %}
+                    {% if perms.aves.view_ave %}
+                        <a href="{% url 'aves:list' %}" class="{% if '/aves/' in request.path %}nav-active{% endif %}"><i class="bi bi-feather me-2"></i>Aves</a>
+                    {% endif %}
+                    {% if perms.lotes.view_lote %}
+                        <a href="{% url 'lotes:list' %}" class="{% if '/lotes/' in request.path %}nav-active{% endif %}"><i class="bi bi-boxes me-2"></i>Lotes</a>
+                    {% endif %}
+                    {% if perms.incubacao.view_incubacao %}
+                        <a href="{% url 'incubacao:list' %}" class="{% if '/incubacao/' in request.path %}nav-active{% endif %}"><i class="bi bi-incognito me-2"></i>Incubação</a>
+                    {% endif %}
+                    {% if perms.nascimentos.view_nascimento %}
+                        <a href="{% url 'nascimentos:list' %}" class="{% if '/nascimentos/' in request.path %}nav-active{% endif %}"><i class="bi bi-baby me-2"></i>Nascimentos</a>
+                    {% endif %}
+                    {% if perms.estoque.view_itemestoque %}
+                        <a href="{% url 'estoque:list' %}" class="{% if '/estoque/' in request.path %}nav-active{% endif %}"><i class="bi bi-archive me-2"></i>Estoque</a>
+                    {% endif %}
+                    {% if perms.sanidade.view_vacina %}
+                        <a href="{% url 'sanidade:vacina_list' %}" class="{% if '/sanidade/' in request.path %}nav-active{% endif %}"><i class="bi bi-shield-check me-2"></i>Sanidade</a>
+                    {% endif %}
+                    {% if perms.vendas.view_venda %}
+                        <a href="{% url 'vendas:list' %}" class="{% if '/vendas/' in request.path %}nav-active{% endif %}"><i class="bi bi-cart3 me-2"></i>Vendas</a>
+                    {% endif %}
+                    {% if perms.financeiro.view_lancamentofinanceiro %}
+                        <a href="{% url 'financeiro:dashboard' %}" class="{% if '/financeiro/' in request.path %}nav-active{% endif %}"><i class="bi bi-cash-coin me-2"></i>Financeiro</a>
+                    {% endif %}
+                    {% if perms.financeiro.view_orcamentofuturo %}
+                        <a href="{% url 'financeiro:orcamento_list' %}" class="{% if '/financeiro/orcamentos/' in request.path %}nav-active{% endif %}"><i class="bi bi-piggy-bank me-2"></i>Planejamento</a>
+                    {% endif %}
+                    <a href="{% url 'calendario:index' %}" class="{% if '/calendario/' in request.path %}nav-active{% endif %}"><i class="bi bi-calendar3 me-2"></i>Calendário</a>
+                    {% if perms.usuarios.view_user %}
+                        <a href="{% url 'usuarios:list' %}" class="{% if '/usuarios/' in request.path %}nav-active{% endif %}"><i class="bi bi-people me-2"></i>Usuários</a>
+                    {% endif %}
+                    <a href="{% url 'usuarios:profile' %}" class="{% if '/perfil/' in request.path %}nav-active{% endif %}"><i class="bi bi-person-circle me-2"></i>Meu Perfil</a>
+                    {% if user.is_authenticated and user.is_manager %}
+                        <a href="{% url 'relatorios:index' %}" class="{% if '/relatorios/' in request.path %}nav-active{% endif %}"><i class="bi bi-graph-up me-2"></i>Relatórios</a>
+                    {% endif %}
+                    {% if user.is_authenticated and user.is_manager %}
+                        <a href="{% url 'historico:list' %}" class="{% if '/historico/' in request.path %}nav-active{% endif %}"><i class="bi bi-clock-history me-2"></i>Histórico</a>
+                    {% endif %}
+                    {% if user.is_authenticated and user.is_admin %}
+                        <a href="{% url 'core:admin_area' %}" class="{% if '/admin-area/' in request.path %}nav-active{% endif %}"><i class="bi bi-shield-lock me-2"></i>Área Admin</a>
+                        <a href="{% url 'core:configuracoes' %}" class="{% if '/configuracoes/' in request.path %}nav-active{% endif %}"><i class="bi bi-gear me-2"></i>Configurações</a>
+                    {% endif %}
+                    <form method="post" action="{% url 'logout' %}" class="px-3">
+                        {% csrf_token %}
+                        <button class="btn btn-outline-light w-100 mt-2" type="submit">
+                            <i class="bi bi-box-arrow-right me-2"></i>Sair
+                        </button>
+                    </form>
+                </nav>
+            </div>
+        </div>
+        <main class="col-12 col-lg-10 content py-3">
+            <div class="page-body">
+            <div class="page-panel">
+                <div class="page-header mb-0">
+                    <div>
+                        <div class="page-header__eyebrow">Operação SISMGC</div>
+                        <h5 class="m-0 page-header__title">{% block page_title %}{% endblock %}</h5>
+                        <div class="page-header__subtitle">
+                            {% block page_subtitle %}
+                                Ambiente operacional com leitura rápida, filtros e ações do dia a dia.
+                            {% endblock %}
+                        </div>
+                    </div>
+                    {% if user.is_authenticated %}
+                        <small class="text-muted page-header__subtitle">Olá, {{ user.get_full_name|default:user.username }}</small>
+                    {% endif %}
+                </div>
+            </div>
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+            {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+</div>
+<div class="offcanvas offcanvas-start sidebar" tabindex="-1" id="sidebarOffcanvas">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">Menu</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <nav class="py-3">
+            <div class="px-3 pb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-egg-fried me-1 text-primary"></i>
+                <div class="d-flex flex-column lh-1">
+                    <strong>SISMGC</strong><small class="text-muted">Grupo REC</small>
+                </div>
+            </div>
+            <div class="px-3 pb-3">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="themeSwitchMobile">
+                <label class="form-check-label" for="themeSwitchMobile">Tema</label>
+            </div>
+        </div>
+        {% if user.is_authenticated %}
+        <div class="px-3 pb-3">
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button class="btn btn-outline-light w-100" type="submit">
+                    <i class="bi bi-box-arrow-right me-2"></i>Sair
+                </button>
+            </form>
+        </div>
+        {% endif %}
+            <a href="{% url 'dashboard:index' %}" class="{% if request.path == '/' %}nav-active{% endif %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+            {% if perms.linhagens.view_linhagem %}
+                <a href="{% url 'linhagens:list' %}" class="{% if '/linhagens/' in request.path %}nav-active{% endif %}"><i class="bi bi-diagram-3 me-2"></i>Linhagens</a>
+            {% endif %}
+            {% if perms.aves.view_ave %}
+                <a href="{% url 'aves:list' %}" class="{% if '/aves/' in request.path %}nav-active{% endif %}"><i class="bi bi-feather me-2"></i>Aves</a>
+            {% endif %}
+            {% if perms.lotes.view_lote %}
+                <a href="{% url 'lotes:list' %}" class="{% if '/lotes/' in request.path %}nav-active{% endif %}"><i class="bi bi-boxes me-2"></i>Lotes</a>
+            {% endif %}
+            {% if perms.incubacao.view_incubacao %}
+                <a href="{% url 'incubacao:list' %}" class="{% if '/incubacao/' in request.path %}nav-active{% endif %}"><i class="bi bi-incognito me-2"></i>Incubação</a>
+            {% endif %}
+            {% if perms.nascimentos.view_nascimento %}
+                <a href="{% url 'nascimentos:list' %}" class="{% if '/nascimentos/' in request.path %}nav-active{% endif %}"><i class="bi bi-baby me-2"></i>Nascimentos</a>
+            {% endif %}
+            {% if perms.estoque.view_itemestoque %}
+                <a href="{% url 'estoque:list' %}" class="{% if '/estoque/' in request.path %}nav-active{% endif %}"><i class="bi bi-archive me-2"></i>Estoque</a>
+            {% endif %}
+            {% if perms.sanidade.view_vacina %}
+                <a href="{% url 'sanidade:vacina_list' %}" class="{% if '/sanidade/' in request.path %}nav-active{% endif %}"><i class="bi bi-shield-check me-2"></i>Sanidade</a>
+            {% endif %}
+            {% if perms.vendas.view_venda %}
+                <a href="{% url 'vendas:list' %}" class="{% if '/vendas/' in request.path %}nav-active{% endif %}"><i class="bi bi-cart3 me-2"></i>Vendas</a>
+            {% endif %}
+            {% if perms.financeiro.view_lancamentofinanceiro %}
+                <a href="{% url 'financeiro:dashboard' %}" class="{% if '/financeiro/' in request.path %}nav-active{% endif %}"><i class="bi bi-cash-coin me-2"></i>Financeiro</a>
+            {% endif %}
+            {% if perms.financeiro.view_orcamentofuturo %}
+                <a href="{% url 'financeiro:orcamento_list' %}" class="{% if '/financeiro/orcamentos/' in request.path %}nav-active{% endif %}"><i class="bi bi-piggy-bank me-2"></i>Planejamento</a>
+            {% endif %}
+            <a href="{% url 'calendario:index' %}" class="{% if '/calendario/' in request.path %}nav-active{% endif %}"><i class="bi bi-calendar3 me-2"></i>Calendário</a>
+            {% if perms.usuarios.view_user %}
+                <a href="{% url 'usuarios:list' %}" class="{% if '/usuarios/' in request.path %}nav-active{% endif %}"><i class="bi bi-people me-2"></i>Usuários</a>
+            {% endif %}
+            <a href="{% url 'usuarios:profile' %}" class="{% if '/perfil/' in request.path %}nav-active{% endif %}"><i class="bi bi-person-circle me-2"></i>Meu Perfil</a>
+            {% if user.is_authenticated and user.is_manager %}
+                <a href="{% url 'relatorios:index' %}" class="{% if '/relatorios/' in request.path %}nav-active{% endif %}"><i class="bi bi-graph-up me-2"></i>Relatórios</a>
+            {% endif %}
+            {% if user.is_authenticated and user.is_manager %}
+                <a href="{% url 'historico:list' %}" class="{% if '/historico/' in request.path %}nav-active{% endif %}"><i class="bi bi-clock-history me-2"></i>Histórico</a>
+            {% endif %}
+            {% if user.is_authenticated and user.is_admin %}
+                <a href="{% url 'core:admin_area' %}" class="{% if '/admin-area/' in request.path %}nav-active{% endif %}"><i class="bi bi-shield-lock me-2"></i>Área Admin</a>
+                <a href="{% url 'core:configuracoes' %}" class="{% if '/configuracoes/' in request.path %}nav-active{% endif %}"><i class="bi bi-gear me-2"></i>Configurações</a>
+            {% endif %}
+            <form method="post" action="{% url 'logout' %}" class="px-3">
+                {% csrf_token %}
+                <button class="btn btn-outline-light w-100 mt-2" type="submit">
+                    <i class="bi bi-box-arrow-right me-2"></i>Sair
+                </button>
+            </form>
+        </nav>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>        
+<script>
+  (function() {
+    const stored = localStorage.getItem("sismgc-theme");
+    const body = document.body;
+    const defaultTheme = body.dataset.defaultTheme || "dark";
+    const switcher = document.getElementById("themeSwitch");
+    const switcherMobile = document.getElementById("themeSwitchMobile");
+    function applyTheme(mode) {
+      body.setAttribute("data-bs-theme", mode);
+      document.getElementById("mainNavbar").classList.toggle("bg-dark", mode === "dark");
+      document.getElementById("mainNavbar").classList.toggle("navbar-dark", mode === "dark");
+      document.getElementById("mainNavbar").classList.toggle("bg-white", mode === "light");
+      document.getElementById("mainNavbar").classList.toggle("navbar-light", mode === "light");
+      localStorage.setItem("sismgc-theme", mode);
+    }
+    const initial = stored || defaultTheme;
+    applyTheme(initial);
+    function bindSwitch(el) {
+      if (!el) return;
+      el.checked = initial === "dark";
+      el.addEventListener("change", () => {
+        const mode = el.checked ? "dark" : "light";
+        applyTheme(mode);
+        if (switcher && switcher !== el) switcher.checked = mode === "dark";
+        if (switcherMobile && switcherMobile !== el) switcherMobile.checked = mode === "dark";
+        const switcherMobileTop = document.getElementById("themeSwitchMobileTop");
+        if (switcherMobileTop && switcherMobileTop !== el) switcherMobileTop.checked = mode === "dark";
+      });
+    }
+    bindSwitch(switcher);
+    bindSwitch(switcherMobile);
+  })();
+</script>
+<script>
+  (function () {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (el) {
+      new bootstrap.Tooltip(el);
+    });
+  })();
+</script>
+<script>
+  (function () {
+    const offcanvasEl = document.getElementById('sidebarOffcanvas');
+    if (!offcanvasEl || typeof bootstrap === 'undefined') return;
+    const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+    offcanvasEl.querySelectorAll('a[href]').forEach(function (link) {
+      link.addEventListener('click', function () {
+        offcanvas.hide();
+      });
+    });
+  })();
+</script>
+</body>
+</html>

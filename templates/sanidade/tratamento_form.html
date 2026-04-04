@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block page_title %}Tratamento{% endblock %}
+{% block page_subtitle %}Registro de tratamento com foco em doença, medicamento, carência e documentação de apoio.{% endblock %}
+{% block content %}
+<form method="post" class="page-panel form-shell" enctype="multipart/form-data">{% csrf_token %}
+    {% if form.errors %}
+        <div class="alert alert-danger"><strong>Não foi possível salvar.</strong> Verifique os campos abaixo.</div>
+    {% endif %}
+    <div class="form-section">
+        {% include "includes/section_header.html" with title="Dados do tratamento" subtitle="Informe alvo, medicamento, datas, carência e observações do tratamento." %}
+        <div class="row g-3 mt-1">
+            {{ form.as_p }}
+        </div>
+    </div>
+    <div class="action-bar">
+        <button class="btn btn-primary" type="submit">Salvar</button>
+        <a class="btn btn-outline-secondary" href="{% url 'sanidade:tratamento_list' %}">Voltar</a>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Planejamento de Compras{% endblock %}
+{% block page_subtitle %}Detalhe do orçamento com referência do caixa atual e visão clara do quanto ainda falta.{% endblock %}
+{% block content %}
+<div class="row g-3">
+    <div class="col-12 col-lg-4">
+        <div class="page-panel h-100 text-center">
+            {% if orcamento.foto %}
+                <a href="{{ orcamento.foto.url }}" target="_blank" rel="noopener">
+                    <img src="{{ orcamento.foto.url }}" alt="{{ orcamento.titulo }}" class="img-fluid rounded-4 mb-3" style="max-height:280px;object-fit:cover;width:100%;">
+                </a>
+            {% else %}
+                <div class="empty-state d-flex align-items-center justify-content-center mb-3 rounded-4" style="min-height:260px;">
+                    Sem foto
+                </div>
+            {% endif %}
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <span class="status-badge {% if orcamento.status == 'concluido' %}status-badge--success{% elif orcamento.status == 'andamento' %}status-badge--warning{% elif orcamento.status == 'cancelado' %}status-badge--danger{% else %}status-badge--muted{% endif %}">
+                    {{ orcamento.get_status_display }}
+                </span>
+                <span class="status-badge {% if orcamento.prioridade == 'alta' %}status-badge--danger{% elif orcamento.prioridade == 'media' %}status-badge--warning{% else %}status-badge--muted{% endif %}">
+                    {{ orcamento.get_prioridade_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-8">
+        <div class="page-panel page-panel--hero h-100">
+            {% include "includes/section_header.html" with title=orcamento.titulo subtitle=orcamento.categoria %}
+            {% if perms.financeiro.change_orcamentofuturo or perms.financeiro.delete_orcamentofuturo %}
+                <div class="d-flex justify-content-end mb-3">
+                    <div class="d-flex gap-2 flex-wrap">
+                        {% if perms.financeiro.change_orcamentofuturo %}
+                            <a class="btn btn-outline-secondary btn-sm" href="{% url 'financeiro:orcamento_update' orcamento.pk %}">Editar</a>
+                        {% endif %}
+                        {% if perms.financeiro.delete_orcamentofuturo %}
+                            <a class="btn btn-outline-danger btn-sm" href="{% url 'financeiro:orcamento_delete' orcamento.pk %}">Excluir</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="info-grid mb-3">
+                <div class="info-chip"><span class="info-chip__label">Valor previsto</span><span class="info-chip__value">{{ orcamento.valor_previsto|brl }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Caixa atual da granja</span><span class="info-chip__value">{{ caixa_atual_referencia|brl }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Quanto falta</span><span class="info-chip__value">{% if valor_faltante > 0 %}{{ valor_faltante|brl }}{% else %}Coberto{% endif %}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Valor já reservado</span><span class="info-chip__value">{{ orcamento.valor_ja_reservado|brl }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Data planejada</span><span class="info-chip__value">{{ orcamento.data_planejada|default:"-" }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Ativo</span><span class="info-chip__value">{% if orcamento.ativo %}Sim{% else %}Não{% endif %}</span></div>
+                <div class="info-chip" style="grid-column: 1 / -1;"><span class="info-chip__label">Descrição</span><span class="info-chip__value">{{ orcamento.descricao|default:"-" }}</span></div>
+                <div class="info-chip" style="grid-column: 1 / -1;"><span class="info-chip__label">Observações</span><span class="info-chip__value">{{ orcamento.observacoes|default:"-" }}</span></div>
+            </div>
+
+            <div class="surface-muted p-3">
+                <div class="info-grid">
+                    <div class="info-chip"><span class="info-chip__label">Criado em</span><span class="info-chip__value">{{ orcamento.created_at }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Atualizado em</span><span class="info-chip__value">{{ orcamento.updated_at }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

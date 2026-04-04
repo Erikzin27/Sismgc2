@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block page_title %}Usuário{% endblock %}
+{% block page_subtitle %}Perfil administrativo com acesso, contato e permissões organizados em painéis curtos e fáceis de ler.{% endblock %}
+{% block content %}
+<div class="page-panel">
+    <div class="section-heading">
+        <div>
+            <h6 class="section-heading__title">{{ user_obj.get_full_name|default:user_obj.username }}</h6>
+            <p class="section-heading__subtitle">@{{ user_obj.username }}</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            {% if perms.usuarios.change_user %}
+                <a class="btn btn-outline-secondary" href="{% url 'usuarios:update' user_obj.pk %}">Editar</a>
+            {% endif %}
+            {% if perms.usuarios.delete_user %}
+                <a class="btn btn-outline-danger" href="{% url 'usuarios:delete' user_obj.pk %}">Excluir</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-12 col-md-6">
+            <div class="surface-muted p-3 h-100">
+                <h6 class="mb-3">Dados básicos</h6>
+                <div class="info-grid">
+                    <div class="info-chip"><span class="info-chip__label">Nome completo</span><span class="info-chip__value">{{ user_obj.get_full_name|default:"-" }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Email</span><span class="info-chip__value">{{ user_obj.email|default:"-" }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Perfil</span><span class="info-chip__value">{{ user_obj.get_role_display }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Status</span><span class="info-chip__value">{{ user_obj.is_active|yesno:"Ativo,Inativo" }}</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="surface-muted p-3 h-100">
+                <h6 class="mb-3">Acesso</h6>
+                <div class="info-grid">
+                    <div class="info-chip"><span class="info-chip__label">Administrador</span><span class="info-chip__value">{{ user_obj.is_admin|yesno:"Sim,Não" }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Gerente</span><span class="info-chip__value">{{ user_obj.is_manager|yesno:"Sim,Não" }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Último acesso</span><span class="info-chip__value">{{ user_obj.last_login|default:"-" }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Criado em</span><span class="info-chip__value">{{ user_obj.date_joined|default:"-" }}</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="surface-muted p-3 h-100">
+                <h6 class="mb-3">Contato</h6>
+                <div class="info-grid">
+                    <div class="info-chip"><span class="info-chip__label">Telefone</span><span class="info-chip__value">{{ profile.telefone|default:"-" }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Setor / função</span><span class="info-chip__value">{{ profile.setor|default:"-" }}</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="surface-muted p-3 h-100">
+                <h6 class="mb-3">Permissões</h6>
+                <div class="text-muted mb-3">Permissões principais continuam controladas pelo perfil e grupos do sistema.</div>
+                <div class="info-chip">
+                    <span class="info-chip__label">Grupos</span>
+                    <span class="info-chip__value">{% for g in user_obj.groups.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</span>
+                </div>
+                <div class="action-bar mt-3">
+                    <a class="btn btn-sm btn-outline-secondary" href="/admin/usuarios/user/{{ user_obj.pk }}/password/">Redefinir senha</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

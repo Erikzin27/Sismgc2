@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block page_title %}Busca Global{% endblock %}
+{% block content %}
+<div class="card card-table p-3 mb-3">
+    <strong>Resultados para:</strong> "{{ query }}"
+</div>
+
+<div class="row g-3">
+    {% if can_view_aves %}
+        <div class="col-12 col-md-6">
+            <div class="card card-table p-3">
+                <h6>Aves</h6>
+                <ul class="list-group list-group-flush">
+                    {% for a in aves %}
+                        <li class="list-group-item"><a href="{% url 'aves:detail' a.pk %}">{{ a }}</a></li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Nenhuma ave encontrada.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+    {% if can_view_lotes %}
+        <div class="col-12 col-md-6">
+            <div class="card card-table p-3">
+                <h6>Lotes</h6>
+                <ul class="list-group list-group-flush">
+                    {% for l in lotes %}
+                        <li class="list-group-item"><a href="{% url 'lotes:detail' l.pk %}">{{ l }}</a></li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Nenhum lote encontrado.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+    {% if can_view_linhagens %}
+        <div class="col-12 col-md-6">
+            <div class="card card-table p-3">
+                <h6>Linhagens</h6>
+                <ul class="list-group list-group-flush">
+                    {% for l in linhagens %}
+                        <li class="list-group-item"><a href="{% url 'linhagens:detail' l.pk %}">{{ l }}</a></li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Nenhuma linhagem encontrada.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+    {% if can_view_vendas %}
+        <div class="col-12 col-md-6">
+            <div class="card card-table p-3">
+                <h6>Vendas</h6>
+                <ul class="list-group list-group-flush">
+                    {% for v in vendas %}
+                        <li class="list-group-item"><a href="{% url 'vendas:detail' v.pk %}">{{ v }}</a></li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Nenhuma venda encontrada.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+    {% if can_view_incubacoes %}
+        <div class="col-12">
+            <div class="card card-table p-3">
+                <h6>Incubações</h6>
+                <ul class="list-group list-group-flush">
+                    {% for i in incubacoes %}
+                        <li class="list-group-item"><a href="{% url 'incubacao:detail' i.pk %}">{{ i }}</a></li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Nenhuma incubação encontrada.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

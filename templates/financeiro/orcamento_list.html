@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Planejamento de Compras{% endblock %}
+{% block page_subtitle %}Orçamentos futuros separados do financeiro real, com referência visual do caixa e prioridade operacional.{% endblock %}
+{% block content %}
+<div class="page-panel filter-bar">
+    <div class="list-actions mb-0">
+        <div class="list-actions__left d-flex gap-2 flex-wrap">
+            {% if perms.financeiro.add_orcamentofuturo %}
+                <a class="btn btn-primary" href="{% url 'financeiro:orcamento_create' %}">Novo orçamento</a>
+            {% endif %}
+            {% if perms.financeiro.view_lancamentofinanceiro %}
+                <a class="btn btn-outline-secondary" href="{% url 'financeiro:dashboard' %}">Financeiro real</a>
+            {% endif %}
+        </div>
+        <div class="list-actions__center">
+            <form method="get" class="d-flex gap-2 flex-wrap w-100">
+                <input class="form-control form-control-sm" type="search" name="q" value="{{ request.GET.q }}" placeholder="Buscar planejamento">
+                <select class="form-select form-select-sm" name="status">
+                    <option value="">Status</option>
+                    {% for val,label in orcamentos.model.STATUS_CHOICES %}
+                        <option value="{{ val }}" {% if request.GET.status == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <select class="form-select form-select-sm" name="prioridade">
+                    <option value="">Prioridade</option>
+                    {% for val,label in orcamentos.model.PRIORIDADE_CHOICES %}
+                        <option value="{{ val }}" {% if request.GET.prioridade == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-outline-secondary btn-sm" type="submit">Filtrar</button>
+            </form>
+        </div>
+    </div>
+    <div class="filter-bar__summary">
+        <span class="badge-soft"><i class="bi bi-piggy-bank"></i>{{ total_orcamentos }} planejamentos</span>
+        <span class="badge-soft"><i class="bi bi-bank"></i>Caixa de referência {{ caixa_atual_referencia|brl }}</span>
+        <span class="badge-soft"><i class="bi bi-info-circle"></i>Não altera o financeiro real</span>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-md-6 col-xl-2">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Total cadastrados</div>
+            <div class="metric-card__value">{{ total_orcamentos }}</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-2">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Soma planejada</div>
+            <div class="metric-card__value">{{ soma_planejada|brl }}</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-2">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Maior orçamento</div>
+            <div class="metric-card__value">{% if maior_orcamento %}{{ maior_orcamento.valor_previsto|brl }}{% else %}-{% endif %}</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-2">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Concluídos</div>
+            <div class="metric-card__value">{{ concluidos }}</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-2">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Em andamento</div>
+            <div class="metric-card__value">{{ em_andamento }}</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-2">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Planejados</div>
+            <div class="metric-card__value">{{ planejados }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="d-none d-xl-block">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover card-table align-middle mb-0">
+            <thead><tr><th>Foto</th><th>Título</th><th>Valor previsto</th><th>Caixa atual</th><th>Quanto falta</th><th>Status</th><th>Prioridade</th><th>Data planejada</th><th></th></tr></thead>
+            <tbody>
+            {% for o in orcamentos %}
+                <tr>
+                    <td style="width:72px;">
+                        {% if o.foto %}
+                            <img src="{{ o.foto.url }}" alt="{{ o.titulo }}" class="rounded-3" style="width:52px;height:52px;object-fit:cover;">
+                        {% else %}
+                            <div class="empty-state d-flex align-items-center justify-content-center" style="width:52px;height:52px;">-</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'financeiro:orcamento_detail' o.pk %}">{{ o.titulo }}</a>
+                        {% if o.categoria %}<div class="record-card__meta">{{ o.categoria }}</div>{% endif %}
+                    </td>
+                    <td>{{ o.valor_previsto|brl }}</td>
+                    <td>{{ o.caixa_atual_referencia|brl }}</td>
+                    <td>
+                        {% if o.valor_faltante > 0 %}
+                            <span class="status-badge status-badge--warning">{{ o.valor_faltante|brl }}</span>
+                        {% else %}
+                            <span class="status-badge status-badge--success">Coberto</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-badge {% if o.status == 'concluido' %}status-badge--success{% elif o.status == 'andamento' %}status-badge--warning{% elif o.status == 'cancelado' %}status-badge--danger{% else %}status-badge--muted{% endif %}">
+                            {{ o.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge {% if o.prioridade == 'alta' %}status-badge--danger{% elif o.prioridade == 'media' %}status-badge--warning{% else %}status-badge--muted{% endif %}">
+                            {{ o.get_prioridade_display }}
+                        </span>
+                    </td>
+                    <td>{{ o.data_planejada|default:"-" }}</td>
+                    <td class="text-end">
+                        <div class="table-actions">
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'financeiro:orcamento_detail' o.pk %}">Ver</a>
+                            {% if perms.financeiro.change_orcamentofuturo %}
+                                <a class="btn btn-sm btn-outline-secondary" href="{% url 'financeiro:orcamento_update' o.pk %}">Editar</a>
+                            {% endif %}
+                            {% if perms.financeiro.delete_orcamentofuturo %}
+                                <a class="btn btn-sm btn-outline-danger" href="{% url 'financeiro:orcamento_delete' o.pk %}">Excluir</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="9">Nenhum orçamento planejado.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="d-xl-none mobile-stack">
+    {% for o in orcamentos %}
+        <div class="card card-table record-card">
+            <div class="d-flex gap-3">
+                <div style="width:64px;flex-shrink:0;">
+                    {% if o.foto %}
+                        <img src="{{ o.foto.url }}" alt="{{ o.titulo }}" class="rounded-3" style="width:64px;height:64px;object-fit:cover;">
+                    {% else %}
+                        <div class="empty-state d-flex align-items-center justify-content-center rounded-3" style="width:64px;height:64px;">-</div>
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold"><a href="{% url 'financeiro:orcamento_detail' o.pk %}">{{ o.titulo }}</a></div>
+                    <div class="record-card__meta">{{ o.categoria|default:"Sem categoria" }}</div>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <span class="status-badge {% if o.status == 'concluido' %}status-badge--success{% elif o.status == 'andamento' %}status-badge--warning{% elif o.status == 'cancelado' %}status-badge--danger{% else %}status-badge--muted{% endif %}">{{ o.get_status_display }}</span>
+                        <span class="status-badge {% if o.prioridade == 'alta' %}status-badge--danger{% elif o.prioridade == 'media' %}status-badge--warning{% else %}status-badge--muted{% endif %}">{{ o.get_prioridade_display }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="info-grid mt-3">
+                <div class="info-chip"><span class="info-chip__label">Valor previsto</span><span class="info-chip__value">{{ o.valor_previsto|brl }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Caixa atual</span><span class="info-chip__value">{{ o.caixa_atual_referencia|brl }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Quanto falta</span><span class="info-chip__value">{% if o.valor_faltante > 0 %}{{ o.valor_faltante|brl }}{% else %}Coberto{% endif %}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Data planejada</span><span class="info-chip__value">{{ o.data_planejada|default:"-" }}</span></div>
+            </div>
+            <div class="record-card__actions">
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'financeiro:orcamento_detail' o.pk %}">Ver</a>
+                {% if perms.financeiro.change_orcamentofuturo %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'financeiro:orcamento_update' o.pk %}">Editar</a>
+                {% endif %}
+                {% if perms.financeiro.delete_orcamentofuturo %}
+                    <a class="btn btn-sm btn-outline-danger" href="{% url 'financeiro:orcamento_delete' o.pk %}">Excluir</a>
+                {% endif %}
+            </div>
+        </div>
+    {% empty %}
+        <div class="card card-table record-card">Nenhum orçamento planejado.</div>
+    {% endfor %}
+</div>
+
+{% include "pagination.html" with page_obj=page_obj %}
+{% endblock %}

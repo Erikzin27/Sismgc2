@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block page_title %}Registro Genético{% endblock %}
+{% block page_subtitle %}Relação genética direta entre filho, pai e mãe, com observações do cadastro.{% endblock %}
+{% block content %}
+<div class="page-panel">
+    {% include "includes/section_header.html" with title="Resumo do registro" subtitle="Visão rápida da composição genética cadastrada." %}
+    <div class="info-grid">
+        <div class="info-chip"><span class="info-chip__label">Filho</span><span class="info-chip__value">{{ registro.filho }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Pai</span><span class="info-chip__value">{{ registro.pai|default:"-" }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Mãe</span><span class="info-chip__value">{{ registro.mae|default:"-" }}</span></div>
+        <div class="info-chip" style="grid-column: 1 / -1;"><span class="info-chip__label">Observações</span><span class="info-chip__value">{{ registro.observacoes|default:"-" }}</span></div>
+    </div>
+</div>
+{% endblock %}

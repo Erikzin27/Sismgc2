@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block page_title %}Área Administrativa{% endblock %}
+{% block content %}
+<div class="card card-table p-4">
+    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-3">
+        <div>
+            <h4 class="mb-1">Painel Administrativo</h4>
+            <p class="text-muted mb-0">Acesso restrito. Controle funções sensíveis do sistema.</p>
+        </div>
+        <span class="badge bg-danger-subtle text-danger border border-danger">Somente Administrador</span>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card card-table h-100 p-3 position-relative">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-sliders"></i>
+                    <h6 class="mb-0">Configurações do Sistema</h6>
+                </div>
+                <p class="text-muted mb-0">Parâmetros globais e preferências.</p>
+                <a class="stretched-link text-decoration-none" href="{% url 'core:configuracoes' %}"></a>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card card-table h-100 p-3 position-relative">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-people"></i>
+                    <h6 class="mb-0">Gestão de Usuários</h6>
+                </div>
+                <p class="text-muted mb-0">Cadastro, perfil e permissões.</p>
+                <a class="stretched-link text-decoration-none" href="{% url 'usuarios:list' %}"></a>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card card-table h-100 p-3 position-relative">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-shield-lock"></i>
+                    <h6 class="mb-0">Admin Django</h6>
+                </div>
+                <p class="text-muted mb-0">Manutenção avançada do sistema.</p>
+                <a class="stretched-link text-decoration-none" href="{% url 'admin:index' %}"></a>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card card-table h-100 p-3 position-relative">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-clock-history"></i>
+                    <h6 class="mb-0">Auditoria & Histórico</h6>
+                </div>
+                <p class="text-muted mb-0">Eventos e rastreabilidade.</p>
+                <a class="stretched-link text-decoration-none" href="{% url 'historico:list' %}"></a>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card card-table h-100 p-3 position-relative">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-diagram-3"></i>
+                    <h6 class="mb-0">Grupos & Perfis</h6>
+                </div>
+                <p class="text-muted mb-0">Gerencie grupos e papéis.</p>
+                <a class="stretched-link text-decoration-none" href="/admin/auth/group/"></a>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card card-table h-100 p-3 position-relative">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-key"></i>
+                    <h6 class="mb-0">Permissões</h6>
+                </div>
+                <p class="text-muted mb-0">Ajustes finos de acesso.</p>
+                <a class="stretched-link text-decoration-none" href="/admin/auth/permission/"></a>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card card-table h-100 p-3 position-relative">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-clipboard-data"></i>
+                    <h6 class="mb-0">Relatórios</h6>
+                </div>
+                <p class="text-muted mb-0">Acesso rápido a relatórios oficiais.</p>
+                <a class="stretched-link text-decoration-none" href="{% url 'relatorios:index' %}"></a>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card card-table h-100 p-3 position-relative">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-shield-check"></i>
+                    <h6 class="mb-0">Segurança</h6>
+                </div>
+                <p class="text-muted mb-0">Políticas, auditoria avançada e revisão de acessos.</p>
+                <a class="stretched-link text-decoration-none" href="{% url 'core:admin_seguranca' %}"></a>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card card-table h-100 p-3 position-relative">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-database-down"></i>
+                    <h6 class="mb-0">Backup / Exportação</h6>
+                </div>
+                <p class="text-muted mb-0">Operações críticas e exportações globais.</p>
+                <a class="stretched-link text-decoration-none" href="{% url 'core:admin_backup' %}"></a>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card card-table h-100 p-3 position-relative">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-palette2"></i>
+                    <h6 class="mb-0">Identidade Visual</h6>
+                </div>
+                <p class="text-muted mb-0">Logo, tema padrão e elementos institucionais.</p>
+                <a class="stretched-link text-decoration-none" href="{% url 'core:admin_identidade' %}"></a>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card card-table h-100 p-3 position-relative">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-gear-wide-connected"></i>
+                    <h6 class="mb-0">Parâmetros Avançados</h6>
+                </div>
+                <p class="text-muted mb-0">Espaço reservado para controles futuros.</p>
+                <a class="stretched-link text-decoration-none" href="{% url 'core:admin_parametros' %}"></a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

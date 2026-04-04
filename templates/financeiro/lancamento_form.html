@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block page_title %}Lançamento{% endblock %}
+{% block page_subtitle %}Cadastro financeiro com melhor separação entre dados principais, pagamento e comprovante.{% endblock %}
+{% block content %}
+<form method="post" class="page-panel form-shell" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Não foi possível salvar.</strong> Verifique os campos destacados abaixo.
+            {% if form.non_field_errors %}
+                <div class="small mt-2">{{ form.non_field_errors|join:", " }}</div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="form-section">
+        <h6 class="form-section__title">Dados do lançamento</h6>
+        <p class="form-section__subtitle">Preencha o tipo, categoria, data e valor principal da movimentação.</p>
+        <div class="row g-3 mt-1">
+            {% for field in form %}
+                {% if field.name in "data tipo categoria valor descricao lote ave" %}
+                {% endif %}
+            {% endfor %}
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="{{ form.data.id_for_label }}">{{ form.data.label }}</label>
+                {{ form.data }}
+                {% if form.data.errors %}<div class="field-error">{{ form.data.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="{{ form.tipo.id_for_label }}">{{ form.tipo.label }}</label>
+                {{ form.tipo }}
+                {% if form.tipo.errors %}<div class="field-error">{{ form.tipo.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
+                {{ form.categoria }}
+                {% if form.categoria.errors %}<div class="field-error">{{ form.categoria.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="{{ form.valor.id_for_label }}">{{ form.valor.label }}</label>
+                {{ form.valor }}
+                {% if form.valor.help_text %}<small class="field-help">{{ form.valor.help_text }}</small>{% endif %}
+                {% if form.valor.errors %}<div class="field-error">{{ form.valor.errors|join:", " }}</div>{% endif %}
+            </div>
+            {% if form.lote %}
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="{{ form.lote.id_for_label }}">{{ form.lote.label }}</label>
+                {{ form.lote }}
+                {% if form.lote.errors %}<div class="field-error">{{ form.lote.errors|join:", " }}</div>{% endif %}
+            </div>
+            {% endif %}
+            {% if form.ave %}
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="{{ form.ave.id_for_label }}">{{ form.ave.label }}</label>
+                {{ form.ave }}
+                {% if form.ave.errors %}<div class="field-error">{{ form.ave.errors|join:", " }}</div>{% endif %}
+            </div>
+            {% endif %}
+            <div class="col-12">
+                <label class="form-label" for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }}</label>
+                {{ form.descricao }}
+                {% if form.descricao.errors %}<div class="field-error">{{ form.descricao.errors|join:", " }}</div>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h6 class="form-section__title">Pagamento e anexo</h6>
+        <p class="form-section__subtitle">Defina a forma de pagamento, complemente se for manual e anexe o comprovante se existir.</p>
+        <div class="row g-3 mt-1">
+            {% if form.forma_pagamento %}
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="{{ form.forma_pagamento.id_for_label }}">{{ form.forma_pagamento.label }}</label>
+                {{ form.forma_pagamento }}
+                {% if form.forma_pagamento.errors %}<div class="field-error">{{ form.forma_pagamento.errors|join:", " }}</div>{% endif %}
+            </div>
+            {% endif %}
+            {% if form.forma_pagamento_outro %}
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="{{ form.forma_pagamento_outro.id_for_label }}">{{ form.forma_pagamento_outro.label }}</label>
+                {{ form.forma_pagamento_outro }}
+                {% if form.forma_pagamento_outro.help_text %}<small class="field-help">{{ form.forma_pagamento_outro.help_text }}</small>{% endif %}
+                {% if form.forma_pagamento_outro.errors %}<div class="field-error">{{ form.forma_pagamento_outro.errors|join:", " }}</div>{% endif %}
+            </div>
+            {% endif %}
+            {% if form.comprovante %}
+            <div class="col-12">
+                <label class="form-label" for="{{ form.comprovante.id_for_label }}">{{ form.comprovante.label }}</label>
+                {{ form.comprovante }}
+                {% if form.comprovante.errors %}<div class="field-error">{{ form.comprovante.errors|join:", " }}</div>{% endif %}
+            </div>
+            {% endif %}
+            {% if form.observacoes %}
+            <div class="col-12">
+                <label class="form-label" for="{{ form.observacoes.id_for_label }}">{{ form.observacoes.label }}</label>
+                {{ form.observacoes }}
+                {% if form.observacoes.errors %}<div class="field-error">{{ form.observacoes.errors|join:", " }}</div>{% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <button class="btn btn-primary" type="submit">Salvar</button>
+        <a class="btn btn-outline-secondary" href="{% url 'financeiro:list' %}">Voltar</a>
+    </div>
+</form>
+{% endblock %}

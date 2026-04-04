@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Item de Estoque{% endblock %}
+{% block page_subtitle %}Detalhe do item com dados de estoque, custo, validade, anexo e últimas movimentações.{% endblock %}
+{% block content %}
+<div class="page-panel page-panel--hero">
+    {% include "includes/section_header.html" with title=item.nome subtitle=item.get_categoria_display %}
+    <div class="info-grid">
+        <div class="info-chip"><span class="info-chip__label">Quantidade</span><span class="info-chip__value">{{ item.quantidade_atual|qty:item.unidade }} {{ item.unidade }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Estoque mínimo</span><span class="info-chip__value">{{ item.estoque_minimo|qty:item.unidade }} {{ item.unidade }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Último preço</span><span class="info-chip__value">{{ item.ultimo_preco|brl }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Custo médio</span><span class="info-chip__value">{{ item.custo_medio|brl }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Validade</span><span class="info-chip__value">{{ item.validade|default:"-" }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Fornecedor</span><span class="info-chip__value">{{ item.fornecedor|default:"-" }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Localização</span><span class="info-chip__value">{{ item.localizacao|default:"-" }}</span></div>
+        <div class="info-chip" style="grid-column: 1 / -1;"><span class="info-chip__label">Observações</span><span class="info-chip__value">{{ item.observacoes|default:"-" }}</span></div>
+        <div class="info-chip" style="grid-column: 1 / -1;"><span class="info-chip__label">Anexo</span><span class="info-chip__value">{% if item.anexo %}<a href="{{ item.anexo.url }}" target="_blank" rel="noopener">Ver arquivo</a>{% else %}-{% endif %}</span></div>
+    </div>
+</div>
+<div class="page-panel">
+    {% include "includes/section_header.html" with title="Últimas movimentações" subtitle="Histórico recente do item em estoque." %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle mb-0">
+            <thead><tr><th>Data</th><th>Tipo</th><th>Motivo</th><th>Qtd</th><th>Lote</th></tr></thead>
+            <tbody>
+            {% for m in movimentos %}
+                <tr>
+                    <td>{{ m.data }}</td>
+                    <td>{{ m.get_tipo_display }}</td>
+                    <td>{{ m.get_motivo_display }}</td>
+                    <td>{{ m.quantidade|qty:item.unidade }}</td>
+                    <td>{{ m.lote_relacionado|default:"-" }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5">Nenhuma movimentação.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

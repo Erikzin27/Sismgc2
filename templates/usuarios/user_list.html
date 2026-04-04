@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block page_title %}Usuários{% endblock %}
+{% block page_subtitle %}Gestão de acessos com filtros, exportação e ações rápidas em uma leitura mais confortável no desktop e no mobile.{% endblock %}
+{% block content %}
+<div class="page-panel">
+<div class="list-actions mb-0">
+    <div class="list-actions__left">
+        {% if perms.usuarios.add_user %}
+            <a class="btn btn-primary" href="{% url 'usuarios:create' %}">Novo usuário</a>
+        {% endif %}
+    </div>
+    <div class="list-actions__center">
+        <form method="get" class="d-flex gap-2 flex-wrap">
+            <input class="form-control form-control-sm" type="search" name="q" value="{{ request.GET.q }}" placeholder="Buscar nome, email ou usuário">
+            <select class="form-select form-select-sm" name="role">
+                <option value="">Perfil</option>
+                {% for val,label in users.model.ROLE_CHOICES %}
+                    <option value="{{ val }}" {% if request.GET.role == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select class="form-select form-select-sm" name="is_active">
+                <option value="">Status</option>
+                <option value="true" {% if request.GET.is_active == "true" %}selected{% endif %}>Ativo</option>
+                <option value="false" {% if request.GET.is_active == "false" %}selected{% endif %}>Inativo</option>
+            </select>
+            <input class="form-control form-control-sm" type="search" name="setor" value="{{ request.GET.setor }}" placeholder="Setor/Função">
+            <select class="form-select form-select-sm" name="last_login">
+                <option value="">Último acesso</option>
+                <option value="7" {% if request.GET.last_login == "7" %}selected{% endif %}>Últimos 7 dias</option>
+                <option value="30" {% if request.GET.last_login == "30" %}selected{% endif %}>Últimos 30 dias</option>
+                <option value="90" {% if request.GET.last_login == "90" %}selected{% endif %}>Últimos 90 dias</option>
+                <option value="never" {% if request.GET.last_login == "never" %}selected{% endif %}>Nunca acessou</option>
+            </select>
+            <button class="btn btn-outline-secondary btn-sm" type="submit">Filtrar</button>
+        </form>
+    </div>
+    <div class="list-actions__right d-flex gap-2">
+        {% if user.is_admin %}
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'usuarios:export_excel' %}?{{ request.GET.urlencode }}">Excel</a>
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'usuarios:export_pdf' %}?{{ request.GET.urlencode }}">PDF</a>
+        {% endif %}
+    </div>
+</div>
+</div>
+<div class="row g-3">
+    <div class="col-12 col-md-4">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Total exibido</div>
+            <div class="metric-card__value">{{ users|length }}</div>
+            <div class="metric-card__meta">Resultado da busca atual</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Status</div>
+            <div class="metric-card__value">{{ request.GET.is_active|default:"Todos" }}</div>
+            <div class="metric-card__meta">Filtro ativo na tela</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Perfil filtrado</div>
+            <div class="metric-card__value">{{ request.GET.role|default:"Todos" }}</div>
+            <div class="metric-card__meta">Controle rápido de acesso</div>
+        </div>
+    </div>
+</div>
+<div class="table-responsive d-none d-lg-block">
+    <table class="table table-striped table-hover card-table align-middle mb-0">
+        <thead><tr><th>Usuário</th><th>Nome</th><th>Email</th><th>Perfil</th><th>Status</th><th>Último acesso</th><th></th></tr></thead>
+        <tbody>
+        {% for u in users %}
+            <tr>
+                <td><a href="{% url 'usuarios:detail' u.pk %}">{{ u.username }}</a></td>
+                <td>{{ u.get_full_name|default:"-" }}</td>
+                <td>{{ u.email|default:"-" }}</td>
+                <td>{{ u.get_role_display }}</td>
+                <td>
+                    {% if u.is_active %}
+                        <span class="badge bg-success-subtle text-success">Ativo</span>
+                    {% else %}
+                        <span class="badge bg-danger-subtle text-danger">Inativo</span>
+                    {% endif %}
+                </td>
+                <td>{{ u.last_login|default:"-" }}</td>
+                <td class="text-end">
+                    {% if perms.usuarios.change_user %}
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'usuarios:update' u.pk %}">Editar</a>
+                    {% endif %}
+                    {% if perms.usuarios.delete_user %}
+                        <a class="btn btn-sm btn-outline-danger" href="{% url 'usuarios:delete' u.pk %}">Excluir</a>
+                    {% endif %}
+                    <a class="btn btn-sm btn-outline-secondary" href="/admin/usuarios/user/{{ u.pk }}/password/">Resetar senha</a>
+                    {% if user.is_admin %}
+                        <form method="post" action="{% url 'usuarios:toggle_active' u.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-primary" type="submit">
+                                {% if u.is_active %}Inativar{% else %}Ativar{% endif %}
+                            </button>
+                        </form>
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="7">Nenhum usuário.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="d-lg-none">
+    <div class="row g-2">
+        {% for u in users %}
+            <div class="col-12">
+                <div class="card card-table record-card">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div>
+                            <div class="fw-bold">{{ u.get_full_name|default:u.username }}</div>
+                            <div class="record-card__meta">@{{ u.username }}</div>
+                            <div class="small">{{ u.email|default:"-" }}</div>
+                            <div class="small">Perfil: {{ u.get_role_display }}</div>
+                            <div class="small">Setor: {{ u.profile.setor|default:"-" }}</div>
+                        </div>
+                        <div>
+                            {% if u.is_active %}
+                                <span class="badge bg-success-subtle text-success">Ativo</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger">Inativo</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="record-card__actions">
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'usuarios:detail' u.pk %}">Detalhes</a>
+                        {% if perms.usuarios.change_user %}
+                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'usuarios:update' u.pk %}">Editar</a>
+                        {% endif %}
+                        {% if perms.usuarios.delete_user %}
+                            <a class="btn btn-sm btn-outline-danger" href="{% url 'usuarios:delete' u.pk %}">Excluir</a>
+                        {% endif %}
+                        <a class="btn btn-sm btn-outline-secondary" href="/admin/usuarios/user/{{ u.pk }}/password/">Resetar senha</a>
+                        {% if user.is_admin %}
+                            <form method="post" action="{% url 'usuarios:toggle_active' u.pk %}">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-primary" type="submit">
+                                    {% if u.is_active %}Inativar{% else %}Ativar{% endif %}
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12"><div class="card card-table p-3">Nenhum usuário.</div></div>
+        {% endfor %}
+    </div>
+</div>
+{% include "pagination.html" with page_obj=page_obj %}
+{% endblock %}

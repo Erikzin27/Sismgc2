@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block page_title %}Relatórios{% endblock %}
+{% block page_subtitle %}Atalhos organizados por objetivo para reduzir procura e facilitar leitura gerencial no dia a dia.{% endblock %}
+{% block content %}
+<div class="row g-3">
+    <div class="col-12 col-xl-4">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Operação</h6>
+                    <p class="section-heading__subtitle">Relatórios que ajudam a acompanhar rotina, estoque e produção.</p>
+                </div>
+            </div>
+            <div class="d-grid gap-2">
+                <a class="btn btn-outline-primary text-start" href="{% url 'relatorios:lotes' %}">Lotes</a>
+                <a class="btn btn-outline-primary text-start" href="{% url 'relatorios:aves' %}">Aves</a>
+                <a class="btn btn-outline-primary text-start" href="{% url 'relatorios:incubacao' %}">Incubação</a>
+                <a class="btn btn-outline-primary text-start" href="{% url 'relatorios:vacinas' %}">Vacinação</a>
+                <a class="btn btn-outline-primary text-start" href="{% url 'relatorios:estoque_baixo' %}">Estoque baixo</a>
+                <a class="btn btn-outline-primary text-start" href="{% url 'relatorios:previsao_estoque' %}">Previsão de estoque</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xl-4">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Reprodução e desempenho</h6>
+                    <p class="section-heading__subtitle">Visões para comparar lotes, reprodução e evolução da granja.</p>
+                </div>
+            </div>
+            <div class="d-grid gap-2">
+                <a class="btn btn-outline-primary text-start" href="{% url 'relatorios:reproducao' %}">Reprodução</a>
+                <a class="btn btn-outline-primary text-start" href="{% url 'relatorios:consumo_custo_lote' %}">Consumo e custo por lote</a>
+                <a class="btn btn-outline-primary text-start" href="{% url 'relatorios:comparacao_lotes' %}">Comparação entre lotes</a>
+                <a class="btn btn-outline-primary text-start" href="{% url 'relatorios:lucro_lote' %}">Lucro por lote</a>
+                <a class="btn btn-outline-primary text-start" href="{% url 'relatorios:ranking_lotes' %}">Ranking de lotes</a>
+                <a class="btn btn-outline-primary text-start" href="{% url 'relatorios:ranking_reprodutores' %}">Ranking reprodutivo</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xl-4">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Financeiro</h6>
+                    <p class="section-heading__subtitle">Saídas e entradas em leitura rápida, sem misturar com o operacional.</p>
+                </div>
+            </div>
+            <div class="d-grid gap-2">
+                <a class="btn btn-outline-primary text-start" href="{% url 'relatorios:financeiro' %}">Financeiro</a>
+            </div>
+            <div class="empty-state p-3 mt-3">
+                Exportação PDF e Excel disponíveis conforme o relatório aberto.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

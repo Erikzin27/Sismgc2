@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Ranking de Reprodutores / Matrizes{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-end gap-2 mb-3">
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'relatorios:export_pdf' %}?report=ranking_reprodutores&inicio={{ request.GET.inicio }}&fim={{ request.GET.fim }}">PDF</a>
+    <a class="btn btn-outline-success btn-sm" href="{% url 'relatorios:export_excel' %}?report=ranking_reprodutores&inicio={{ request.GET.inicio }}&fim={{ request.GET.fim }}">Excel</a>
+</div>
+<div class="table-responsive">
+    <table class="table table-striped card-table">
+        <thead><tr><th>#</th><th>Ave</th><th>Filhos</th><th>Incubações</th><th>Nascidos</th><th>Eficiência</th></tr></thead>
+        <tbody>
+        {% for item in ranking_reprodutores %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.ave }}</td>
+                <td>{{ item.filhos|int_if_whole }}</td>
+                <td>{{ item.incubacoes|int_if_whole }}</td>
+                <td>{{ item.nascidos|int_if_whole }}</td>
+                <td>{{ item.eficiencia|num }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6">Sem dados reprodutivos suficientes.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

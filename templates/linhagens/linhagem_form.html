@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block page_title %}Linhagem{% endblock %}
+{% block page_subtitle %}Cadastro da linhagem com visual mais limpo e foco em nome, origem e descrição.{% endblock %}
+{% block content %}
+<form method="post" class="page-panel form-shell">{% csrf_token %}
+    <div class="form-section">
+        {% include "includes/section_header.html" with title="Dados da linhagem" subtitle="Preencha os dados principais da linhagem e sua referência operacional." %}
+        <div class="row g-3 mt-1">
+            {{ form.as_p }}
+        </div>
+    </div>
+    <div class="action-bar">
+        <button class="btn btn-primary">Salvar</button>
+        <a class="btn btn-outline-secondary" href="{% url 'linhagens:list' %}">Voltar</a>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block page_title %}Histórico{% endblock %}
+{% block page_subtitle %}Auditoria consolidada com filtro por entidade, pesquisa livre e foco maior em acessos negados e rastreabilidade.{% endblock %}
+{% block content %}
+<div class="page-panel">
+<div class="list-actions mb-0">
+    <div class="list-actions__left d-flex gap-2 flex-wrap">
+        <a class="btn btn-outline-secondary btn-sm {% if tipo != 'acessos' %}active{% endif %}" href="{% url 'historico:list' %}">
+            Todos
+        </a>
+        <a class="btn btn-outline-secondary btn-sm {% if tipo == 'acessos' %}active{% endif %}" href="{% url 'historico:list' %}?tipo=acessos">
+            Acessos negados
+        </a>
+    </div>
+    <div class="list-actions__center">
+        <form method="get" class="d-flex gap-2 flex-wrap w-100">
+            {% if tipo == 'acessos' %}
+                <input type="hidden" name="tipo" value="acessos">
+            {% endif %}
+            <input class="form-control form-control-sm" type="search" name="q" value="{{ request.GET.q }}" placeholder="Buscar no histórico">
+            {% if tipo == 'acessos' %}
+                <select class="form-select form-select-sm" name="categoria">
+                    <option value="">Tipo</option>
+                    <option value="admin_only" {% if categoria == "admin_only" %}selected{% endif %}>Admin only</option>
+                    <option value="manager_or_admin" {% if categoria == "manager_or_admin" %}selected{% endif %}>Manager/Admin</option>
+                    <option value="admin_manager_or_perm" {% if categoria == "admin_manager_or_perm" %}selected{% endif %}>Admin/Gerente/Perm</option>
+                    <option value="permission_required" {% if categoria == "permission_required" %}selected{% endif %}>Permission required</option>
+                </select>
+            {% endif %}
+            <select class="form-select form-select-sm" name="entidade">
+                <option value="">Entidade</option>
+                <option value="Permissao" {% if request.GET.entidade == "Permissao" %}selected{% endif %}>Permissão</option>
+                <option value="Ave" {% if request.GET.entidade == "Ave" %}selected{% endif %}>Ave</option>
+                <option value="Lote" {% if request.GET.entidade == "Lote" %}selected{% endif %}>Lote</option>
+                <option value="Venda" {% if request.GET.entidade == "Venda" %}selected{% endif %}>Venda</option>
+                <option value="Estoque" {% if request.GET.entidade == "Estoque" %}selected{% endif %}>Estoque</option>
+                <option value="Incubacao" {% if request.GET.entidade == "Incubacao" %}selected{% endif %}>Incubação</option>
+            </select>
+            <button class="btn btn-outline-secondary btn-sm" type="submit">Filtrar</button>
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'historico:list' %}{% if tipo == 'acessos' %}?tipo=acessos{% endif %}">
+                Limpar filtros
+            </a>
+        </form>
+    </div>
+    <div class="list-actions__right"></div>
+</div>
+</div>
+<div class="table-responsive">
+    <table class="table table-striped table-hover card-table align-middle mb-0">
+    <thead>
+        <tr>
+            <th>Entidade</th>
+            <th>Ação</th>
+            <th>ID</th>
+            <th>Descrição</th>
+            <th>Usuário</th>
+            {% if tipo == "acessos" %}
+                <th>IP</th>
+                <th>User-Agent</th>
+            {% endif %}
+            <th>Data</th>
+        </tr>
+    </thead>
+        <tbody>
+        {% for e in eventos %}
+            <tr>
+            <td>
+                {% if e.entidade == "Permissao" %}
+                    <span class="badge bg-danger">Permissão</span>
+                {% else %}
+                    {{ e.entidade }}
+                {% endif %}
+            </td>
+            <td>{{ e.get_acao_display }}</td>
+            <td>{{ e.referencia_id }}</td>
+            <td>
+                {{ e.descricao }}
+                {% if tipo == "acessos" and e.detalhes.tipo %}
+                    <span class="badge bg-secondary ms-2">{{ e.detalhes.tipo }}</span>
+                {% endif %}
+            </td>
+            <td>{{ e.usuario }}</td>
+            {% if tipo == "acessos" %}
+                <td>{{ e.detalhes.ip|default:"-" }}</td>
+                <td class="text-truncate" style="max-width: 280px;">
+                    <span class="d-inline-block text-truncate" style="max-width: 260px;" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ e.detalhes.user_agent|default:"" }}">
+                        {{ e.detalhes.user_agent|default:"-" }}
+                    </span>
+                </td>
+            {% endif %}
+            <td>{{ e.created_at }}</td>
+            </tr>
+        {% empty %}
+        <tr><td colspan="{% if tipo == "acessos" %}8{% else %}6{% endif %}">Nenhum evento.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% include "pagination.html" with page_obj=page_obj %}
+{% endblock %}

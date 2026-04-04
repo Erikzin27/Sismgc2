@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Nascimentos{% endblock %}
+{% block content %}
+<div class="list-actions mb-2">
+    <div class="list-actions__left">
+        {% if perms.nascimentos.add_nascimento %}
+            <a class="btn btn-primary" href="{% url 'nascimentos:create' %}">Registrar nascimento</a>
+        {% endif %}
+    </div>
+    <div class="list-actions__center"></div>
+    <div class="list-actions__right"></div>
+</div>
+<div class="table-responsive">
+    <table class="table table-striped table-hover card-table align-middle">
+        <thead><tr><th>Data</th><th>Incubação</th><th>Qtd</th><th>Lote destino</th><th></th></tr></thead>
+        <tbody>
+        {% for n in nascimentos %}
+            <tr>
+                <td><a href="{% url 'nascimentos:detail' n.pk %}">{{ n.data }}</a></td>
+                <td>{{ n.incubacao.codigo }}</td>
+                <td>{{ n.quantidade_nascida|int_if_whole }}</td>
+                <td>{{ n.lote_destino }}</td>
+                <td class="text-end">
+                    {% if perms.nascimentos.change_nascimento %}
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'nascimentos:update' n.pk %}">Editar</a>
+                    {% endif %}
+                    {% if perms.nascimentos.delete_nascimento %}
+                        <a class="btn btn-sm btn-outline-danger" href="{% url 'nascimentos:delete' n.pk %}">Excluir</a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5">Nenhum nascimento.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% include "pagination.html" with page_obj=page_obj %}
+{% endblock %}

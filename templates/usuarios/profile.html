@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block page_title %}Meu Perfil{% endblock %}
+{% block page_subtitle %}Atualize seus dados, preferências e foto com uma experiência mais limpa e confortável em qualquer dispositivo.{% endblock %}
+{% block content %}
+<div class="row g-3">
+    <div class="col-12 col-lg-4">
+        <div class="page-panel h-100 text-center">
+            {% if user.profile.foto %}
+                <a href="{{ user.profile.foto.url }}" target="_blank" rel="noopener">
+                    <img src="{{ user.profile.foto.url }}" class="img-fluid rounded-circle mb-3" style="max-width:140px; max-height:140px; object-fit:cover;">
+                </a>
+            {% else %}
+                <div class="empty-state d-flex align-items-center justify-content-center rounded-circle mb-3" style="width:140px; height:140px; margin: 0 auto;">
+                    <span class="small text-muted">Sem foto</span>
+                </div>
+            {% endif %}
+            <h6 class="mb-1">{{ user.get_full_name|default:user.username }}</h6>
+            <div class="record-card__meta">{{ user.get_role_display }}</div>
+            <div class="info-grid mt-3">
+                <div class="info-chip"><span class="info-chip__label">Criado em</span><span class="info-chip__value">{{ user.date_joined }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Último acesso</span><span class="info-chip__value">{{ user.last_login|default:"-" }}</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-8">
+        <form method="post" enctype="multipart/form-data" class="page-panel form-shell">
+            {% csrf_token %}
+            {% if profile_form.errors or user_form.errors %}
+                <div class="alert alert-danger">
+                    <strong>Não foi possível salvar.</strong> Verifique os campos abaixo.
+                </div>
+            {% endif %}
+
+            <div class="form-section">
+                <h6 class="form-section__title">Dados básicos</h6>
+                <p class="form-section__subtitle">Informações visíveis no sistema e no contexto administrativo.</p>
+                <div class="row g-3 mt-1">
+                    {% for field in user_form %}
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}<small class="field-help">{{ field.help_text }}</small>{% endif %}
+                            {% if field.errors %}<div class="field-error">{{ field.errors|join:", " }}</div>{% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h6 class="form-section__title">Preferências e perfil</h6>
+                <p class="form-section__subtitle">Tema, contato, setor e foto do perfil para facilitar identificação.</p>
+                <div class="row g-3 mt-1">
+                    {% for field in profile_form %}
+                        <div class="col-12 {% if field.name == 'foto' or field.name == 'tema' %}col-md-6{% else %}col-md-6{% endif %}">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}<small class="field-help">{{ field.help_text }}</small>{% endif %}
+                            {% if field.errors %}<div class="field-error">{{ field.errors|join:", " }}</div>{% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button class="btn btn-primary" type="submit">Salvar</button>
+                <a class="btn btn-outline-secondary" href="{% url 'password_change' %}">Alterar senha</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

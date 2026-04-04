@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block page_title %}Vacinas{% endblock %}
+{% block page_subtitle %}Catálogo sanitário com leitura rápida de carência e acesso direto à receita quando houver anexo.{% endblock %}
+{% block content %}
+<div class="page-panel filter-bar">
+    <div class="list-actions mb-0">
+        <div class="list-actions__left">
+            {% if perms.sanidade.add_vacina %}
+                <a class="btn btn-primary" href="{% url 'sanidade:vacina_create' %}">Nova vacina</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="filter-bar__summary">
+        <span class="badge-soft"><i class="bi bi-shield-check"></i>{{ page_obj.paginator.count|default:vacinas|length }} vacinas</span>
+        <span class="badge-soft"><i class="bi bi-file-earmark-medical"></i>Receita anexada quando disponível</span>
+    </div>
+</div>
+
+<div class="d-none d-lg-block">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover card-table align-middle mb-0">
+            <thead><tr><th>Nome</th><th>Fabricante</th><th>Carência</th><th>Receita</th><th></th></tr></thead>
+            <tbody>
+            {% for v in vacinas %}
+                <tr>
+                    <td><a href="{% url 'sanidade:vacina_detail' v.pk %}">{{ v.nome }}</a></td>
+                    <td>{{ v.fabricante|default:"-" }}</td>
+                    <td><span class="status-badge status-badge--warning">{{ v.carencia_dias }} dias</span></td>
+                    <td>
+                        {% if v.receita_anexo %}
+                            <a href="{{ v.receita_anexo.url }}" target="_blank" rel="noopener">Ver arquivo</a>
+                        {% else %}
+                            <span class="record-card__meta">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="table-actions">
+                            {% if perms.sanidade.change_vacina %}
+                                <a class="btn btn-sm btn-outline-secondary" href="{% url 'sanidade:vacina_update' v.pk %}">Editar</a>
+                            {% endif %}
+                            {% if perms.sanidade.delete_vacina %}
+                                <a class="btn btn-sm btn-outline-danger" href="{% url 'sanidade:vacina_delete' v.pk %}">Excluir</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5">Nenhuma vacina.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="d-lg-none mobile-stack">
+    {% for v in vacinas %}
+        <div class="card card-table record-card">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <div>
+                    <div class="fw-semibold"><a href="{% url 'sanidade:vacina_detail' v.pk %}">{{ v.nome }}</a></div>
+                    <div class="record-card__meta">{{ v.fabricante|default:"Fabricante não informado" }}</div>
+                </div>
+                <span class="status-badge status-badge--warning">{{ v.carencia_dias }} dias</span>
+            </div>
+            <div class="record-card__meta mt-2">
+                Receita: {% if v.receita_anexo %}<a href="{{ v.receita_anexo.url }}" target="_blank" rel="noopener">Ver arquivo</a>{% else %}-{% endif %}
+            </div>
+            <div class="record-card__actions">
+                {% if perms.sanidade.change_vacina %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'sanidade:vacina_update' v.pk %}">Editar</a>
+                {% endif %}
+                {% if perms.sanidade.delete_vacina %}
+                    <a class="btn btn-sm btn-outline-danger" href="{% url 'sanidade:vacina_delete' v.pk %}">Excluir</a>
+                {% endif %}
+            </div>
+        </div>
+    {% empty %}
+        <div class="card card-table record-card">Nenhuma vacina.</div>
+    {% endfor %}
+</div>
+
+{% include "pagination.html" with page_obj=page_obj %}
+{% endblock %}
