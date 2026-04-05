@@ -1,8 +1,27 @@
 # SISMGC
 
-Sistema Inteligente de Gestao de Granja e Controle Avicola, desenvolvido com Django, Django Templates e Bootstrap 5.
+Sistema Inteligente de Gestao de Granja e Controle Avicola.
 
-## Tecnologias
+Projeto web desenvolvido com Django para apoiar a operacao diaria de granjas, com foco em controle zootecnico, financeiro, sanidade, estoque, reproducao, historico e relatorios.
+
+## Visao geral
+
+O SISMGC foi estruturado para uso local e em rede local, mantendo simplicidade de implantacao com SQLite e interface baseada em Django Templates + Bootstrap 5.
+
+Hoje o sistema ja cobre fluxos importantes como:
+
+- dashboard operacional
+- controle de aves e lotes
+- linhagens e genetica
+- incubacao e nascimentos
+- estoque e alimentacao
+- sanidade e carencia
+- abate e vendas
+- financeiro real e planejamento futuro
+- relatorios, historico e calendario
+- controle de usuarios, perfis e permissoes
+
+## Stack
 
 - Python 3.13
 - Django 6
@@ -14,7 +33,7 @@ Sistema Inteligente de Gestao de Granja e Controle Avicola, desenvolvido com Dja
 - ReportLab
 - WeasyPrint
 
-## Modulos principais
+## Modulos do sistema
 
 - Dashboard
 - Linhagens
@@ -35,13 +54,13 @@ Sistema Inteligente de Gestao de Granja e Controle Avicola, desenvolvido com Dja
 - Calendario
 - Configuracoes
 
-## Como rodar localmente
+## Como executar localmente
 
-### 1. Clonar o projeto
+### 1. Clonar o repositorio
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
-cd MGC-GR
+git clone https://github.com/Erikzin27/Sismgc2.git
+cd Sismgc2
 ```
 
 ### 2. Criar e ativar a virtualenv
@@ -60,13 +79,13 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Instalar dependencias
+### 3. Instalar as dependencias
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Criar o arquivo .env
+### 4. Criar o arquivo `.env`
 
 Crie um arquivo `.env` na raiz do projeto com base no `.env.example`.
 
@@ -78,28 +97,36 @@ DEBUG=True
 ALLOWED_HOSTS=127.0.0.1,localhost,0.0.0.0
 ```
 
-### 5. Rodar migrations
+### 5. Aplicar as migrations
 
 ```bash
 python manage.py migrate
 ```
 
-### 6. Iniciar o servidor
+### 6. Executar o servidor
 
 ```bash
 python manage.py runserver
 ```
 
-Para uso em rede local:
+Para acesso em rede local:
 
 ```bash
 python manage.py runserver 0.0.0.0:8000
 ```
 
-## Estrutura basica
+## Validacao rapida
+
+Depois de subir o sistema:
+
+- acesse `http://127.0.0.1:8000`
+- faca login com um usuario valido
+- confira dashboard, vendas, financeiro, lotes e relatorios
+
+## Estrutura principal
 
 ```text
-MGC-GR/
+Sismgc2/
 |-- abate/
 |-- alimentacao/
 |-- aves/
@@ -125,6 +152,7 @@ MGC-GR/
 |-- requirements.txt
 |-- .env.example
 |-- .gitignore
+|-- README.md
 ```
 
 ## Banco de dados
@@ -137,11 +165,23 @@ MGC-GR/
 ## Static e media
 
 - `static/` faz parte do projeto e pode ser versionado.
-- `staticfiles/` nao deve ser enviado.
+- `staticfiles/` nao deve ser enviado ao GitHub.
 - `media/` nao deve ser enviado ao GitHub.
 
-## Observacoes
+## Observacoes importantes
 
-- O projeto esta preparado para uso local e rede local.
-- Para producao futura, ajuste `DEBUG=False`, `ALLOWED_HOSTS` e a `SECRET_KEY` no `.env`.
-- O PDF tem fallback via ReportLab caso o WeasyPrint nao tenha dependencias nativas do sistema.
+- O sistema esta preparado para uso local e em rede local.
+- Para producao futura, ajuste `DEBUG=False`, `ALLOWED_HOSTS` e `SECRET_KEY` no `.env`.
+- A exportacao PDF usa fallback com ReportLab quando o WeasyPrint nao consegue carregar dependencias nativas do sistema operacional.
+- O projeto foi preparado para versionamento seguro, sem incluir banco local, media ou secrets.
+
+## Versionamento
+
+Fluxo basico para continuar versionando:
+
+```bash
+git status
+git add .
+git commit -m "Sua mensagem"
+git push
+```
