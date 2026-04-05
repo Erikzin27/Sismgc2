@@ -21,6 +21,19 @@ Hoje o sistema ja cobre fluxos importantes como:
 - relatorios, historico e calendario
 - controle de usuarios, perfis e permissoes
 
+## Funcionalidades principais
+
+- Controle completo de aves, lotes e linhagens em uma unica base
+- Gestao operacional da granja com foco em rotina diaria e tomada de decisao
+- Registro de incubacao, nascimentos, reproducao e historico zootecnico
+- Controle de estoque, alimentacao, sanidade e carencia sanitaria
+- Vendas integradas ao financeiro de forma segura
+- Dashboard com indicadores, alertas e visao rapida da operacao
+- Relatorios gerenciais para acompanhamento tecnico e financeiro
+- Calendario operacional com eventos importantes da granja
+- Controle de usuarios, perfis e permissoes por nivel de acesso
+- Estrutura preparada para crescimento futuro sem abandonar a base atual
+
 ## Stack
 
 - Python 3.13
