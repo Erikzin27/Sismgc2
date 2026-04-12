@@ -60,3 +60,61 @@ class Venda(TimeStampedModel, AuditModel):
         if self.valor_total is None or self.valor_total == 0:
             self.valor_total = ((self.quantidade or 0) * (self.valor_unitario or 0) - (self.desconto or 0)).quantize(Decimal("0.01"))
         super().save(*args, **kwargs)
+
+    @property
+    def tem_entrada_financeira(self):
+        """
+        Verifica se a venda tem entrada no financeiro vinculada.
+        Útil para templates e verificações.
+        """
+        return hasattr(self, 'lancamento_financeiro') and self.lancamento_financeiro is not None
+
+    @property
+    def status_integracao(self):
+        """
+        Retorna o status da integração com financeiro.
+        - 'vinculada': venda paga com entrada financeira
+        - 'pendente_vínculo': venda paga mas sem entrada (erro)
+        - 'não_sincronizada': venda não paga
+        """
+        if self.status_pagamento == self.STATUS_PAGO:
+            if self.tem_entrada_financeira:
+                return 'vinculada'
+            else:
+                return 'pendente_vínculo'
+        else:
+            return 'não_sincronizada'
+
+    def get_status_integracao_display(self):
+        """Retorna label legível do status de integração."""
+        status_map = {
+            'vinculada': 'Entrada gerada ✓',
+            'pendente_vínculo': '⚠ Aguardando vínculo',
+            'não_sincronizada': 'Sem entrada (normal)',
+        }
+        return status_map.get(self.status_integracao, 'Desconhecido')
+
+    @property
+    def saldo_financeiro(self):
+        """
+        Retorna o valor do lançamento financeiro vinculado, ou None se não há.
+        Útil para relatórios e dashboards.
+        """
+        if self.tem_entrada_financeira:
+            return self.lancamento_financeiro.valor
+        return None
+
+    def clean(self):
+        """
+        Validações adicionais para evitar estados inválidos.
+        Útil para garantir integridade de dados.
+        """
+        from django.core.exceptions import ValidationError
+        
+        # Validar que quantidade e valor_unitario são positivos
+        if self.quantidade and self.quantidade <= 0:
+            raise ValidationError('Quantidade deve ser maior que zero')
+        if self.valor_unitario and self.valor_unitario < 0:
+            raise ValidationError('Valor unitário não pode ser negativo')
+        if self.desconto and self.desconto < 0:
+            raise ValidationError('Desconto não pode ser negativo')
