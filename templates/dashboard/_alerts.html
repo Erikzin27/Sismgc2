@@ -1,0 +1,49 @@
+<div id="dashboard-alerts"
+     class="page-panel h-100"
+     hx-get="{% url 'dashboard:index' %}?partial=alerts"
+     hx-trigger="load, every 60s"
+     hx-swap="outerHTML">
+    <div class="section-heading">
+        <div>
+            <h6 class="section-heading__title">Alertas criticos</h6>
+            <p class="section-heading__subtitle">Janela de {{ janela_dias }} dias para priorizacao rapida.</p>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <span class="badge-soft"><i class="bi bi-exclamation-triangle"></i>Estoque baixo {{ estoque_baixo_count }}</span>
+        {% if estoque_critico_count %}
+            <span class="badge-soft text-warning"><i class="bi bi-battery-half"></i>Critico {{ estoque_critico_count }}</span>
+        {% endif %}
+        <span class="badge-soft"><i class="bi bi-shield-exclamation"></i>Vacinas {{ vacinas_pendentes_count }}</span>
+        {% if vacinas_atrasadas_count %}
+            <span class="badge-soft text-danger"><i class="bi bi-exclamation-triangle"></i>Atrasadas {{ vacinas_atrasadas_count }}</span>
+        {% endif %}
+        {% if vacinas_urgencia_critica_count %}
+            <span class="badge-soft text-danger"><i class="bi bi-fire"></i>Criticas {{ vacinas_urgencia_critica_count }}</span>
+        {% endif %}
+        {% if vacinas_urgencia_alta_count %}
+            <span class="badge-soft text-warning"><i class="bi bi-exclamation-diamond"></i>Altas {{ vacinas_urgencia_alta_count }}</span>
+        {% endif %}
+        <span class="badge-soft"><i class="bi bi-capsule-pill"></i>Medicamentos {{ medicamentos_vencendo_count }}</span>
+        {% if itens_vencidos_count %}
+            <span class="badge-soft text-danger"><i class="bi bi-calendar-x"></i>Vencidos {{ itens_vencidos_count }}</span>
+        {% endif %}
+        <span class="badge-soft"><i class="bi bi-egg"></i>Incubacoes {{ incubacoes_proximas_count }}</span>
+        <span class="badge-soft"><i class="bi bi-baby"></i>Nascimentos {{ nascimentos_previstos_count }}</span>
+        <span class="badge-soft"><i class="bi bi-clock-history"></i>Carencias {{ carencias_ativas_count }}</span>
+        {% if can_view_vendas %}
+            <span class="badge-soft"><i class="bi bi-receipt"></i>Pendencias {{ contas_pendentes_count }}</span>
+        {% endif %}
+        {% if can_view_financeiro and contas_vencidas_count %}
+            <span class="badge-soft text-danger"><i class="bi bi-cash"></i>Contas vencidas {{ contas_vencidas_count }}</span>
+        {% endif %}
+        {% if can_view_financeiro and contas_proximas_count %}
+            <span class="badge-soft text-warning"><i class="bi bi-alarm"></i>Contas proximas {{ contas_proximas_count }}</span>
+        {% endif %}
+        <span class="badge-soft"><i class="bi bi-heart-pulse"></i>Lotes {{ lotes_problema_count }}</span>
+        <span class="badge-soft"><i class="bi bi-calendar-event"></i>Eventos {{ eventos_importantes_count }}</span>
+    </div>
+    {% if not estoque_baixo_count and not vacinas_pendentes_count and not medicamentos_vencendo_count %}
+        <div class="empty-state p-3 mt-3">Sem alertas críticos no momento.</div>
+    {% endif %}
+</div>

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}{{ casal.reprodutor_macho.ave.codigo_interno }} × {{ casal.matriz_femea.ave.codigo_interno }}{% endblock %}
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'reprodutores:casal_list' %}" class="btn btn-outline-secondary btn-sm">← Voltar</a>
+    {% if perms.reprodutores.change_casal %}
+        <a href="{% url 'reprodutores:casal_update' casal.pk %}" class="btn btn-outline-secondary btn-sm">Editar</a>
+    {% endif %}
+    {% if perms.reprodutores.delete_casal %}
+        <a href="{% url 'reprodutores:casal_delete' casal.pk %}" class="btn btn-outline-danger btn-sm">Excluir</a>
+    {% endif %}
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-8">
+        <div class="card card-table">
+            <div class="card-header bg-transparent border-bottom border-secondary">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Informações do Casal</h5>
+                    {% if casal.status == "ativo" and casal.ativo %}
+                        <span class="badge bg-success">Ativo</span>
+                    {% elif casal.status == "pausado" %}
+                        <span class="badge bg-warning text-dark">Pausado</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Finalizado</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-muted">Reprodutor × Matriz</h6>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-5">
+                            <div class="card bg-opacity-10 border-primary">
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <i class="bi bi-mars" style="font-size: 1.5rem; color: #0d6efd;"></i>
+                                        <span class="ms-2 fw-bold">Macho</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Código</small>
+                                        <p class="mb-0 fw-bold">{{ casal.reprodutor_macho.ave.codigo_interno }}</p>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Nome</small>
+                                        <p class="mb-0">{{ casal.reprodutor_macho.ave.nome|default:"-" }}</p>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Qualidade</small>
+                                        <p class="mb-0">
+                                            {% if casal.reprodutor_macho.qualidade_genetica == "superior" %}
+                                                ★ Superior
+                                            {% else %}
+                                                {{ casal.reprodutor_macho.get_qualidade_genetica_display }}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <a href="{% url 'reprodutores:detail' casal.reprodutor_macho.pk %}" class="btn btn-sm btn-outline-primary w-100 mt-2">Ver Reprodutor</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-5">
+                            <div class="card bg-opacity-10 border-danger">
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <i class="bi bi-venus" style="font-size: 1.5rem; color: #dc3545;"></i>
+                                        <span class="ms-2 fw-bold">Fêmea</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Código</small>
+                                        <p class="mb-0 fw-bold">{{ casal.matriz_femea.ave.codigo_interno }}</p>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Nome</small>
+                                        <p class="mb-0">{{ casal.matriz_femea.ave.nome|default:"-" }}</p>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Qualidade</small>
+                                        <p class="mb-0">
+                                            {% if casal.matriz_femea.qualidade_genetica == "superior" %}
+                                                ★ Superior
+                                            {% else %}
+                                                {{ casal.matriz_femea.get_qualidade_genetica_display }}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <a href="{% url 'reprodutores:detail' casal.matriz_femea.pk %}" class="btn btn-sm btn-outline-danger w-100 mt-2">Ver Matriz</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-6 col-md-4 mb-3">
+                        <small class="text-muted">Início</small>
+                        <p class="mb-0 fw-bold">{{ casal.data_inicio|date:"d/m/Y" }}</p>
+                    </div>
+                    <div class="col-6 col-md-4 mb-3">
+                        <small class="text-muted">Fim</small>
+                        <p class="mb-0 fw-bold">{{ casal.data_fim|date:"d/m/Y"|default:"Em andamento" }}</p>
+                    </div>
+                    <div class="col-6 col-md-4 mb-3">
+                        <small class="text-muted">Duração</small>
+                        <p class="mb-0 fw-bold">{{ casal.duracao_reproducao|default:"Em andamento" }} dias</p>
+                    </div>
+                </div>
+
+                {% if casal.lote %}
+                <hr>
+                <div>
+                    <small class="text-muted">Lote Vinculado</small>
+                    <p class="mb-0">
+                        <a href="{% url 'lotes:detail' casal.lote.pk %}" class="fw-bold">{{ casal.lote.nome }}</a>
+                    </p>
+                </div>
+                {% endif %}
+
+                {% if casal.observacoes %}
+                <hr>
+                <div>
+                    <small class="text-muted">Observações</small>
+                    <p class="mb-0 mt-1">{{ casal.observacoes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <!-- Estatísticas -->
+        <div class="card card-table mb-3">
+            <div class="card-header bg-transparent border-bottom border-secondary">
+                <h6 class="mb-0">Estatísticas</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted">Filhotes Registrados</small>
+                    <p class="mb-0 fw-bold" style="font-size: 1.75rem;">{{ filhotes_count }}</p>
+                </div>
+                {% if filhotes_count > 0 %}
+                <div>
+                    <small class="text-muted d-block mb-2">Últimos Filhotes</small>
+                    <div class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+                        {% for filhote in ultimos_filhotes %}
+                        <a href="{% url 'aves:detail' filhote.pk %}" class="list-group-item list-group-item-action text-decoration-none small">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ filhote.codigo_interno }}</strong>
+                                <small class="text-muted">{{ filhote.data_nascimento|date:"d/m/Y" }}</small>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Compatibilidade Genética (se integrado com genetica) -->
+        {% if compatibilidade %}
+        <div class="card card-table">
+            <div class="card-header bg-transparent border-bottom border-secondary">
+                <h6 class="mb-0">Compatibilidade Genética</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ compatibilidade }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

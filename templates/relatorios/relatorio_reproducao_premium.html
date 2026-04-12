@@ -1,0 +1,198 @@
+{% load relatorio_filters %}
+{% extends "relatorios/print_premium.html" %}
+
+{% block content %}
+    <!-- RELATÓRIO REPRODUÇÃO PREMIUM -->
+    
+    {% if incubacoes %}
+        <!-- RESUMO EXECUTIVO DE REPRODUÇÃO -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Resumo: Desempenho Reprodutivo</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 30%">Indicador</th>
+                        <th style="width: 35%" class="text-right">Valor</th>
+                        <th style="width: 35%">Meta/Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total Incubações</td>
+                        <td class="text-right value-number">{{ incubacoes|length }}</td>
+                        <td style="font-size: 9px;">Períodos monitorados</td>
+                    </tr>
+                    <tr>
+                        <td>Ovos Totais</td>
+                        <td class="text-right value-number">{{ total_ovos|default:0 }}</td>
+                        <td class="text-center"><span class="badge badge--venda">{{ ovos_status|default:"Normal" }}</span></td>
+                    </tr>
+                    <tr>
+                        <td>Pintos Nascidos</td>
+                        <td class="text-right value-number" style="color: #1fbf91; font-weight: bold;">{{ total_nascidos|default:0 }}</td>
+                        <td class="text-center" style="color: #1fbf91;">✓ Produção</td>
+                    </tr>
+                    <tr>
+                        <td>Taxa Média Eclosão</td>
+                        <td class="text-right value-number" style="color: #1fbf91; font-weight: bold;">{{ taxa_media|default:"0" }}%</td>
+                        <td class="text-center">
+                            {% if taxa_media >= 85 %}
+                                <span style="color: #1fbf91;">✓ Excelente</span>
+                            {% elif taxa_media >= 75 %}
+                                <span style="color: #f59e0b;">⚠️ Bom</span>
+                            {% else %}
+                                <span style="color: #dc3545;">❌ Baixo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Perda Total</td>
+                        <td class="text-right value-number" style="color: #dc3545;">{{ total_perdas|default:0 }}</td>
+                        <td class="text-right value-number" style="font-size: 9px; color: #dc3545;">
+                            {% if total_ovos != 0 %}
+                                {% widthratio total_perdas total_ovos 100 %}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ANÁLISE DETALHADA POR INCUBAÇÃO -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Performance Detalhada (Por Ciclo)</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%">Ciclo</th>
+                        <th style="width: 12%" class="text-right">Ovos</th>
+                        <th style="width: 12%" class="text-right">Nascidos</th>
+                        <th style="width: 12%" class="text-right">Perdas</th>
+                        <th style="width: 13%" class="text-right">Taxa %</th>
+                        <th style="width: 15%">Matriz</th>
+                        <th style="width: 22%">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inc in incubacoes %}
+                        {% with taxa=inc.quantidade_nascida|percentage:inc.quantidade_ovos %}
+                        <tr>
+                            <td><strong>{{ inc.codigo }}</strong></td>
+                            <td class="text-right value-number">{{ inc.quantidade_ovos }}</td>
+                            <td class="text-right value-number">{{ inc.quantidade_nascida|default:0 }}</td>
+                            <td class="text-right value-number" style="color: #dc3545;">
+                                {{ inc.perdas|default:0 }}
+                            </td>
+                            <td class="text-right value-number" style="color: #1fbf91; font-weight: bold;">
+                                {{ taxa }}%
+                            </td>
+                            <td style="font-size: 9px;">
+                                {{ inc.matriz_responsavel.codigo_interno|default:"—" }}
+                            </td>
+                            <td>
+                                {% if inc.status == 'concluida' %}
+                                    <span class="badge badge--entrada">✓ Finalizado</span>
+                                {% else %}
+                                    <span class="badge badge--pendente">⏳ Ativo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ANÁLISE DE TENDÊNCIAS -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Análise de Tendências Reprodutivas</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Parâmetro</th>
+                        <th style="width: 30%" class="text-right">Valor Atual</th>
+                        <th style="width: 30%">Tendência</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Taxa Eclosão Média</td>
+                        <td class="text-right value-number" style="color: #1fbf91; font-weight: bold;">{{ taxa_media|default:"0" }}%</td>
+                        <td>
+                            <span style="color: #1fbf91;">📈 Estável</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Qualidade de Ovos</td>
+                        <td class="text-center">
+                            <span class="badge badge--entrada">✓ Boa</span>
+                        </td>
+                        <td style="font-size: 9px;">Dentro do padrão</td>
+                    </tr>
+                    <tr>
+                        <td>Fertilidade Média</td>
+                        <td class="text-right value-number">{{ fertilidade_media|default:"0" }}%</td>
+                        <td style="font-size: 9px;">Acompanhar</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RECOMENDAÇÕES REPRODUTIVAS -->
+        <div class="pdf-section" style="background: #dbeafe; border-left: 4px solid #4c8dff; padding: 12px; margin: 16px 0;">
+            <h3 style="color: #1e40af; margin: 0 0 8px 0; font-size: 12px;">💡 RECOMENDAÇÕES REPRODUTIVAS</h3>
+            <ul style="margin: 0; padding-left: 16px; color: #1e40af; font-size: 10px;">
+                <li>Manter proporção de machos adequada (1 macho para 8-10 fêmeas)</li>
+                <li>Renovar matrizes conforme índice produtivo cai abaixo de 70%</li>
+                <li>Revisar dieta: Proteína mínima 16%, Cálcio 3.5-4%</li>
+                <li>Monitorar peso corporal: Desvio máximo de ±5% da meta</li>
+                <li>Garantir período de luz: 16 horas/dia para matrizes</li>
+            </ul>
+        </div>
+
+        <!-- RESUMO FINAL -->
+        <div class="pdf-section no-break">
+            <h2 class="pdf-section__title">Totalizações Reprodutivas</h2>
+            
+            <table>
+                <tbody>
+                    <tr>
+                        <td style="width: 50%; background: #dbeafe; font-weight: 600;">Produção Total (pintos)</td>
+                        <td style="width: 50%; background: #dbeafe; text-align: right;" class="value-number" style="color: #1fbf91; font-weight: bold;">
+                            {{ total_nascidos|default:0 }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #e8f5e9; font-weight: 600;">Eficiência Geral</td>
+                        <td style="width: 50%; background: #e8f5e9; text-align: right;" class="value-number" style="color: #1fbf91; font-weight: bold;">
+                            {{ taxa_media|default:"0" }}%
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #fef3c7; font-weight: 600;">Recomendação</td>
+                        <td style="width: 50%; background: #fef3c7; text-align: right;" style="color: #92400e; font-weight: bold;">
+                            {% if taxa_media >= 85 %}
+                                MANTER ✓
+                            {% elif taxa_media >= 75 %}
+                                REVISAR ⚠️
+                            {% else %}
+                                INTERVIR 🔧
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+        <div class="pdf-empty-state">
+            Nenhuma incubação/reprodução encontrada para o período especificado.
+        </div>
+    {% endif %}
+
+{% endblock %}

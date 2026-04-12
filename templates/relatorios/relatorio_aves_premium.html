@@ -1,0 +1,160 @@
+{% load relatorio_filters %}
+{% extends "relatorios/print_premium.html" %}
+
+{% block content %}
+    <!-- RELATÓRIO AVES PREMIUM -->
+    
+    {% if aves %}
+        <!-- RESUMO POR FINALIDADE -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Resumo: Aves por Finalidade</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Finalidade</th>
+                        <th style="width: 30%" class="text-right">Quantidade</th>
+                        <th style="width: 30%" class="text-right">% do Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% regroup aves by finalidade as aves_por_finalidade %}
+                    {% for finalidade, items in aves_por_finalidade %}
+                        <tr>
+                            <td>
+                                {% if finalidade == 'reproducao' %}
+                                    <span class="badge badge--entrada">🔄 Reprodução</span>
+                                {% elif finalidade == 'producao' %}
+                                    <span class="badge badge--venda">🐔 Produção</span>
+                                {% else %}
+                                    <span class="badge badge--pendente">❓ Outro</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right value-number">{{ items|length }}</td>
+                            <td class="text-right value-number">
+                                {% widthratio items|length aves|length 100 %}%
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RESUMO POR STATUS -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Aves por Status</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Status</th>
+                        <th style="width: 30%" class="text-right">Quantidade</th>
+                        <th style="width: 30%" class="text-right">% do Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% regroup aves by status as aves_por_status %}
+                    {% for status, items in aves_por_status %}
+                        <tr>
+                            <td>
+                                {% if status == 'ativa' %}
+                                    <span class="badge badge--entrada">✓ Ativa</span>
+                                {% elif status == 'descartada' %}
+                                    <span class="badge badge--saida">✗ Descartada</span>
+                                {% else %}
+                                    <span class="badge badge--pendente">⏳ {{ status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right value-number">{{ items|length }}</td>
+                            <td class="text-right value-number">
+                                {% widthratio items|length aves|length 100 %}%
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- LISTA DETALHADA DE AVES -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Aves Monitoradas (Detalhado)</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%">Código</th>
+                        <th style="width: 12%">Nome</th>
+                        <th style="width: 15%">Linhagem</th>
+                        <th style="width: 15%">Finalidade</th>
+                        <th style="width: 12%">Status</th>
+                        <th style="width: 20%" class="text-right">Nascimento</th>
+                        <th style="width: 14%">Lote</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ave in aves %}
+                        <tr>
+                            <td><strong>{{ ave.codigo_interno }}</strong></td>
+                            <td>{{ ave.nome|truncatewords:2 }}</td>
+                            <td>{{ ave.linhagem.nome|truncatewords:2|default:"—" }}</td>
+                            <td>
+                                {% if ave.finalidade == 'reproducao' %}
+                                    <span class="badge badge--entrada">Reprodução</span>
+                                {% else %}
+                                    <span class="badge badge--venda">Produção</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ave.status == 'ativa' %}
+                                    <span class="badge badge--entrada">✓ Ativa</span>
+                                {% else %}
+                                    <span class="badge badge--saida">{{ ave.status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right" style="font-size: 9px;">
+                                {{ ave.data_nascimento|date:"d/m/Y"|default:"—" }}
+                            </td>
+                            <td style="font-size: 9px;">
+                                {{ ave.lote.codigo|default:"—" }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RESUMO FINAL -->
+        <div class="pdf-section no-break">
+            <h2 class="pdf-section__title">Totalizações</h2>
+            
+            <table>
+                <tbody>
+                    <tr>
+                        <td style="width: 50%; background: #dbeafe; font-weight: 600;">Total de Aves</td>
+                        <td style="width: 50%; background: #dbeafe; text-align: right;" class="value-number">
+                            {{ aves|length }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #f8fafc; font-weight: 600;">Aves Ativas</td>
+                        <td style="width: 50%; background: #f8fafc; text-align: right;" class="value-number">
+                            {{ ativas_count|default:0 }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #e8f5e9; font-weight: 600;">Reprodutivas</td>
+                        <td style="width: 50%; background: #e8f5e9; text-align: right;" class="value-number">
+                            {{ reprodutivas_count|default:0 }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+        <div class="pdf-empty-state">
+            Nenhuma ave encontrada para o período especificado.
+        </div>
+    {% endif %}
+
+{% endblock %}

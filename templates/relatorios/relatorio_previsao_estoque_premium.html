@@ -1,0 +1,208 @@
+{% load relatorio_filters %}
+{% extends "relatorios/print_premium.html" %}
+
+{% block content %}
+    <!-- RELATÓRIO PREVISÃO DE ESTOQUE PREMIUM -->
+    
+    {% if itens_previsao %}
+        <!-- RESUMO EXECUTIVO -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Resumo: Previsão de Reposição</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Categoria</th>
+                        <th style="width: 20%" class="text-right">Qtd Items</th>
+                        <th style="width: 20%" class="text-right">Reposição</th>
+                        <th style="width: 20%" class="text-right">15 dias</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <span class="badge badge--entrada">✓ Suficiente</span>
+                        </td>
+                        <td class="text-right value-number">
+                            {{ reposicao_normal|default:0 }}
+                        </td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge badge--pendente">⏳ Próximas 15 dias</span>
+                        </td>
+                        <td class="text-right value-number">
+                            {{ reposicao_proxima|default:0 }}
+                        </td>
+                        <td class="text-right value-number">{{ reposicao_proxima|default:0 }}</td>
+                        <td class="text-center">⚠️</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge badge--saida">❌ Crítico</span>
+                        </td>
+                        <td class="text-right value-number">
+                            {{ reposicao_critica|default:0 }}
+                        </td>
+                        <td class="text-right value-number" style="color: #dc3545; font-weight: bold;">
+                            {{ reposicao_critica|default:0 }}
+                        </td>
+                        <td class="text-center">🚨</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ALERTAS - REPOSIÇÃO PRÓXIMA 15 DIAS -->
+        {% if reposicao_proxima > 0 %}
+            <div class="pdf-section" style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin: 16px 0;">
+                <h3 style="color: #92400e; margin: 0 0 8px 0; font-size: 12px;">⚠️ ATENÇÃO: {{ reposicao_proxima }} itens precisam de reposição nos próximos 15 dias</h3>
+                <p style="margin: 0; color: #92400e; font-size: 10px;">
+                    Prepare os pedidos com antecedência para garantir continuidade operacional.
+                </p>
+            </div>
+        {% endif %}
+
+        <!-- LISTA DETALHADA COM DURAÇÃO ESTIMADA -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Previsão Detalhada (Ordenado por Urgência)</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 5%" class="text-center">⏱</th>
+                        <th style="width: 25%">Item</th>
+                        <th style="width: 18%" class="text-center">Categoria</th>
+                        <th style="width: 13%" class="text-right">Qtd Atual</th>
+                        <th style="width: 15%" class="text-right">Consumo Médio</th>
+                        <th style="width: 18%" class="text-right">Duração (dias)</th>
+                        <th style="width: 6%" class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in itens_previsao %}
+                        <tr>
+                            <td class="text-center">
+                                {% if item.reposicao_proxima %}
+                                    <span style="color: #f59e0b; font-weight: bold;">⏳</span>
+                                {% else %}
+                                    <span style="color: #1fbf91;">✓</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.item.nome|truncatewords:4 }}</td>
+                            <td class="text-center">{{ item.item.get_categoria_display }}</td>
+                            <td class="text-right value-number">{{ item.item.quantidade_atual }}</td>
+                            <td class="text-right value-number">{{ item.consumo_medio|floatformat:1 }}</td>
+                            <td class="text-right value-number" style="font-weight: 600;">
+                                {% if item.duracao_estimada > 15 %}
+                                    <span style="color: #1fbf91;">{{ item.duracao_estimada|floatformat:0 }} dias</span>
+                                {% elif item.duracao_estimada > 7 %}
+                                    <span style="color: #f59e0b;">{{ item.duracao_estimada|floatformat:0 }} dias</span>
+                                {% else %}
+                                    <span style="color: #dc3545;">{{ item.duracao_estimada|floatformat:0 }} dias</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.reposicao_proxima %}
+                                    <span class="badge badge--pendente">⚠️</span>
+                                {% else %}
+                                    <span class="badge badge--entrada">✓</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ANÁLISE POR CATEGORIA -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Análise por Categoria</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 35%">Categoria</th>
+                        <th style="width: 15%" class="text-center">Items</th>
+                        <th style="width: 20%" class="text-right">Consumo/Dia</th>
+                        <th style="width: 20%" class="text-right">Estoque Dias</th>
+                        <th style="width: 10%" class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in itens_previsao %}
+                        <tr>
+                            <td><strong>{{ item.item.get_categoria_display }}</strong></td>
+                            <td class="text-center value-number">1</td>
+                            <td class="text-right value-number">{{ item.consumo_medio|floatformat:2 }}</td>
+                            <td class="text-right value-number">{{ item.duracao_estimada|floatformat:0 }}</td>
+                            <td class="text-center">
+                                {% if item.duracao_estimada > 21 %}
+                                    <span style="background: #1fbf91; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px;">✓ OK</span>
+                                {% elif item.duracao_estimada > 10 %}
+                                    <span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px;">⚠️ ALERTA</span>
+                                {% else %}
+                                    <span style="background: #dc3545; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px;">🚨 CRÍTICO</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RECOMENDAÇÕES DE REPOSIÇÃO -->
+        <div class="pdf-section" style="background: #dbeafe; border-left: 4px solid #4c8dff; padding: 12px; margin: 16px 0;">
+            <h3 style="color: #1e40af; margin: 0 0 8px 0; font-size: 12px;">💡 RECOMENDAÇÕES DE REPOSIÇÃO</h3>
+            <ul style="margin: 0; padding-left: 16px; color: #1e40af; font-size: 10px;">
+                <li><strong>Próximas 7 dias:</strong> Solicitar reposição urgente para itens marcados com 🚨</li>
+                <li><strong>Próximas 2 semanas:</strong> Programar reabastecimento para itens com ⚠️</li>
+                <li><strong>Próximas 3 semanas:</strong> Revisar ponto de reabastecimento (ROP) conforme consumo</li>
+                <li><strong>Geral:</strong> Manter margem de segurança mínima de 15 dias de estoque</li>
+            </ul>
+        </div>
+
+        <!-- RESUMO FINAL -->
+        <div class="pdf-section no-break">
+            <h2 class="pdf-section__title">Totalizações e Status</h2>
+            
+            <table>
+                <tbody>
+                    <tr>
+                        <td style="width: 50%; background: #e8f5e9; font-weight: 600;">Items em Estoque Normal</td>
+                        <td style="width: 50%; background: #e8f5e9; text-align: right;" class="value-number">
+                            {{ reposicao_normal|default:0 }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #fef3c7; font-weight: 600;">Items que Precisam Reposição (15d)</td>
+                        <td style="width: 50%; background: #fef3c7; text-align: right;" class="value-number" style="color: #92400e; font-weight: bold;">
+                            {{ reposicao_proxima|default:0 }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #fee2e2; font-weight: 600;">Items em Nível Crítico</td>
+                        <td style="width: 50%; background: #fee2e2; text-align: right;" class="value-number" style="color: #dc3545; font-weight: bold;">
+                            {{ reposicao_critica|default:0 }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 12px; padding: 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px;">
+                <p style="margin: 0; font-size: 10px; color: #64748b;">
+                    <strong>Próxima revisão recomendada:</strong> {{ proxima_revisao|date:"d/m/Y"|default:"A cada 7 dias" }}<br>
+                    <strong>Considerações finais:</strong> Manter comunicação com fornecedores para prazos de entrega. Revisar ajustes de consumo mensalmente.
+                </p>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="pdf-empty-state">
+            Nenhuma previsão de estoque disponível para o período especificado.
+        </div>
+    {% endif %}
+
+{% endblock %}

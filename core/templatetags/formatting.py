@@ -54,3 +54,11 @@ def qty(value, unidade=""):
 @register.filter
 def num(value):
     return _format_decimal(value, 2, strip_trailing=True)
+
+
+@register.filter
+def get_item(mapping, key):
+    try:
+        return mapping.get(key)
+    except Exception:
+        return None

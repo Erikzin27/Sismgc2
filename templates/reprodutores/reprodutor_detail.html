@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}{{ reprodutor }}{% endblock %}
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'reprodutores:list' %}" class="btn btn-outline-secondary btn-sm">← Voltar</a>
+    {% if perms.reprodutores.change_reprodutor %}
+        <a href="{% url 'reprodutores:update' reprodutor.pk %}" class="btn btn-outline-secondary btn-sm">Editar</a>
+    {% endif %}
+    {% if perms.reprodutores.delete_reprodutor %}
+        <a href="{% url 'reprodutores:delete' reprodutor.pk %}" class="btn btn-outline-danger btn-sm">Excluir</a>
+    {% endif %}
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-8">
+        <div class="card card-table">
+            <div class="card-header bg-transparent border-bottom border-secondary">
+                <h5 class="mb-0">Informações do Reprodutor</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-6 col-md-4">
+                        <small class="text-muted d-block mb-1">Tipo</small>
+                        {% if reprodutor.tipo == "matriz" %}
+                            <span class="badge bg-danger fs-6">♀ Matriz</span>
+                        {% else %}
+                            <span class="badge bg-primary fs-6">♂ Reprodutor</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <small class="text-muted d-block mb-1">Status</small>
+                        {% if reprodutor.status == "ativo" %}
+                            <span class="badge bg-success">Ativo</span>
+                        {% elif reprodutor.status == "descanso" %}
+                            <span class="badge bg-warning text-dark">Descanso</span>
+                        {% elif reprodutor.status == "vendido" %}
+                            <span class="badge bg-info">Vendido</span>
+                        {% else %}
+                            <span class="badge bg-danger">Descartado</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <small class="text-muted d-block mb-1">Qualidade</small>
+                        {% if reprodutor.qualidade_genetica == "padrao" %}
+                            <span class="badge bg-secondary">Padrão</span>
+                        {% elif reprodutor.qualidade_genetica == "superior" %}
+                            <span class="badge bg-warning text-dark">★ Superior</span>
+                        {% else %}
+                            <span class="badge bg-success">Pura</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-6 col-md-3 mb-2">
+                        <small class="text-muted">Código</small>
+                        <p class="mb-0 fw-bold">{{ reprodutor.ave.codigo_interno }}</p>
+                    </div>
+                    <div class="col-6 col-md-3 mb-2">
+                        <small class="text-muted">Nome</small>
+                        <p class="mb-0 fw-bold">{{ reprodutor.ave.nome|default:"-" }}</p>
+                    </div>
+                    <div class="col-6 col-md-3 mb-2">
+                        <small class="text-muted">Linhagem</small>
+                        <p class="mb-0 fw-bold">
+                            {% if reprodutor.ave.linhagem %}
+                                {{ reprodutor.ave.linhagem.nome }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-6 col-md-3 mb-2">
+                        <small class="text-muted">Lote Atual</small>
+                        <p class="mb-0 fw-bold">
+                            {% if reprodutor.ave.lote_atual %}
+                                {{ reprodutor.ave.lote_atual.nome }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-6 col-md-3 mb-2">
+                        <small class="text-muted">Sexo</small>
+                        <p class="mb-0 fw-bold">
+                            {% if reprodutor.ave.sexo == "M" %}
+                                ♂ Macho
+                            {% else %}
+                                ♀ Fêmea
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-6 col-md-3 mb-2">
+                        <small class="text-muted">Nascimento</small>
+                        <p class="mb-0 fw-bold">{{ reprodutor.ave.data_nascimento|date:"d/m/Y"|default:"-" }}</p>
+                    </div>
+                    <div class="col-6 col-md-3 mb-2">
+                        <small class="text-muted">Peso</small>
+                        <p class="mb-0 fw-bold">{{ reprodutor.ave.peso_atual|default:"-" }} kg</p>
+                    </div>
+                    <div class="col-6 col-md-3 mb-2">
+                        <small class="text-muted">Valor Estimado</small>
+                        <p class="mb-0 fw-bold">{{ reprodutor.valor_estimado|brl|default:"-" }}</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-6 col-md-3 mb-2">
+                        <small class="text-muted">Início Reprodução</small>
+                        <p class="mb-0 fw-bold">{{ reprodutor.data_inicio_reproducao|date:"d/m/Y"|default:"-" }}</p>
+                    </div>
+                    <div class="col-6 col-md-3 mb-2">
+                        <small class="text-muted">Fim Reprodução</small>
+                        <p class="mb-0 fw-bold">{{ reprodutor.data_fim_reproducao|date:"d/m/Y"|default:"-" }}</p>
+                    </div>
+                </div>
+
+                {% if reprodutor.observacoes %}
+                <hr>
+                <div>
+                    <small class="text-muted">Observações</small>
+                    <p class="mb-0 mt-1">{{ reprodutor.observacoes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <!-- Genética -->
+        <div class="card card-table mb-3">
+            <div class="card-header bg-transparent border-bottom border-secondary">
+                <h6 class="mb-0">Genealogia</h6>
+            </div>
+            <div class="card-body">
+                {% if reprodutor.ave.pai %}
+                    <div class="mb-2">
+                        <small class="text-muted">Pai</small>
+                        <p class="mb-0"><strong>{{ reprodutor.ave.pai.codigo_interno }}</strong></p>
+                    </div>
+                {% endif %}
+                {% if reprodutor.ave.mae %}
+                    <div class="mb-2">
+                        <small class="text-muted">Mãe</small>
+                        <p class="mb-0"><strong>{{ reprodutor.ave.mae.codigo_interno }}</strong></p>
+                    </div>
+                {% endif %}
+                {% if not reprodutor.ave.pai and not reprodutor.ave.mae %}
+                    <p class="text-muted small mb-0">Sem registro de pais</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Casais -->
+        {% if casais %}
+        <div class="card card-table">
+            <div class="card-header bg-transparent border-bottom border-secondary">
+                <h6 class="mb-0">Casais Participantes</h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for casal in casais %}
+                    <a href="{% url 'reprodutores:casal_detail' casal.pk %}" class="list-group-item list-group-item-action text-decoration-none">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                {% if reprodutor.tipo == "matriz" %}
+                                    ♂ {{ casal.reprodutor_macho.ave.codigo_interno }}
+                                {% else %}
+                                    ♀ {{ casal.matriz_femea.ave.codigo_interno }}
+                                {% endif %}
+                            </div>
+                            <small class="badge {% if casal.status == 'ativo' and casal.ativo %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ casal.get_status_display }}
+                            </small>
+                        </div>
+                        <small class="text-muted">{{ casal.data_inicio|date:"d/m/Y" }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Filhotes Info -->
+        {% if filhotes_como_pai or filhotes_como_mae %}
+        <div class="card card-table mt-3">
+            <div class="card-header bg-transparent border-bottom border-secondary">
+                <h6 class="mb-0">Genética Registrada</h6>
+            </div>
+            <div class="card-body">
+                {% if filhotes_como_pai %}
+                    <div class="mb-2">
+                        <small class="text-muted">Filhotes como Pai</small>
+                        <p class="mb-0 fw-bold">{{ filhotes_como_pai }}</p>
+                    </div>
+                {% endif %}
+                {% if filhotes_como_mae %}
+                    <div class="mb-2">
+                        <small class="text-muted">Filhotes como Mãe</small>
+                        <p class="mb-0 fw-bold">{{ filhotes_como_mae }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

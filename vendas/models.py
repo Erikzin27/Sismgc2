@@ -1,9 +1,10 @@
 from django.db import models
 from decimal import Decimal
 from core.models import TimeStampedModel, AuditModel
+from core.state_machines import VendaPaymentStateMachine
 
 
-class Venda(TimeStampedModel, AuditModel):
+class Venda(VendaPaymentStateMachine, TimeStampedModel, AuditModel):
     CAT_OVOS = "ovos"
     CAT_AVE_VIVA = "ave_viva"
     CAT_AVE_ABATIDA = "ave_abatida"
@@ -58,7 +59,13 @@ class Venda(TimeStampedModel, AuditModel):
 
     def save(self, *args, **kwargs):
         if self.valor_total is None or self.valor_total == 0:
-            self.valor_total = ((self.quantidade or 0) * (self.valor_unitario or 0) - (self.desconto or 0)).quantize(Decimal("0.01"))
+            from decimal import Decimal
+            qty = Decimal(str(self.quantidade or 0))
+            unit_val = Decimal(str(self.valor_unitario or 0))
+            disc = Decimal(str(self.desconto or 0))
+            self.valor_total = (qty * unit_val - disc).quantize(Decimal("0.01"))
+        # Validar estados antes de salvar
+        self.full_clean()
         super().save(*args, **kwargs)
 
     @property
@@ -109,6 +116,9 @@ class Venda(TimeStampedModel, AuditModel):
         Validações adicionais para evitar estados inválidos.
         Útil para garantir integridade de dados.
         """
+        # Validar transições de estado primeiro (StateTransitionMixin)
+        super().clean()
+        
         from django.core.exceptions import ValidationError
         
         # Validar que quantidade e valor_unitario são positivos

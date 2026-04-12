@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Reprodutores{% endblock %}
+{% block page_subtitle %}Gestão de matriz e reprodutores com qualidade genética.{% endblock %}
+{% block content %}
+<style>
+    .reprodutor-card {
+        background: #121b2f;
+        border: 1px solid #1f2a44;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+    }
+    .reprodutor-card:hover {
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+        border-color: #4c8dff;
+    }
+    body[data-bs-theme="light"] .reprodutor-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+    }
+    body[data-bs-theme="light"] .reprodutor-card:hover {
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+</style>
+
+<div class="page-panel filter-bar">
+    <div class="list-actions mb-0">
+        <div class="list-actions__left">
+            {% if perms.reprodutores.add_reprodutor %}
+                <a class="btn btn-primary" href="{% url 'reprodutores:create' %}"><i class="bi bi-plus-lg"></i> Novo Reprodutor</a>
+            {% endif %}
+        </div>
+        <div class="list-actions__center w-100">
+            <form method="get" class="d-flex gap-2 flex-wrap w-100">
+                <input class="form-control form-control-sm" type="search" name="q" value="{{ request.GET.q }}" placeholder="Código ou nome da ave">
+                <select class="form-select form-select-sm" name="tipo">
+                    <option value="">Tipo</option>
+                    {% for val,label in reprodutores.model.TIPOS %}
+                        <option value="{{ val }}" {% if request.GET.tipo == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <select class="form-select form-select-sm" name="status">
+                    <option value="">Status</option>
+                    {% for val,label in reprodutores.model.STATUS_CHOICES %}
+                        <option value="{{ val }}" {% if request.GET.status == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <select class="form-select form-select-sm" name="qualidade_genetica">
+                    <option value="">Qualidade</option>
+                    {% for val,label in reprodutores.model.QUALIDADE_CHOICES %}
+                        <option value="{{ val }}" {% if request.GET.qualidade_genetica == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-outline-secondary btn-sm" type="submit">Filtrar</button>
+                <a class="btn btn-outline-light btn-sm" href="{% url 'reprodutores:list' %}">Limpar</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="filter-bar__summary">
+    <span class="badge-soft"><i class="bi bi-feather"></i>Total {{ total }} reprodutores</span>
+    <span class="badge-soft"><i class="bi bi-venus"></i>{{ matrizes }} matrizes</span>
+    <span class="badge-soft"><i class="bi bi-mars"></i>{{ reprodutores }} reprodutores</span>
+    <span class="badge-soft"><i class="bi bi-check-circle"></i>{{ ativos }} ativos</span>
+    <span class="badge-soft"><i class="bi bi-star"></i>{{ superior }} superiores</span>
+</div>
+
+{% if reprodutores %}
+    <div class="d-none d-lg-block">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover card-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Linhagem</th>
+                        <th>Qualidade</th>
+                        <th>Status</th>
+                        <th>Valor</th>
+                        <th>Desde</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in reprodutores %}
+                    <tr>
+                        <td><a href="{% url 'reprodutores:detail' r.pk %}" class="fw-bold">{{ r.ave.codigo_interno }}</a></td>
+                        <td>{{ r.ave.nome|default:"-" }}</td>
+                        <td>
+                            {% if r.tipo == "matriz" %}
+                                <span class="badge bg-danger">♀ Matriz</span>
+                            {% else %}
+                                <span class="badge bg-primary">♂ Reprodutor</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if r.ave.linhagem %}
+                                <span class="badge bg-info text-dark">{{ r.ave.linhagem.nome }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if r.qualidade_genetica == "padrao" %}
+                                <span class="badge bg-secondary">Padrão</span>
+                            {% elif r.qualidade_genetica == "superior" %}
+                                <span class="badge bg-warning text-dark">★ Superior</span>
+                            {% elif r.qualidade_genetica == "pura" %}
+                                <span class="badge bg-success">Pura</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if r.status == "ativo" %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% elif r.status == "descanso" %}
+                                <span class="badge bg-warning text-dark">Descanso</span>
+                            {% elif r.status == "vendido" %}
+                                <span class="badge bg-info">Vendido</span>
+                            {% else %}
+                                <span class="badge bg-danger">Descartado</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ r.valor_estimado|brl|default:"-" }}</td>
+                        <td>{{ r.data_inicio_reproducao|date:"d/m/Y"|default:"-" }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'reprodutores:detail' r.pk %}" class="btn btn-sm btn-outline-info">Ver</a>
+                            {% if perms.reprodutores.change_reprodutor %}
+                                <a href="{% url 'reprodutores:update' r.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-lg-none">
+        {% for r in reprodutores %}
+        <div class="reprodutor-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <h6 class="mb-0">{{ r.ave.codigo_interno }}</h6>
+                    <small class="text-muted">{{ r.ave.nome|default:"Sem nome" }}</small>
+                </div>
+                {% if r.tipo == "matriz" %}
+                    <span class="badge bg-danger">♀ Matriz</span>
+                {% else %}
+                    <span class="badge bg-primary">♂ Reprodutor</span>
+                {% endif %}
+            </div>
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <small class="text-muted">Qualidade:</small>
+                    <div>
+                        {% if r.qualidade_genetica == "padrao" %}
+                            <span class="badge bg-secondary">Padrão</span>
+                        {% elif r.qualidade_genetica == "superior" %}
+                            <span class="badge bg-warning text-dark">★ Superior</span>
+                        {% else %}
+                            <span class="badge bg-success">Pura</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-6">
+                    <small class="text-muted">Status:</small>
+                    <div>
+                        {% if r.status == "ativo" %}
+                            <span class="badge bg-success">Ativo</span>
+                        {% elif r.status == "descanso" %}
+                            <span class="badge bg-warning text-dark">Descanso</span>
+                        {% elif r.status == "vendido" %}
+                            <span class="badge bg-info">Vendido</span>
+                        {% else %}
+                            <span class="badge bg-danger">Descartado</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if r.ave.linhagem %}
+                <div class="col-12">
+                    <small class="text-muted">Linhagem:</small>
+                    <div>{{ r.ave.linhagem.nome }}</div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'reprodutores:detail' r.pk %}" class="btn btn-sm btn-outline-info flex-grow-1">Ver</a>
+                {% if perms.reprodutores.change_reprodutor %}
+                    <a href="{% url 'reprodutores:update' r.pk %}" class="btn btn-sm btn-outline-secondary flex-grow-1">Editar</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% include "pagination.html" with page_obj=page_obj %}
+{% else %}
+    <div class="text-center py-5">
+        <div class="empty-state p-5" style="border-radius: 1rem;">
+            <i class="bi bi-feather" style="font-size: 3rem; opacity: 0.6; display: block; margin-bottom: 1rem;"></i>
+            <h5>Nenhum reprodutor encontrado</h5>
+            <p class="text-muted mb-3">Nenhum reprodutor corresponde aos critérios de filtro.</p>
+            {% if perms.reprodutores.add_reprodutor %}
+                <a href="{% url 'reprodutores:create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Cadastrar primeiro reprodutor
+                </a>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

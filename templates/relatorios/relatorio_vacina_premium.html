@@ -1,0 +1,171 @@
+{% load relatorio_filters %}
+{% extends "relatorios/print_premium.html" %}
+
+{% block content %}
+    <!-- RELATÓRIO VACINAÇÃO PREMIUM -->
+    
+    {% if vacinas %}
+        <!-- RESUMO POR STATUS -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Resumo: Status de Vacinações</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Status</th>
+                        <th style="width: 30%" class="text-right">Quantidade</th>
+                        <th style="width: 30%" class="text-right">% do Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% regroup vacinas by status as vacinas_por_status %}
+                    {% for status, items in vacinas_por_status %}
+                        <tr>
+                            <td>
+                                {% if status == 'pendente' %}
+                                    <span class="badge badge--pendente">⏳ Pendente</span>
+                                {% elif status == 'aplicada' or status == 'ok' %}
+                                    <span class="badge badge--entrada">✓ Aplicada</span>
+                                {% else %}
+                                    <span class="badge badge--saida">✗ {{ status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right value-number">{{ items|length }}</td>
+                            <td class="text-right value-number">
+                                {% widthratio items|length vacinas|length 100 %}%
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ALERTAS DE VACINAÇÕES PENDENTES -->
+        {% regroup vacinas by status as vacinas_por_status %}
+        {% for status, items in vacinas_por_status %}
+            {% if status == 'pendente' and items|length > 0 %}
+                <div class="pdf-section" style="background: #fee2e2; border-left: 4px solid #dc3545; padding: 12px; margin: 16px 0;">
+                    <h3 style="color: #991b1b; margin: 0 0 8px 0; font-size: 12px;">🚨 ATENÇÃO: {{ items|length }} Vacinações Pendentes</h3>
+                    <p style="margin: 0; color: #991b1b; font-size: 10px;">
+                        Verifique o cronograma de vacinação e execute as aplicações conforme planejado.
+                    </p>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <!-- RESUMO POR VACINA -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Vacinas Aplicadas</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 35%">Vacina</th>
+                        <th style="width: 15%" class="text-center">Total</th>
+                        <th style="width: 20%" class="text-center">Aplicadas</th>
+                        <th style="width: 20%" class="text-center">Pendentes</th>
+                        <th style="width: 10%" class="text-right">% Cobertura</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% regroup vacinas by vacina as vacinas_por_tipo %}
+                    {% for vacina, items in vacinas_por_tipo %}
+                        {% with aplicadas=items|count_by_type:1 total=items|length pendentes=total|add:"-"|add:aplicadas %}
+                            <tr>
+                                <td>{{ vacina.nome|truncatewords:3 }}</td>
+                                <td class="text-center value-number">{{ total }}</td>
+                                <td class="text-center value-number" style="color: #1fbf91;">{{ aplicadas }}</td>
+                                <td class="text-center value-number" style="color: #dc3545;">{{ pendentes }}</td>
+                                <td class="text-right value-number">{{ cobertura }}%</td>
+                            </tr>
+                        {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- LISTA DETALHADA DE VACINAÇÕES -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Vacinações Detalhadadas (Cronograma)</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%">Status</th>
+                        <th style="width: 18%">Vacina</th>
+                        <th style="width: 15%">Alvo</th>
+                        <th style="width: 20%" class="text-right">Data Prog.</th>
+                        <th style="width: 18%" class="text-right">Data Real</th>
+                        <th style="width: 17%">Responsável</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vacinas %}
+                        <tr>
+                            <td>
+                                {% if v.status == 'pendente' %}
+                                    <span class="badge badge--pendente">⏳</span>
+                                {% else %}
+                                    <span class="badge badge--entrada">✓</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ v.vacina.nome|truncatewords:2 }}</td>
+                            <td>
+                                {% if v.ave %}
+                                    Ave: {{ v.ave.codigo_interno }}
+                                {% elif v.lote %}
+                                    Lote: {{ v.lote.codigo }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td class="text-right" style="font-size: 9px;">
+                                {{ v.data_programada|date:"d/m/Y" }}
+                            </td>
+                            <td class="text-right" style="font-size: 9px;">
+                                {{ v.data_aplicacao|date:"d/m/Y"|default:"—" }}
+                            </td>
+                            <td style="font-size: 9px;">
+                                {{ v.responsavel|truncatewords:2|default:"—" }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RESUMO FINAL -->
+        <div class="pdf-section no-break">
+            <h2 class="pdf-section__title">Indicadores de Saúde</h2>
+            
+            <table>
+                <tbody>
+                    <tr>
+                        <td style="width: 50%; background: #dbeafe; font-weight: 600;">Total Aplicações</td>
+                        <td style="width: 50%; background: #dbeafe; text-align: right;" class="value-number">
+                            {{ vacinas|length }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #e8f5e9; font-weight: 600;">Cobertura Vacinação</td>
+                        <td style="width: 50%; background: #e8f5e9; text-align: right;" class="value-number">
+                            {{ cobertura|default:"0" }}%
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #fef3c7; font-weight: 600;">Próximas Vacinações</td>
+                        <td style="width: 50%; background: #fef3c7; text-align: right;" class="value-number">
+                            {{ proximas|default:"0" }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+        <div class="pdf-empty-state">
+            Nenhuma vacinação encontrada para o período especificado.
+        </div>
+    {% endif %}
+
+{% endblock %}

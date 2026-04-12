@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Calendário Vacinal - {{ lote.nome }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 24px; color: #172033; }
+        h1, h2, p { margin: 0 0 10px; }
+        .meta { color: #5b657a; margin-bottom: 18px; }
+        .summary { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        .chip { border: 1px solid #cfd7e6; border-radius: 8px; padding: 10px 12px; min-width: 140px; }
+        .chip strong { display: block; font-size: 20px; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { border: 1px solid #d8deea; padding: 8px 10px; text-align: left; font-size: 13px; }
+        th { background: #f2f5fb; }
+        .status { font-weight: bold; }
+        .status-atrasada { color: #b42318; }
+        .status-hoje { color: #b54708; }
+        .status-aplicada { color: #027a48; }
+        .print-actions { margin-top: 18px; }
+        @media print {
+            .print-actions { display: none; }
+            body { margin: 0; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Calendário de Vacinação</h1>
+    <p class="meta">Lote {{ lote.nome }} · Código {{ lote.codigo }} · Gerado em {{ hoje }}</p>
+
+    <div class="summary">
+        <div class="chip">Total<strong>{{ vacinas_total }}</strong></div>
+        <div class="chip">Pendentes<strong>{{ vacinas_pendentes }}</strong></div>
+        <div class="chip">Aplicadas<strong>{{ vacinas_aplicadas }}</strong></div>
+        <div class="chip">Atrasadas<strong>{{ vacinas_atrasadas }}</strong></div>
+        <div class="chip">Hoje<strong>{{ vacinas_hoje }}</strong></div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Vacina</th>
+                <th>Data prevista</th>
+                <th>Status</th>
+                <th>Data de aplicação</th>
+                <th>Observação</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for v in vacinas %}
+            <tr>
+                <td>{{ v.nome_vacina }}</td>
+                <td>{{ v.data_prevista }}</td>
+                <td class="status {% if v.status_operacional == 'atrasada' %}status-atrasada{% elif v.status_operacional == 'hoje' %}status-hoje{% elif v.status_operacional == 'aplicada' %}status-aplicada{% endif %}">{{ v.status_operacional_label }}</td>
+                <td>{{ v.data_aplicacao|default:"-" }}</td>
+                <td>{{ v.observacao_operacional }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5">Nenhuma vacina encontrada com os filtros atuais.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="print-actions">
+        <button type="button" onclick="window.print()">Imprimir</button>
+    </div>
+</body>
+</html>

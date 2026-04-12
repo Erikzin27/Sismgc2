@@ -1,4 +1,5 @@
 import os
+import socket
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,11 +27,41 @@ def _env_list(name, default=""):
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
-_load_env_file(BASE_DIR / ".env")
+def _local_network_hosts():
+    hosts = {"127.0.0.1", "localhost", "0.0.0.0"}
+    try:
+        hostname = socket.gethostname()
+        hosts.add(hostname)
+        hosts.add(f"{hostname}.local")
+        _, _, ips = socket.gethostbyname_ex(hostname)
+        hosts.update(ip for ip in ips if ip)
+    except Exception:
+        pass
+    for target in (("8.8.8.8", 80), ("10.255.255.255", 1)):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                sock.connect(target)
+                local_ip = sock.getsockname()[0]
+                if local_ip:
+                    hosts.add(local_ip)
+        except Exception:
+            continue
+    return sorted(hosts)
+
+
+ENV_FILE_PATH = BASE_DIR / ".env"
+_load_env_file(ENV_FILE_PATH)
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 DEBUG = _env_bool("DEBUG", True)
+_allowed_hosts_env = os.environ.get("ALLOWED_HOSTS", "")
 ALLOWED_HOSTS = _env_list("ALLOWED_HOSTS", "127.0.0.1,localhost,0.0.0.0")
+if DEBUG:
+    if not _allowed_hosts_env and not ENV_FILE_PATH.exists():
+        ALLOWED_HOSTS = ["*"]
+    for host in _local_network_hosts():
+        if host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(host)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -47,6 +78,7 @@ INSTALLED_APPS = [
     "aves",
     "lotes",
     "genetica",
+    "reprodutores",
     "incubacao",
     "nascimentos",
     "estoque",

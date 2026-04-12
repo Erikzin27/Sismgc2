@@ -1,49 +1,527 @@
 {% extends "base.html" %}
 {% block page_title %}Aves{% endblock %}
 {% block content %}
-<div class="list-actions mb-2">
-    <div class="list-actions__left">
+<style>
+    .ave-card {
+        background: #121b2f;
+        border: 1px solid #1f2a44;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+    }
+    .ave-card:hover {
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+        border-color: #4c8dff;
+    }
+    body[data-bs-theme="light"] .ave-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+    }
+    body[data-bs-theme="light"] .ave-card:hover {
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+    .ave-card-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #243456;
+    }
+    body[data-bs-theme="light"] .ave-card-header {
+        border-bottom-color: #e5e7eb;
+    }
+    .ave-card-photo {
+        width: 56px;
+        height: 56px;
+        min-width: 56px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .ave-card-title {
+        flex-grow: 1;
+        min-width: 0;
+    }
+    .ave-card-title h6 {
+        margin: 0;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .ave-card-subtitle {
+        margin: 0.25rem 0 0 0;
+        font-size: 0.85rem;
+        opacity: 0.85;
+    }
+    .ave-card-body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+    @media (max-width: 576px) {
+        .ave-card-body {
+            grid-template-columns: 1fr;
+        }
+    }
+    .ave-field {
+        display: flex;
+        flex-direction: column;
+    }
+    .ave-field-label {
+        font-weight: 500;
+        font-size: 0.75rem;
+        opacity: 0.7;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+    .ave-field-value {
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+    .ave-card-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    @media (max-width: 576px) {
+        .ave-card-actions {
+            gap: 0.25rem;
+        }
+    }
+    .ave-card-actions .btn {
+        flex: 1;
+        min-width: 140px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    @media (max-width: 576px) {
+        .ave-card-actions .btn {
+            min-width: auto;
+            flex: 1;
+            padding: 0.5rem;
+        }
+    }
+    .list-header {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    @media (min-width: 768px) {
+        .list-header {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+    }
+    .filters-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: #0f1a2f;
+        border: 1px solid #1f2a44;
+        border-radius: 0.5rem;
+    }
+    @media (max-width: 768px) {
+        .filters-section {
+            grid-template-columns: 1fr;
+        }
+    }
+    body[data-bs-theme="light"] .filters-section {
+        background: #f8f9fa;
+        border-color: #e5e7eb;
+    }
+    .table-view {
+        overflow-x: auto;
+    }
+    .card-table {
+        background: #121b2f;
+        border: 1px solid #1f2a44;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+        color: #e5ecff;
+        margin-bottom: 1rem;
+    }
+    body[data-bs-theme="light"] .card-table {
+        background: #ffffff;
+        color: #0d1117;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .summary-card {
+        background: #121b2f;
+        border: 1px solid #1f2a44;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        text-align: center;
+    }
+    body[data-bs-theme="light"] .summary-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+    }
+    .summary-card h3 {
+        margin: 0;
+        font-size: 1.75rem;
+        color: #4c8dff;
+    }
+    .summary-card p {
+        margin: 0.5rem 0 0 0;
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+    .pagination-mobile {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+    }
+    .pagination-mobile .page-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+</style>
+
+<!-- Header com título e botão novo -->
+<div class="list-header">
+    <div>
+        <h3 class="mb-0">Aves</h3>
+        <p class="text-muted small mb-0">Gerenciamento de aves do rebanho</p>
+    </div>
+    <div>
         {% if perms.aves.add_ave %}
-            <a class="btn btn-primary" href="{% url 'aves:create' %}">Nova ave</a>
+            <a class="btn btn-primary" href="{% url 'aves:create' %}">
+                <i class="bi bi-plus-lg"></i> Nova ave
+            </a>
         {% endif %}
     </div>
-    <div class="list-actions__center"></div>
-    <div class="list-actions__right"></div>
 </div>
-<div class="table-responsive">
-    <table class="table table-striped table-hover card-table align-middle">
-        <thead><tr><th>Foto</th><th>Código</th><th>Nome</th><th>Linhagem</th><th>Finalidade</th><th>Status</th><th></th></tr></thead>
-        <tbody>
+
+<!-- Cards de Resumo -->
+{% if aves %}
+<div class="summary-cards">
+    <div class="summary-card">
+        <h3>{{ page_obj.paginator.count }}</h3>
+        <p>Total de aves</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Seção de Filtros -->
+<div class="filters-section">
+    <form method="get" class="w-100" id="filter-form">
+        <div class="row g-2">
+            <!-- Search -->
+            <div class="col-12 col-md-4">
+                <input type="text" name="q" class="form-control form-control-sm" placeholder="Buscar código, nome..." value="{{ request.GET.q|default:'' }}">
+            </div>
+            
+            <!-- Finalidade -->
+            <div class="col-12 col-sm-6 col-md-3">
+                <select name="finalidade" class="form-select form-select-sm">
+                    <option value="">Finalidade</option>
+                    <option value="corte" {% if request.GET.finalidade == "corte" %}selected{% endif %}>Corte</option>
+                    <option value="postura" {% if request.GET.finalidade == "postura" %}selected{% endif %}>Postura</option>
+                    <option value="reproducao" {% if request.GET.finalidade == "reproducao" %}selected{% endif %}>Reprodução</option>
+                </select>
+            </div>
+            
+            <!-- Status -->
+            <div class="col-12 col-sm-6 col-md-3">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">Status</option>
+                    <option value="viva" {% if request.GET.status == "viva" %}selected{% endif %}>Viva</option>
+                    <option value="vendida" {% if request.GET.status == "vendida" %}selected{% endif %}>Vendida</option>
+                    <option value="morta" {% if request.GET.status == "morta" %}selected{% endif %}>Morta</option>
+                    <option value="abatida" {% if request.GET.status == "abatida" %}selected{% endif %}>Abatida</option>
+                </select>
+            </div>
+            
+            <!-- Botão Buscar -->
+            <div class="col-12 col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Lista de Aves -->
+{% if aves %}
+    <!-- Visualização Desktop (Tabela) -->
+    <div class="d-none d-lg-block table-view">
+        <table class="table table-striped table-hover card-table align-middle">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">Foto</th>
+                    <th style="width: 100px;">Código</th>
+                    <th style="width: 150px;">Nome</th>
+                    <th style="width: 130px;">Linhagem</th>
+                    <th style="width: 100px;">Finalidade</th>
+                    <th style="width: 100px;">Status</th>
+                    <th style="width: 100px;">Sexo</th>
+                    <th style="width: 150px; text-align: right;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in aves %}
+                <tr>
+                    <td>
+                        {% if a.foto %}
+                            <img src="{{ a.foto.url }}" class="rounded-circle" style="width:40px; height:40px; object-fit:cover;">
+                        {% else %}
+                            <div class="empty-state d-inline-flex align-items-center justify-content-center rounded-circle" style="width:40px; height:40px;">
+                                <i class="bi bi-image" style="opacity: .6;"></i>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'aves:detail' a.pk %}" class="text-decoration-none">
+                            <strong>{{ a.codigo_interno }}</strong>
+                        </a>
+                    </td>
+                    <td>{{ a.nome|default:"-" }}</td>
+                    <td>
+                        {% if a.linhagem %}
+                            <span class="badge bg-info text-dark">{{ a.linhagem.nome }}</span>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary">
+                            {{ a.get_finalidade_display|default:"-" }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if a.status == "viva" %}
+                            <span class="badge bg-success">Viva</span>
+                        {% elif a.status == "vendida" %}
+                            <span class="badge bg-warning text-dark">Vendida</span>
+                        {% elif a.status == "morta" %}
+                            <span class="badge bg-danger">Morta</span>
+                        {% elif a.status == "abatida" %}
+                            <span class="badge bg-dark">Abatida</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ a.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if a.sexo == "M" %}
+                            <span class="badge bg-primary"><i class="bi bi-mars"></i> Macho</span>
+                        {% elif a.sexo == "F" %}
+                            <span class="badge bg-danger"><i class="bi bi-venus"></i> Fêmea</span>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'aves:detail' a.pk %}" class="btn btn-sm btn-outline-info" title="Visualizar">
+                            <i class="bi bi-eye"></i> Ver
+                        </a>
+                        {% if perms.aves.change_ave %}
+                            <a href="{% url 'aves:update' a.pk %}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
+                        {% endif %}
+                        {% if perms.aves.delete_ave %}
+                            <a href="{% url 'aves:delete' a.pk %}" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Visualização Mobile (Cards) -->
+    <div class="d-lg-none">
         {% for a in aves %}
-            <tr>
-                <td>
+        <div class="ave-card">
+            <!-- Card Header com foto e título -->
+            <div class="ave-card-header">
+                <div>
                     {% if a.foto %}
-                        <img src="{{ a.foto.url }}" class="rounded-circle" style="width:36px; height:36px; object-fit:cover;">
+                        <img src="{{ a.foto.url }}" class="ave-card-photo" alt="{{ a.codigo_interno }}">
                     {% else %}
-                        <div class="empty-state d-inline-flex align-items-center justify-content-center rounded-circle" style="width:36px; height:36px;">
-                            <span class="small text-muted">-</span>
+                        <div class="ave-card-photo empty-state d-flex align-items-center justify-content-center">
+                            <i class="bi bi-image" style="opacity: .6; font-size: 1.5rem;"></i>
                         </div>
                     {% endif %}
-                </td>
-                <td><a href="{% url 'aves:detail' a.pk %}">{{ a.codigo_interno }}</a></td>     
-                <td>{{ a.nome }}</td>
-                <td>{{ a.linhagem }}</td>
-                <td>{{ a.get_finalidade_display }}</td>
-                <td>{{ a.get_status_display }}</td>
-                <td class="text-end">
-                    {% if perms.aves.change_ave %}
-                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'aves:update' a.pk %}">Editar</a>
-                    {% endif %}
-                    {% if perms.aves.delete_ave %}
-                        <a class="btn btn-sm btn-outline-danger" href="{% url 'aves:delete' a.pk %}">Excluir</a>
-                    {% endif %}
-                </td>
-            </tr>
-        {% empty %}
-            <tr><td colspan="7">Nenhuma ave.</td></tr>
+                </div>
+                <div class="ave-card-title">
+                    <h6>{{ a.codigo_interno }}</h6>
+                    <div class="ave-card-subtitle">{{ a.nome|default:"Sem nome" }}</div>
+                </div>
+            </div>
+
+            <!-- Card Body com dados -->
+            <div class="ave-card-body">
+                <div class="ave-field">
+                    <div class="ave-field-label">Linhagem</div>
+                    <div class="ave-field-value">
+                        {% if a.linhagem %}
+                            {{ a.linhagem.nome }}
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="ave-field">
+                    <div class="ave-field-label">Finalidade</div>
+                    <div class="ave-field-value">
+                        <span class="badge bg-secondary">{{ a.get_finalidade_display|default:"-" }}</span>
+                    </div>
+                </div>
+
+                <div class="ave-field">
+                    <div class="ave-field-label">Status</div>
+                    <div class="ave-field-value">
+                        {% if a.status == "viva" %}
+                            <span class="badge bg-success">Viva</span>
+                        {% elif a.status == "vendida" %}
+                            <span class="badge bg-warning text-dark">Vendida</span>
+                        {% elif a.status == "morta" %}
+                            <span class="badge bg-danger">Morta</span>
+                        {% elif a.status == "abatida" %}
+                            <span class="badge bg-dark">Abatida</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ a.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="ave-field">
+                    <div class="ave-field-label">Sexo</div>
+                    <div class="ave-field-value">
+                        {% if a.sexo == "M" %}
+                            <span class="badge bg-primary"><i class="bi bi-mars"></i> Macho</span>
+                        {% elif a.sexo == "F" %}
+                            <span class="badge bg-danger"><i class="bi bi-venus"></i> Fêmea</span>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="ave-field">
+                    <div class="ave-field-label">Lote Atual</div>
+                    <div class="ave-field-value">
+                        {% if a.lote_atual %}
+                            {{ a.lote_atual.identificacao }}
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="ave-field">
+                    <div class="ave-field-label">Peso</div>
+                    <div class="ave-field-value">
+                        {% if a.peso_atual %}
+                            {{ a.peso_atual }} kg
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Actions -->
+            <div class="ave-card-actions">
+                <a href="{% url 'aves:detail' a.pk %}" class="btn btn-sm btn-outline-info">
+                    <i class="bi bi-eye"></i> Ver
+                </a>
+                {% if perms.aves.change_ave %}
+                    <a href="{% url 'aves:update' a.pk %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                {% endif %}
+                {% if perms.aves.delete_ave %}
+                    <a href="{% url 'aves:delete' a.pk %}" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i> Excluir
+                    </a>
+                {% endif %}
+            </div>
+        </div>
         {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% include "pagination.html" with page_obj=page_obj %}
+    </div>
+
+    <!-- Paginação Responsiva -->
+    {% if page_obj and page_obj.has_other_pages %}
+    <nav class="d-flex justify-content-center mt-4">
+        <ul class="pagination pagination-sm flex-wrap justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.finalidade %}&finalidade={{ request.GET.finalidade }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Primeira</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.finalidade %}&finalidade={{ request.GET.finalidade }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Anterior</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Primeira</span>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">Anterior</span>
+                </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">
+                    Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.finalidade %}&finalidade={{ request.GET.finalidade }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Próxima</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.finalidade %}&finalidade={{ request.GET.finalidade }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Última</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Próxima</span>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">Última</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+{% else %}
+    <!-- Estado Vazio -->
+    <div class="text-center py-5">
+        <div class="empty-state p-5" style="border-radius: 1rem;">
+            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.6; display: block; margin-bottom: 1rem;"></i>
+            <h5>Nenhuma ave encontrada</h5>
+            <p class="text-muted mb-3">Nenhuma ave corresponde aos critérios de filtro.</p>
+            {% if perms.aves.add_ave %}
+                <a href="{% url 'aves:create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Criar primeira ave
+                </a>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
 {% endblock %}

@@ -15,6 +15,9 @@ class IncubacaoListView(AdminManagerOrPermMixin, SearchFilterMixin, Authenticate
     search_fields = ["codigo", "origem_ovos"]
     filter_fields = ["tipo", "status", "lote_relacionado"]
 
+    def get_queryset(self):
+        return super().get_queryset().select_related("lote_relacionado")
+
 
 class IncubacaoDetailView(AdminManagerOrPermMixin, AuthenticatedView, generic.DetailView):
     model = Incubacao

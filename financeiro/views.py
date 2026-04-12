@@ -1,8 +1,9 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from django.urls import reverse_lazy
 from django.views import generic
 from django.contrib import messages
 from django.db.models import Count, Max, Q, Sum
+from django.utils import timezone
 from django.db.models.functions import TruncMonth
 
 from core.mixins import AuthenticatedView, AdminManagerOrPermMixin, SearchFilterMixin
@@ -19,8 +20,62 @@ class LancamentoListView(AdminManagerOrPermMixin, SearchFilterMixin, Authenticat
     search_fields = ["descricao"]
     filter_fields = ["tipo", "categoria"]
 
+    def get_template_names(self):
+        if self.request.headers.get("HX-Request") == "true":
+            return ["financeiro/_lancamento_table.html"]
+        return [self.template_name]
+
     def get_queryset(self):
-        return super().get_queryset().select_related("lote", "ave", "venda")
+        qs = super().get_queryset().select_related("lote", "ave", "venda")
+        forma_pagamento = self.request.GET.get("forma_pagamento", "").strip()
+        if forma_pagamento:
+            qs = qs.filter(forma_pagamento__iexact=forma_pagamento)
+        lote = self.request.GET.get("lote", "").strip()
+        if lote:
+            qs = qs.filter(lote_id=lote)
+        origem = self.request.GET.get("origem", "").strip()
+        if origem == "venda":
+            qs = qs.filter(venda__isnull=False)
+        elif origem == "manual":
+            qs = qs.filter(venda__isnull=True)
+        inicio = self.request.GET.get("inicio", "").strip()
+        fim = self.request.GET.get("fim", "").strip()
+        if inicio:
+            qs = qs.filter(data__gte=inicio)
+        if fim:
+            qs = qs.filter(data__lte=fim)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        queryset = self.get_queryset()
+        resumo = queryset.aggregate(
+            entradas=Sum("valor", filter=Q(tipo=LancamentoFinanceiro.TIPO_ENTRADA)),
+            saidas=Sum("valor", filter=Q(tipo=LancamentoFinanceiro.TIPO_SAIDA)),
+            total_lancamentos=Count("id"),
+            total_vinculados_venda=Count("id", filter=Q(venda__isnull=False)),
+        )
+        entradas = resumo["entradas"] or 0
+        saidas = resumo["saidas"] or 0
+        ctx.update(
+            {
+                "entradas_filtradas": entradas,
+                "saidas_filtradas": saidas,
+                "saldo_filtrado": entradas - saidas,
+                "total_lancamentos_filtrados": resumo["total_lancamentos"] or 0,
+                "total_vinculados_venda": resumo["total_vinculados_venda"] or 0,
+            }
+        )
+        if self.request.headers.get("HX-Request") != "true":
+            ctx["formas_pagamento_filtro"] = [
+                item
+                for item in queryset.exclude(forma_pagamento="")
+                .values_list("forma_pagamento", flat=True)
+                .distinct()
+                .order_by("forma_pagamento")
+            ]
+            ctx["lotes_filtro"] = queryset.model._meta.get_field("lote").related_model.objects.order_by("nome")
+        return ctx
 
 
 class LancamentoDetailView(AdminManagerOrPermMixin, AuthenticatedView, generic.DetailView):
@@ -31,6 +86,53 @@ class LancamentoDetailView(AdminManagerOrPermMixin, AuthenticatedView, generic.D
 
     def get_queryset(self):
         return super().get_queryset().select_related("lote", "ave", "venda")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        hoje = timezone.localdate()
+        meses = []
+        ano = hoje.year
+        mes = hoje.month
+        for _ in range(6):
+            meses.append((ano, mes))
+            mes -= 1
+            if mes == 0:
+                mes = 12
+                ano -= 1
+        meses.reverse()
+        labels = [f"{m:02d}/{a}" for a, m in meses]
+        entradas_series = []
+        saidas_series = []
+        for a, m in meses:
+            entradas_series.append(
+                LancamentoFinanceiro.objects.filter(
+                    tipo=LancamentoFinanceiro.TIPO_ENTRADA, data__year=a, data__month=m
+                ).aggregate(total=Sum("valor"))["total"]
+                or 0
+            )
+            saidas_series.append(
+                LancamentoFinanceiro.objects.filter(
+                    tipo=LancamentoFinanceiro.TIPO_SAIDA, data__year=a, data__month=m
+                ).aggregate(total=Sum("valor"))["total"]
+                or 0
+            )
+        ctx["financeiro_chart_detail"] = {
+            "labels": labels,
+            "entradas": [float(v) for v in entradas_series],
+            "saidas": [float(v) for v in saidas_series],
+        }
+        lancamento = self.object
+        impacto = float(lancamento.valor or 0)
+        ctx["impacto_caixa"] = impacto if lancamento.tipo == LancamentoFinanceiro.TIPO_ENTRADA else -impacto
+        sugestoes = []
+        if lancamento.tipo == LancamentoFinanceiro.TIPO_SAIDA and impacto > 1000:
+            sugestoes.append("Saída alta: revisar categoria e justificativa.")
+        if lancamento.tipo == LancamentoFinanceiro.TIPO_ENTRADA and not lancamento.venda:
+            sugestoes.append("Entrada manual: verificar se precisa vincular a uma venda.")
+        if lancamento.comprovante:
+            sugestoes.append("Comprovante anexado. Conferência rápida recomendada.")
+        ctx["sugestoes_financeiro"] = sugestoes
+        return ctx
 
 
 class LancamentoCreateView(AdminManagerOrPermMixin, AuthenticatedView, generic.CreateView):
@@ -128,6 +230,8 @@ class FinanceiroDashboardView(AdminManagerOrPermMixin, AuthenticatedView, generi
 
         hoje = date.today()
         mes_inicio = hoje.replace(day=1)
+        mes_anterior_fim = mes_inicio - timedelta(days=1)
+        mes_anterior_inicio = mes_anterior_fim.replace(day=1)
         totais_mes = LancamentoFinanceiro.objects.aggregate(
             entradas_mes=Sum(
                 "valor",
@@ -141,10 +245,34 @@ class FinanceiroDashboardView(AdminManagerOrPermMixin, AuthenticatedView, generi
         entradas_mes = totais_mes["entradas_mes"] or 0
         saidas_mes = totais_mes["saidas_mes"] or 0
         saldo_mes = entradas_mes - saidas_mes
+        totais_mes_anterior = LancamentoFinanceiro.objects.aggregate(
+            entradas=Sum(
+                "valor",
+                filter=Q(
+                    tipo=LancamentoFinanceiro.TIPO_ENTRADA,
+                    data__gte=mes_anterior_inicio,
+                    data__lte=mes_anterior_fim,
+                ),
+            ),
+            saidas=Sum(
+                "valor",
+                filter=Q(
+                    tipo=LancamentoFinanceiro.TIPO_SAIDA,
+                    data__gte=mes_anterior_inicio,
+                    data__lte=mes_anterior_fim,
+                ),
+            ),
+        )
+        entradas_mes_anterior = totais_mes_anterior["entradas"] or 0
+        saidas_mes_anterior = totais_mes_anterior["saidas"] or 0
+        saldo_mes_anterior = entradas_mes_anterior - saidas_mes_anterior
 
         maior_entrada = entradas.order_by("-valor").first()
         maior_saida = saidas.order_by("-valor").first()
         recentes = qs.order_by("-data", "-created_at")[:10]
+        maiores_entradas = entradas.order_by("-valor", "-data")[:5]
+        maiores_saidas = saidas.order_by("-valor", "-data")[:5]
+        alerta_saldo_baixo = saldo_atual <= 0
 
         # Agrupa por mês do período filtrado; quando não houver filtro, mostra os últimos 6 meses.
         base_chart_qs = qs
@@ -201,8 +329,14 @@ class FinanceiroDashboardView(AdminManagerOrPermMixin, AuthenticatedView, generi
                 "entradas_mes": entradas_mes,
                 "saidas_mes": saidas_mes,
                 "saldo_mes": saldo_mes,
+                "entradas_mes_anterior": entradas_mes_anterior,
+                "saidas_mes_anterior": saidas_mes_anterior,
+                "saldo_mes_anterior": saldo_mes_anterior,
                 "maior_entrada": maior_entrada,
                 "maior_saida": maior_saida,
+                "maiores_entradas": maiores_entradas,
+                "maiores_saidas": maiores_saidas,
+                "alerta_saldo_baixo": alerta_saldo_baixo,
                 "recentes": recentes,
                 "categorias": LancamentoFinanceiro.CATEGORIAS,
                 "labels_mes": labels,

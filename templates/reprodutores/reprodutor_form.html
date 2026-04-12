@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block page_title %}{% if form.instance.pk %}Editar{% else %}Novo{% endif %} Reprodutor{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12 col-lg-8 offset-lg-2">
+        <div class="card card-table">
+            <div class="card-header bg-transparent border-bottom border-secondary">
+                <h5 class="mb-0">{% if form.instance.pk %}Editar Reprodutor{% else %}Cadastrar Novo Reprodutor{% endif %}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" class="needs-validation">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.ave.id_for_label }}" class="form-label">Ave *</label>
+                        {{ form.ave }}
+                        {% if form.ave.errors %}
+                            <div class="text-danger small mt-1">{{ form.ave.errors.0 }}</div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-1">Selecione uma ave com finalidade reprodução</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 col-md-6 mb-3">
+                            <label for="{{ form.tipo.id_for_label }}" class="form-label">Tipo *</label>
+                            {{ form.tipo }}
+                            {% if form.tipo.errors %}
+                                <div class="text-danger small mt-1">{{ form.tipo.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 col-md-6 mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">Status *</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                                <div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 col-md-6 mb-3">
+                            <label for="{{ form.qualidade_genetica.id_for_label }}" class="form-label">Qualidade Genética</label>
+                            {{ form.qualidade_genetica }}
+                            {% if form.qualidade_genetica.errors %}
+                                <div class="text-danger small mt-1">{{ form.qualidade_genetica.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 col-md-6 mb-3">
+                            <label for="{{ form.valor_estimado.id_for_label }}" class="form-label">Valor Estimado (R$)</label>
+                            {{ form.valor_estimado }}
+                            {% if form.valor_estimado.errors %}
+                                <div class="text-danger small mt-1">{{ form.valor_estimado.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 col-md-6 mb-3">
+                            <label for="{{ form.data_inicio_reproducao.id_for_label }}" class="form-label">Início Reprodução</label>
+                            {{ form.data_inicio_reproducao }}
+                            {% if form.data_inicio_reproducao.errors %}
+                                <div class="text-danger small mt-1">{{ form.data_inicio_reproducao.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 col-md-6 mb-3">
+                            <label for="{{ form.data_fim_reproducao.id_for_label }}" class="form-label">Fim Reprodução</label>
+                            {{ form.data_fim_reproducao }}
+                            {% if form.data_fim_reproducao.errors %}
+                                <div class="text-danger small mt-1">{{ form.data_fim_reproducao.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.observacoes.id_for_label }}" class="form-label">Observações</label>
+                        {{ form.observacoes }}
+                        {% if form.observacoes.errors %}
+                            <div class="text-danger small mt-1">{{ form.observacoes.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ form.non_field_errors.0 }}
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            {% if form.instance.pk %}Salvar Alterações{% else %}Cadastrar Reprodutor{% endif %}
+                        </button>
+                        <a href="{% url 'reprodutores:list' %}" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

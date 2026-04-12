@@ -1,10 +1,11 @@
 from django.db import models
 
 from core.models import TimeStampedModel, AtivoInativoModel, AuditModel
+from core.state_machines import AveStateMachine
 from linhagens.models import Linhagem
 
 
-class Ave(TimeStampedModel, AtivoInativoModel, AuditModel):
+class Ave(AveStateMachine, TimeStampedModel, AtivoInativoModel, AuditModel):
     SEXO_MACHO = "M"
     SEXO_FEMEA = "F"
     SEXO_CHOICES = [(SEXO_MACHO, "Macho"), (SEXO_FEMEA, "Fêmea")]

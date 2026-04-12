@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block page_title %}Confirmar Exclusão{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12 col-lg-6 offset-lg-3">
+        <div class="card border-danger">
+            <div class="card-header bg-danger bg-opacity-20 border-danger">
+                <h5 class="mb-0 text-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Confirmar Exclusão
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">
+                    Você tem certeza que deseja excluir <strong>{{ object }}</strong>?
+                </p>
+                <p class="text-muted small">
+                    Esta ação não pode ser desfeita.
+                </p>
+                
+                <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Excluir Permanentemente
+                    </button>
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -15,6 +15,9 @@ class NascimentoListView(AdminManagerOrPermMixin, SearchFilterMixin, Authenticat
     search_fields = ["incubacao__codigo", "lote_destino__nome"]
     filter_fields = ["lote_destino"]
 
+    def get_queryset(self):
+        return super().get_queryset().select_related("incubacao", "lote_destino")
+
 
 class NascimentoDetailView(AdminManagerOrPermMixin, AuthenticatedView, generic.DetailView):
     model = Nascimento

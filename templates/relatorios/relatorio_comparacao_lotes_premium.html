@@ -1,0 +1,218 @@
+{% load relatorio_filters %}
+{% extends "relatorios/print_premium.html" %}
+
+{% block content %}
+    <!-- RELATÓRIO COMPARAÇÃO ENTRE LOTES PREMIUM -->
+    
+    {% if linhas_lote %}
+        <!-- RESUMO EXECUTIVO - MELHORES vs PIORES -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Resumo: Comparação de Desempenho</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 35%">Métrica</th>
+                        <th style="width: 26%" class="text-center">Melhor Lote</th>
+                        <th style="width: 22%" class="text-center">Valor</th>
+                        <th style="width: 17%" class="text-right">Ranking</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Maior Lucro</strong></td>
+                        <td class="text-center">
+                            {% for linha in linhas_lote|dictsort:"lucro_final" reversed|slice:":1" %}
+                                {{ linha.lote.codigo }}
+                            {% endfor %}
+                        </td>
+                        <td class="text-center value-money value-money--positive">
+                            {% for linha in linhas_lote|dictsort:"lucro_final" reversed|slice:":1" %}
+                                R$ {{ linha.lucro_final|brl }}
+                            {% endfor %}
+                        </td>
+                        <td class="text-right">🥇</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Menor Mortalidade</strong></td>
+                        <td class="text-center">
+                            {% for linha in linhas_lote|dictsort:"mortalidade_percentual"|slice:":1" %}
+                                {{ linha.lote.codigo }}
+                            {% endfor %}
+                        </td>
+                        <td class="text-center value-number">
+                            {% for linha in linhas_lote|dictsort:"mortalidade_percentual"|slice:":1" %}
+                                {{ linha.mortalidade_percentual }}%
+                            {% endfor %}
+                        </td>
+                        <td class="text-right">✓</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Melhor Conversão</strong></td>
+                        <td class="text-center">
+                            {% for linha in linhas_lote|dictsort:"conversao_alimentar"|slice:":1" %}
+                                {{ linha.lote.codigo }}
+                            {% endfor %}
+                        </td>
+                        <td class="text-center value-number">
+                            {% for linha in linhas_lote|dictsort:"conversao_alimentar"|slice:":1" %}
+                                {{ linha.conversao_alimentar }}
+                            {% endfor %}
+                        </td>
+                        <td class="text-right">✓</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TABELA COMPARATIVA LADO-A-LADO -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Comparação Detalhada (Todos Lotes)</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 10%">Lote</th>
+                        <th style="width: 9%" class="text-right">Qtd</th>
+                        <th style="width: 10%" class="text-right">Custo</th>
+                        <th style="width: 10%" class="text-right">Receita</th>
+                        <th style="width: 10%" class="text-right">Lucro</th>
+                        <th style="width: 10%" class="text-right">Margem %</th>
+                        <th style="width: 10%" class="text-right">Mort. %</th>
+                        <th style="width: 11%" class="text-right">Conv.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for linha in linhas_lote %}
+                        {% with margem=linha.lucro_final|percentage:linha.receita_vendas %}
+                            <tr>
+                                <td><strong>{{ linha.lote.codigo }}</strong></td>
+                                <td class="text-right value-number">{{ linha.quantidade_atual }}</td>
+                                <td class="text-right value-money">R$ {{ linha.custo_racao|add:linha.despesas_extras|brl }}</td>
+                                <td class="text-right value-money value-money--positive">R$ {{ linha.receita_vendas|brl }}</td>
+                                <td class="text-right value-money {% if linha.lucro_final > 0 %}value-money--positive{% else %}value-money--negative{% endif %}" style="font-weight: 600;">
+                                    {% if linha.lucro_final > 0 %}
+                                        R$ {{ linha.lucro_final|brl }}
+                                    {% else %}
+                                        -R$ {{ linha.lucro_final|add:"0"|brl }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-right value-number" style="font-weight: bold;">{{ margem }}%</td>
+                                <td class="text-right value-number" style="color: #dc3545;">{{ linha.mortalidade_percentual }}%</td>
+                                <td class="text-right value-number">{{ linha.conversao_alimentar }}</td>
+                            </tr>
+                        {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ANÁLISE: AGRUPAMENTO POR PERFORMANCE -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Agrupamento por Performance</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 20%">Classificação</th>
+                        <th style="width: 15%" class="text-center">Qtd Lotes</th>
+                        <th style="width: 30%" class="text-right">Lucro Total</th>
+                        <th style="width: 20%" class="text-right">Margem Média</th>
+                        <th style="width: 15%">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <span class="badge badge--entrada">✓ Excelente (>20%)</span>
+                        </td>
+                        <td class="text-center value-number">{{ excelentes_count|default:0 }}</td>
+                        <td class="text-right value-money value-money--positive">
+                            R$ {{ excelentes_lucro|brl|default:"0,00" }}
+                        </td>
+                        <td class="text-right value-number">{{ excelentes_margem|default:"0" }}%</td>
+                        <td class="text-center">🥇</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge badge--venda">✓ Bom (10-20%)</span>
+                        </td>
+                        <td class="text-center value-number">{{ bom_count|default:0 }}</td>
+                        <td class="text-right value-money value-money--positive">
+                            R$ {{ bom_lucro|brl|default:"0,00" }}
+                        </td>
+                        <td class="text-right value-number">{{ bom_margem|default:"0" }}%</td>
+                        <td class="text-center">🥈</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge badge--pendente">⚠️ Margem (0-10%)</span>
+                        </td>
+                        <td class="text-center value-number">{{ margem_count|default:0 }}</td>
+                        <td class="text-right value-money value-money--positive">
+                            R$ {{ margem_lucro|brl|default:"0,00" }}
+                        </td>
+                        <td class="text-right value-number">{{ margem_pct|default:"0" }}%</td>
+                        <td class="text-center">⚠️</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge badge--saida">❌ Prejuízo (<0%)</span>
+                        </td>
+                        <td class="text-center value-number">{{ prejuizo_count|default:0 }}</td>
+                        <td class="text-right value-money value-money--negative">
+                            {{ prejuizo_lucro|brl|default:"0,00" }}
+                        </td>
+                        <td class="text-right value-number">{{ prejuizo_pct|default:"0" }}%</td>
+                        <td class="text-center">❌</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- INSIGHTS E RECOMENDAÇÕES -->
+        <div class="pdf-section" style="background: #dbeafe; border-left: 4px solid #4c8dff; padding: 12px; margin: 16px 0;">
+            <h3 style="color: #1e40af; margin: 0 0 8px 0; font-size: 12px;">💡 INSIGHTS COMPARATIVOS</h3>
+            <ul style="margin: 0; padding-left: 16px; color: #1e40af; font-size: 10px;">
+                <li><strong>Melhor Prática:</strong> Analisar lotes lucrativos para replicar processos</li>
+                <li><strong>Pontos de Melhoria:</strong> Revise mortalidade e conversão em lotes fracos</li>
+                <li><strong>Padrão de Custo:</strong> Compare custo/ave entre lotes similares</li>
+                <li><strong>Variabilidade:</strong> Identifique causas de flutuação de desempenho</li>
+            </ul>
+        </div>
+
+        <!-- RESUMO FINAL -->
+        <div class="pdf-section no-break">
+            <h2 class="pdf-section__title">Totalizações Comparativas</h2>
+            
+            <table>
+                <tbody>
+                    <tr>
+                        <td style="width: 50%; background: #dbeafe; font-weight: 600;">Total Lotes Analisados</td>
+                        <td style="width: 50%; background: #dbeafe; text-align: right;" class="value-number">
+                            {{ linhas_lote|length }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #e8f5e9; font-weight: 600;">Lotes Lucrativos</td>
+                        <td style="width: 50%; background: #e8f5e9; text-align: right;" class="value-number">
+                            {{ lucrativo_count|default:0 }}/{{ linhas_lote|length }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #f8fafc; font-weight: 600;">Lucro Total Acumulado</td>
+                        <td style="width: 50%; background: #f8fafc; text-align: right;" class="value-money value-money--positive">
+                            R$ {{ total_lucro|brl|default:"0,00" }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+        <div class="pdf-empty-state">
+            Nenhum lote disponível para comparação no período especificado.
+        </div>
+    {% endif %}
+
+{% endblock %}

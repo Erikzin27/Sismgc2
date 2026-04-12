@@ -1,124 +1,335 @@
 {% extends "base.html" %}
 {% load formatting %}
 {% block page_title %}Financeiro{% endblock %}
-{% block page_subtitle %}Listagem operacional com origem, forma de pagamento e ações rápidas sem sobrecarga visual.{% endblock %}
+{% block page_subtitle %}Gerenciamento operacional com visualização total, gráficos e integração com vendas.{% endblock %}
 {% block content %}
-<div class="page-panel filter-bar">
-    <div class="list-actions mb-0">
-        <div class="list-actions__left">
-            {% if perms.financeiro.add_lancamentofinanceiro %}
-                <a class="btn btn-primary" href="{% url 'financeiro:create' %}">Novo lançamento</a>
-            {% endif %}
-        </div>
-        <div class="list-actions__center"></div>
-        <div class="list-actions__right d-flex gap-2 flex-wrap">
-            <a class="btn btn-outline-secondary" href="{% url 'financeiro:dashboard' %}">Dashboard</a>
-            {% if perms.financeiro.view_orcamentofuturo %}
-                <a class="btn btn-outline-primary" href="{% url 'financeiro:orcamento_list' %}">Planejamento</a>
-            {% endif %}
-        </div>
+<style>
+    /* === PREMIUM DASHBOARD STYLING === */
+    
+    /* Filter Bar Compact */
+    .filter-bar--modern {
+        background: rgba(76, 141, 255, 0.04);
+        border: 1px solid rgba(76, 141, 255, 0.1);
+        border-radius: 12px;
+        padding: 0.875rem;
+        margin-bottom: 1.5rem;
+    }
+    body[data-bs-theme="light"] .filter-bar--modern {
+        background: rgba(13, 110, 253, 0.03);
+        border-color: rgba(13, 110, 253, 0.08);
+    }
+    
+    .filter-bar--modern form {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .filter-bar--modern .form-control,
+    .filter-bar--modern .form-select {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+    }
+    
+    .filter-bar--modern .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0 0.5rem;
+    }
+    
+    .filter-bar--modern .filter-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        opacity: 0.7;
+        letter-spacing: 0.5px;
+        min-width: 60px;
+    }
+    
+    @media (max-width: 768px) {
+        .filter-bar--modern {
+            padding: 0.75rem;
+        }
+        .filter-bar--modern form {
+            flex-direction: column;
+        }
+        .filter-bar--modern .form-control,
+        .filter-bar--modern .form-select {
+            width: 100%;
+        }
+        .filter-bar--modern .d-md-none {
+            display: flex !important;
+            width: 100%;
+        }
+        .filter-bar--modern .d-none.d-md-flex {
+            display: none !important;
+        }
+        .filter-bar--modern .filter-group {
+            width: 100%;
+        }
+    }
+    
+    /* Metric Cards Premium */
+    .metric-card--premium {
+        background: linear-gradient(135deg, rgba(76, 141, 255, 0.08) 0%, rgba(76, 141, 255, 0.04) 100%);
+        border: 1px solid rgba(76, 141, 255, 0.15);
+        border-radius: 12px;
+        padding: 1.25rem;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+    body[data-bs-theme="light"] .metric-card--premium {
+        background: linear-gradient(135deg, rgba(13, 110, 253, 0.05) 0%, rgba(13, 110, 253, 0.02) 100%);
+        border-color: rgba(13, 110, 253, 0.12);
+    }
+    
+    .metric-card--premium:hover {
+        border-color: rgba(76, 141, 255, 0.35);
+        box-shadow: 0 8px 20px rgba(76, 141, 255, 0.15);
+    }
+    body[data-bs-theme="light"] .metric-card--premium:hover {
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.12);
+    }
+    
+    .metric-card--premium .metric-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+        opacity: 0.8;
+    }
+    
+    .metric-card--premium .metric-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        opacity: 0.6;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-card--premium .metric-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        line-height: 1;
+    }
+    
+    .metric-card--premium .metric-detail {
+        font-size: 0.8rem;
+        opacity: 0.6;
+    }
+    
+    .metric-card--entrada { --metric-color: #1fbf91; }
+    .metric-card--saida { --metric-color: #dc3545; }
+    .metric-card--saldo { --metric-color: #4c8dff; }
+    .metric-card--pendente { --metric-color: #ffc107; }
+    .metric-card--caixa { --metric-color: #0dcaf0; }
+    
+    .metric-card--entrada .metric-icon,
+    .metric-card--entrada .metric-value {
+        color: #1fbf91;
+    }
+    .metric-card--saida .metric-icon,
+    .metric-card--saida .metric-value {
+        color: #dc3545;
+    }
+    .metric-card--saldo .metric-icon,
+    .metric-card--saldo .metric-value {
+        color: #4c8dff;
+    }
+    .metric-card--pendente .metric-icon,
+    .metric-card--pendente .metric-value {
+        color: #ffc107;
+    }
+    .metric-card--caixa .metric-icon,
+    .metric-card--caixa .metric-value {
+        color: #0dcaf0;
+    }
+    
+    @media (max-width: 576px) {
+        .metric-card--premium {
+            padding: 1rem;
+        }
+        .metric-card--premium .metric-value {
+            font-size: 1.5rem;
+        }
+    }
+    
+    /* Charts Container */
+    .chart-container {
+        position: relative;
+        height: 350px;
+        margin: 1.5rem 0;
+        padding: 1.5rem;
+        background: rgba(76, 141, 255, 0.02);
+        border: 1px solid rgba(76, 141, 255, 0.1);
+        border-radius: 12px;
+    }
+    body[data-bs-theme="light"] .chart-container {
+        background: rgba(13, 110, 253, 0.02);
+        border-color: rgba(13, 110, 253, 0.08);
+    }
+    
+    .chart-title {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        opacity: 0.7;
+        letter-spacing: 0.5px;
+        margin-bottom: 1rem;
+    }
+    
+    /* Summary Badges Compact */
+    .summary-badge-row {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin: 1rem 0;
+    }
+    
+    .summary-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(76, 141, 255, 0.1);
+        border: 1px solid rgba(76, 141, 255, 0.2);
+        border-radius: 8px;
+        font-size: 0.85rem;
+    }
+    body[data-bs-theme="light"] .summary-badge {
+        background: rgba(13, 110, 253, 0.08);
+        border-color: rgba(13, 110, 253, 0.15);
+    }
+    
+    .summary-badge.entrada {
+        background: rgba(31, 191, 145, 0.15);
+        border-color: rgba(31, 191, 145, 0.25);
+        color: #1fbf91;
+    }
+    
+    .summary-badge.saida {
+        background: rgba(220, 53, 69, 0.15);
+        border-color: rgba(220, 53, 69, 0.25);
+        color: #dc3545;
+    }
+</style>
+
+<!-- HEADER ACTIONS - Modern Premium -->
+<div class="d-flex justify-content-between align-items-center gap-2 mb-4 flex-wrap">
+    <div class="d-flex gap-2 flex-wrap">
+        {% if perms.financeiro.add_lancamentofinanceiro %}
+            <a class="btn btn-primary" href="{% url 'financeiro:create' %}">
+                <i class="bi bi-plus-circle me-1"></i> Novo Lançamento
+            </a>
+        {% endif %}
     </div>
-    <div class="filter-bar__summary">
-        <span class="badge-soft"><i class="bi bi-wallet2"></i>{{ page_obj.paginator.count|default:lancamentos|length }} lançamentos</span>
-        <span class="badge-soft"><i class="bi bi-arrow-down-left-circle"></i>Entradas e saídas no mesmo fluxo</span>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-outline-secondary" href="{% url 'financeiro:dashboard' %}" title="Dashboard detalhado">
+            <i class="bi bi-graph-up me-1"></i> Dashboard
+        </a>
+        {% if perms.financeiro.view_orcamentofuturo %}
+            <a class="btn btn-outline-secondary" href="{% url 'financeiro:orcamento_list' %}" title="Orçamentos futuros">
+                <i class="bi bi-calendar-check me-1"></i> Planejamento
+            </a>
+        {% endif %}
     </div>
 </div>
 
-<div class="d-none d-xl-block">
-    <div class="table-responsive">
-        <table class="table table-striped table-hover card-table align-middle mb-0">
-            <thead><tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Pagamento</th><th>Origem</th><th>Valor</th><th>Arquivo</th><th></th></tr></thead>
-            <tbody>
-            {% for l in lancamentos %}
-                <tr>
-                    <td><a href="{% url 'financeiro:detail' l.pk %}">{{ l.data }}</a></td>
-                    <td>
-                        <span class="status-badge {% if l.tipo == 'entrada' %}status-badge--success{% else %}status-badge--danger{% endif %}">
-                            {{ l.get_tipo_display }}
-                        </span>
-                    </td>
-                    <td>{{ l.get_categoria_display }}</td>
-                    <td>
-                        {{ l.descricao }}
-                        {% if l.venda %}
-                            <div class="record-card__meta">Venda #{{ l.venda.pk }}</div>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if l.forma_pagamento %}
-                            <span class="status-badge status-badge--info">{{ l.forma_pagamento }}</span>
-                        {% else %}
-                            <span class="record-card__meta">Não informada</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if l.venda %}
-                            <span class="status-badge status-badge--success">Venda</span>
-                        {% else %}
-                            <span class="status-badge status-badge--muted">Manual</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ l.valor|brl }}</td>
-                    <td>
-                        {% if l.comprovante %}
-                            <a href="{{ l.comprovante.url }}" target="_blank" rel="noopener">Ver arquivo</a>
-                        {% else %}
-                            <span class="record-card__meta">-</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-end">
-                        <div class="table-actions">
-                            {% if perms.financeiro.change_lancamentofinanceiro %}
-                                <a class="btn btn-sm btn-outline-secondary" href="{% url 'financeiro:update' l.pk %}">Editar</a>
-                            {% endif %}
-                            {% if perms.financeiro.delete_lancamentofinanceiro %}
-                                <a class="btn btn-sm btn-outline-danger" href="{% url 'financeiro:delete' l.pk %}">Excluir</a>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-            {% empty %}
-                <tr><td colspan="9">Nenhum lançamento.</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
+<!-- FILTROS MODERNOS - Compact Design -->
+<div class="filter-bar--modern">
+    <form id="financeiro-filters" method="get"
+          hx-get="{% url 'financeiro:list' %}" hx-target="#financeiro-body" hx-push-url="true"
+          hx-indicator="#financeiro-loading" hx-trigger="change, keyup delay:400ms from:input[type=search]">
+        
+        <!-- Busca Principal -->
+        <input class="form-control" type="search" name="q" value="{{ request.GET.q }}" 
+               placeholder="Buscar descrição..." style="flex: 1; min-width: 150px; max-width: 300px;">
+        
+        <!-- Tipo Entrada/Saída (sempre visível) -->
+        <select class="form-select" name="tipo" style="min-width: 120px;">
+            <option value="">Todos Tipos</option>
+            <option value="entrada" {% if request.GET.tipo == 'entrada' %}selected{% endif %}>Entradas</option>
+            <option value="saida" {% if request.GET.tipo == 'saida' %}selected{% endif %}>Saídas</option>
+        </select>
+        
+        <!-- Filtros Secundários - Colapsam em mobile -->
+        <div class="d-none d-md-flex gap-2" style="flex-wrap: wrap;">
+            <select class="form-select" name="categoria" style="min-width: 120px;">
+                <option value="">Categoria</option>
+                {% for val,label in lancamentos.model.CATEGORIAS %}
+                    <option value="{{ val }}" {% if request.GET.categoria == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            
+            <select class="form-select" name="origem" style="min-width: 110px;">
+                <option value="">Origem</option>
+                <option value="manual" {% if request.GET.origem == 'manual' %}selected{% endif %}>Manual</option>
+                <option value="venda" {% if request.GET.origem == 'venda' %}selected{% endif %}>Venda</option>
+            </select>
+            
+            <input class="form-control" type="date" name="inicio" value="{{ request.GET.inicio }}" style="min-width: 130px;" title="Data inicial">
+            <input class="form-control" type="date" name="fim" value="{{ request.GET.fim }}" style="min-width: 130px;" title="Data final">
+        </div>
+        
+        <!-- Actions -->
+        <div class="d-flex gap-2 align-items-center">
+            <button class="btn btn-secondary" type="submit" title="Aplicar filtros">
+                <i class="bi bi-funnel"></i> <span class="d-none d-md-inline ms-1">Filtrar</span>
+            </button>
+            <a class="btn btn-outline-secondary" href="{% url 'financeiro:list' %}" title="Limpar filtros">
+                <i class="bi bi-arrow-clockwise"></i>
+            </a>
+            <span id="financeiro-loading" class="htmx-indicator small text-muted" style="margin-left: 0.5rem;">
+                <i class="bi bi-hourglass-split"></i> Atualizando...
+            </span>
+        </div>
+        
+        <input type="hidden" name="page" value="{{ page_obj.number }}">
+    </form>
+</div>
+
+<!-- CARDS RESUMO PREMIUM -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="metric-card--premium metric-card--entrada">
+            <div class="metric-icon"><i class="bi bi-arrow-down-left-circle"></i></div>
+            <div class="metric-label">Entradas Filtradas</div>
+            <div class="metric-value">{{ entradas_filtradas|brl }}</div>
+            <div class="metric-detail">Receitas do período</div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="metric-card--premium metric-card--saida">
+            <div class="metric-icon"><i class="bi bi-arrow-up-right-circle"></i></div>
+            <div class="metric-label">Saídas Filtradas</div>
+            <div class="metric-value">{{ saidas_filtradas|brl }}</div>
+            <div class="metric-detail">Despesas do período</div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-4">
+        <div class="metric-card--premium metric-card--saldo">
+            <div class="metric-icon"><i class="bi bi-bank2"></i></div>
+            <div class="metric-label">Saldo Filtrado</div>
+            <div class="metric-value">{{ saldo_filtrado|brl }}</div>
+            <div class="metric-detail">Resultado atual</div>
+        </div>
     </div>
 </div>
 
-<div class="d-xl-none mobile-stack">
-    {% for l in lancamentos %}
-        <div class="card card-table record-card">
-            <div class="d-flex justify-content-between align-items-start gap-2">
-                <div>
-                    <div class="fw-semibold"><a href="{% url 'financeiro:detail' l.pk %}">{{ l.descricao }}</a></div>
-                    <div class="record-card__meta">{{ l.data }} · {{ l.get_categoria_display }}</div>
-                </div>
-                <span class="status-badge {% if l.tipo == 'entrada' %}status-badge--success{% else %}status-badge--danger{% endif %}">
-                    {{ l.get_tipo_display }}
-                </span>
-            </div>
-            <div class="info-grid mt-3">
-                <div class="info-chip"><span class="info-chip__label">Valor</span><span class="info-chip__value">{{ l.valor|brl }}</span></div>
-                <div class="info-chip"><span class="info-chip__label">Pagamento</span><span class="info-chip__value">{{ l.forma_pagamento|default:"Não informada" }}</span></div>
-                <div class="info-chip"><span class="info-chip__label">Origem</span><span class="info-chip__value">{% if l.venda %}Venda{% else %}Manual{% endif %}</span></div>
-                <div class="info-chip"><span class="info-chip__label">Arquivo</span><span class="info-chip__value">{% if l.comprovante %}<a href="{{ l.comprovante.url }}" target="_blank" rel="noopener">Ver</a>{% else %}-{% endif %}</span></div>
-            </div>
-            {% if l.venda %}
-                <div class="record-card__meta mt-2">Venda vinculada #{{ l.venda.pk }}</div>
-            {% endif %}
-            <div class="record-card__actions">
-                {% if perms.financeiro.change_lancamentofinanceiro %}
-                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'financeiro:update' l.pk %}">Editar</a>
-                {% endif %}
-                {% if perms.financeiro.delete_lancamentofinanceiro %}
-                    <a class="btn btn-sm btn-outline-danger" href="{% url 'financeiro:delete' l.pk %}">Excluir</a>
-                {% endif %}
-            </div>
-        </div>
-    {% empty %}
-        <div class="card card-table record-card">Nenhum lançamento.</div>
-    {% endfor %}
+<!-- SUMMARY BADGES -->
+<div class="summary-badge-row">
+    <span class="summary-badge">
+        <i class="bi bi-files"></i> {{ total_lancamentos_filtrados }} registros
+    </span>
+    {% if total_vinculados_venda > 0 %}
+    <span class="summary-badge">
+        <i class="bi bi-link-45deg"></i> {{ total_vinculados_venda }} vinculados a vendas
+    </span>
+    {% endif %}
 </div>
 
-{% include "pagination.html" with page_obj=page_obj %}
+{% include "financeiro/_lancamento_table.html" %}
 {% endblock %}

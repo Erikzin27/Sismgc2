@@ -16,6 +16,8 @@ urlpatterns = [
     path("medicamentos/<int:pk>/excluir/", views.MedicamentoDeleteView.as_view(), name="medicamento_delete"),
     path("aplicacoes/", views.AplicacaoListView.as_view(), name="aplicacao_list"),
     path("aplicacoes/nova/", views.AplicacaoCreateView.as_view(), name="aplicacao_create"),
+    path("aplicacoes/imprimir/", views.AplicacaoPrintView.as_view(), name="aplicacao_print"),
+    path("aplicacoes/<int:pk>/ok/", views.AplicacaoQuickApplyView.as_view(), name="aplicacao_ok"),
     path("aplicacoes/<int:pk>/editar/", views.AplicacaoUpdateView.as_view(), name="aplicacao_update"),
     path("aplicacoes/<int:pk>/excluir/", views.AplicacaoDeleteView.as_view(), name="aplicacao_delete"),
     path("tratamentos/", views.TratamentoListView.as_view(), name="tratamento_list"),
@@ -23,5 +25,7 @@ urlpatterns = [
     path("tratamentos/<int:pk>/editar/", views.TratamentoUpdateView.as_view(), name="tratamento_update"),
     path("tratamentos/<int:pk>/excluir/", views.TratamentoDeleteView.as_view(), name="tratamento_delete"),
     path("vacinas/lote/<int:pk>/", views.VacinaLoteListView.as_view(), name="vacina_lote"),
+    path("vacinas/lote/<int:pk>/imprimir/", views.VacinaLotePrintView.as_view(), name="vacina_lote_print"),
+    path("vacinas/lote/<int:pk>/ok/", views.VacinaLoteBulkMarcarView.as_view(), name="vacina_lote_bulk_ok"),
     path("vacinas/lote/<int:pk>/ok/<int:vacina_id>/", views.VacinaLoteMarcarView.as_view(), name="vacina_lote_ok"),
 ]

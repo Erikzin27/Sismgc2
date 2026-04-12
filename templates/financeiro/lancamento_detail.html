@@ -7,17 +7,28 @@
     <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-3">
         <div>
             <h6 class="section-heading__title mb-1">{{ lancamento.descricao }}</h6>
-            <p class="section-heading__subtitle">{{ lancamento.data }} · {{ lancamento.get_categoria_display }}</p>
+            <p class="section-heading__subtitle">{{ lancamento.data }} - {{ lancamento.get_categoria_display }}</p>
         </div>
         <span class="status-badge {% if lancamento.tipo == 'entrada' %}status-badge--success{% else %}status-badge--danger{% endif %}">
             {{ lancamento.get_tipo_display }}
         </span>
     </div>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        {% if lancamento.lote %}
+            <span class="badge-soft"><i class="bi bi-boxes"></i>Lote {{ lancamento.lote }}</span>
+        {% endif %}
+        {% if lancamento.ave %}
+            <span class="badge-soft"><i class="bi bi-feather"></i>Ave {{ lancamento.ave }}</span>
+        {% endif %}
+        {% if lancamento.forma_pagamento %}
+            <span class="badge-soft"><i class="bi bi-credit-card"></i>{{ lancamento.forma_pagamento }}</span>
+        {% endif %}
+    </div>
     <div class="info-grid">
         <div class="info-chip"><span class="info-chip__label">Data</span><span class="info-chip__value">{{ lancamento.data }}</span></div>
         <div class="info-chip"><span class="info-chip__label">Tipo</span><span class="info-chip__value">{{ lancamento.get_tipo_display }}</span></div>
         <div class="info-chip"><span class="info-chip__label">Categoria</span><span class="info-chip__value">{{ lancamento.get_categoria_display }}</span></div>
-        <div class="info-chip"><span class="info-chip__label">Valor</span><span class="info-chip__value">{{ lancamento.valor|brl }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Valor</span><span class="info-chip__value fw-semibold">{{ lancamento.valor|brl }}</span></div>
         <div class="info-chip"><span class="info-chip__label">Forma de pagamento</span><span class="info-chip__value">{{ lancamento.forma_pagamento|default:"Não informada" }}</span></div>
         <div class="info-chip">
             <span class="info-chip__label">Origem</span>
@@ -45,4 +56,149 @@
         </div>
     </div>
 </div>
+<div class="row g-3">
+    <div class="col-12 col-lg-7">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Observações</h6>
+                    <p class="section-heading__subtitle">Detalhes extras para auditoria e conferência.</p>
+                </div>
+            </div>
+            {% if lancamento.observacoes %}
+                <div class="surface-muted p-3">{{ lancamento.observacoes }}</div>
+            {% else %}
+                <div class="empty-state p-3">Nenhuma observação cadastrada.</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-12 col-lg-5">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Ações rápidas</h6>
+                    <p class="section-heading__subtitle">Atalhos para manter o financeiro em dia.</p>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                {% if perms.financeiro.change_lancamentofinanceiro %}
+                    <a class="btn btn-outline-secondary" href="{% url 'financeiro:update' lancamento.pk %}">Editar lançamento</a>
+                {% endif %}
+                {% if lancamento.venda and perms.vendas.view_venda %}
+                    <a class="btn btn-outline-secondary" href="{% url 'vendas:detail' lancamento.venda.pk %}">Ver venda</a>
+                {% endif %}
+                {% if perms.financeiro.delete_lancamentofinanceiro %}
+                    <a class="btn btn-outline-danger" href="{% url 'financeiro:delete' lancamento.pk %}">Excluir</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="row g-3 mt-1">
+        <div class="col-12 col-lg-4">
+            <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Insights rápidos</h6>
+                    <p class="section-heading__subtitle">Resumo do lançamento para decisão rápida.</p>
+                </div>
+            </div>
+                <div class="info-grid">
+                    <div class="info-chip"><span class="info-chip__label">Tipo</span><span class="info-chip__value">{{ lancamento.get_tipo_display }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Forma</span><span class="info-chip__value">{{ lancamento.forma_pagamento|default:"-" }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Origem</span><span class="info-chip__value">{% if lancamento.venda %}Venda{% else %}Manual{% endif %}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Comprovante</span><span class="info-chip__value">{% if lancamento.comprovante %}Anexado{% else %}Não{% endif %}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Impacto no caixa</span><span class="info-chip__value fw-semibold">{{ impacto_caixa|brl }}</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-8">
+            <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Ações</h6>
+                    <p class="section-heading__subtitle">Atalhos agrupados para manter o financeiro em dia.</p>
+                </div>
+            </div>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Ações rápidas
+                    </button>
+                    <ul class="dropdown-menu">
+                    {% if perms.financeiro.change_lancamentofinanceiro %}
+                        <li><a class="dropdown-item" href="{% url 'financeiro:update' lancamento.pk %}">Editar lançamento</a></li>
+                    {% endif %}
+                    {% if lancamento.venda and perms.vendas.view_venda %}
+                        <li><a class="dropdown-item" href="{% url 'vendas:detail' lancamento.venda.pk %}">Ver venda</a></li>
+                    {% endif %}
+                    {% if perms.financeiro.delete_lancamentofinanceiro %}
+                        <li><a class="dropdown-item text-danger" href="{% url 'financeiro:delete' lancamento.pk %}">Excluir</a></li>
+                    {% endif %}
+                    </ul>
+                </div>
+                {% if sugestoes_financeiro %}
+                    <div class="surface-muted p-3 mt-3">
+                        <div class="metric-card__label mb-2">Sugestões inteligentes</div>
+                        <ul class="list-group list-group-flush list-soft">
+                            {% for s in sugestoes_financeiro %}
+                                <li class="list-group-item">{{ s }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="row g-3 mt-1">
+        <div class="col-12">
+            <div class="page-panel">
+                <div class="section-heading">
+                    <div>
+                        <h6 class="section-heading__title">Tendência financeira</h6>
+                        <p class="section-heading__subtitle">Entradas e saídas nos últimos meses.</p>
+                    </div>
+                </div>
+                <div class="surface-muted p-3">
+                    <canvas id="financeDetailChart" height="140"></canvas>
+                    {{ financeiro_chart_detail|json_script:"financeiro-chart-detail" }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const chartEl = document.getElementById("financeDetailChart");
+    if (!chartEl || typeof Chart === "undefined") return;
+    const payload = JSON.parse(document.getElementById("financeiro-chart-detail").textContent || "{}");
+    const data = {
+        labels: payload.labels || [],
+        datasets: [
+            {
+                label: "Entradas",
+                data: payload.entradas || [],
+                borderColor: "#1bbf91",
+                backgroundColor: "rgba(27,191,145,0.2)",
+                tension: 0.3,
+                fill: true
+            },
+            {
+                label: "Saídas",
+                data: payload.saidas || [],
+                borderColor: "#ff6b6b",
+                backgroundColor: "rgba(255,107,107,0.18)",
+                tension: 0.3,
+                fill: true
+            }
+        ]
+    };
+    new Chart(chartEl, {
+        type: "line",
+        data: data,
+        options: { responsive: true, plugins: { legend: { position: "bottom" } }, scales: { y: { beginAtZero: true } } }
+    });
+});
+</script>
 {% endblock %}

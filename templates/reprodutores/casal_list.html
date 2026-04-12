@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Casais de Reprodução{% endblock %}
+{% block page_subtitle %}Gerenciamento de pares para reprodução.{% endblock %}
+{% block content %}
+<style>
+    .casal-card {
+        background: #121b2f;
+        border: 1px solid #1f2a44;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+    }
+    .casal-card:hover {
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+        border-color: #4c8dff;
+    }
+    body[data-bs-theme="light"] .casal-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+    }
+    body[data-bs-theme="light"] .casal-card:hover {
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+</style>
+
+<div class="page-panel filter-bar">
+    <div class="list-actions mb-0">
+        <div class="list-actions__left">
+            {% if perms.reprodutores.add_casal %}
+                <a class="btn btn-primary" href="{% url 'reprodutores:casal_create' %}"><i class="bi bi-plus-lg"></i> Novo Casal</a>
+            {% endif %}
+        </div>
+        <div class="list-actions__center w-100">
+            <form method="get" class="d-flex gap-2 flex-wrap w-100">
+                <select class="form-select form-select-sm" name="status">
+                    <option value="">Status</option>
+                    <option value="ativo" {% if request.GET.status == "ativo" %}selected{% endif %}>Ativo</option>
+                    <option value="pausado" {% if request.GET.status == "pausado" %}selected{% endif %}>Pausado</option>
+                    <option value="finalizado" {% if request.GET.status == "finalizado" %}selected{% endif %}>Finalizado</option>
+                </select>
+                {% if request.GET.lote %}
+                <input type="hidden" name="lote" value="{{ request.GET.lote }}">
+                {% else %}
+                <select class="form-select form-select-sm" name="lote">
+                    <option value="">Todos os Lotes</option>
+                    {% for lote in lotes %}
+                        <option value="{{ lote.id }}" {% if request.GET.lote == lote.id|stringformat:"s" %}selected{% endif %}>{{ lote.nome }}</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+                <button class="btn btn-outline-secondary btn-sm" type="submit">Filtrar</button>
+                <a class="btn btn-outline-light btn-sm" href="{% url 'reprodutores:casal_list' %}">Limpar</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="filter-bar__summary">
+    <span class="badge-soft"><i class="bi bi-heart-handshake"></i>Total {{ total }} casais</span>
+    <span class="badge-soft"><i class="bi bi-check-circle"></i>{{ ativos }} ativos</span>
+    <span class="badge-soft"><i class="bi bi-pause"></i>{{ pausados }} pausados</span>
+    <span class="badge-soft"><i class="bi bi-check2-all"></i>{{ finalizados }} finalizados</span>
+</div>
+
+{% if casais %}
+    <div class="d-none d-lg-block">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover card-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Reprodutor</th>
+                        <th>Matriz</th>
+                        <th>Lote</th>
+                        <th>Início</th>
+                        <th>Fim</th>
+                        <th>Status</th>
+                        <th>Filhotes</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in casais %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'reprodutores:detail' c.reprodutor_macho.pk %}" class="fw-bold">
+                                ♂ {{ c.reprodutor_macho.ave.codigo_interno }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'reprodutores:detail' c.matriz_femea.pk %}" class="fw-bold">
+                                ♀ {{ c.matriz_femea.ave.codigo_interno }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if c.lote %}
+                                <span class="badge bg-info text-dark">{{ c.lote.nome }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ c.data_inicio|date:"d/m/Y" }}</td>
+                        <td>{{ c.data_fim|date:"d/m/Y"|default:"-" }}</td>
+                        <td>
+                            {% if c.status == "ativo" %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% elif c.status == "pausado" %}
+                                <span class="badge bg-warning text-dark">Pausado</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Finalizado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">{{ c.get_filhotes_count }}</span>
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'reprodutores:casal_detail' c.pk %}" class="btn btn-sm btn-outline-info">Ver</a>
+                            {% if perms.reprodutores.change_casal %}
+                                <a href="{% url 'reprodutores:casal_update' c.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-lg-none">
+        {% for c in casais %}
+        <div class="casal-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <h6 class="mb-1">♂ {{ c.reprodutor_macho.ave.codigo_interno }} × ♀ {{ c.matriz_femea.ave.codigo_interno }}</h6>
+                    {% if c.lote %}
+                        <small class="text-muted">{{ c.lote.nome }}</small>
+                    {% endif %}
+                </div>
+                {% if c.status == "ativo" %}
+                    <span class="badge bg-success">Ativo</span>
+                {% elif c.status == "pausado" %}
+                    <span class="badge bg-warning text-dark">Pausado</span>
+                {% else %}
+                    <span class="badge bg-secondary">Finalizado</span>
+                {% endif %}
+            </div>
+            <div class="row g-2 mb-2 text-sm">
+                <div class="col-6">
+                    <small class="text-muted">Início</small>
+                    <p class="mb-0">{{ c.data_inicio|date:"d/m/Y" }}</p>
+                </div>
+                <div class="col-6">
+                    <small class="text-muted">Fim</small>
+                    <p class="mb-0">{{ c.data_fim|date:"d/m/Y"|default:"Em andamento" }}</p>
+                </div>
+                <div class="col-12">
+                    <small class="text-muted">Filhotes registrados</small>
+                    <p class="mb-0 fw-bold">{{ c.get_filhotes_count }}</p>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'reprodutores:casal_detail' c.pk %}" class="btn btn-sm btn-outline-info flex-grow-1">Ver</a>
+                {% if perms.reprodutores.change_casal %}
+                    <a href="{% url 'reprodutores:casal_update' c.pk %}" class="btn btn-sm btn-outline-secondary flex-grow-1">Editar</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% include "pagination.html" with page_obj=page_obj %}
+{% else %}
+    <div class="text-center py-5">
+        <div class="empty-state p-5" style="border-radius: 1rem;">
+            <i class="bi bi-heart-handshake" style="font-size: 3rem; opacity: 0.6; display: block; margin-bottom: 1rem;"></i>
+            <h5>Nenhum casal encontrado</h5>
+            <p class="text-muted mb-3">Nenhum casal corresponde aos critérios de filtro.</p>
+            {% if perms.reprodutores.add_casal %}
+                <a href="{% url 'reprodutores:casal_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Criar primeiro casal
+                </a>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

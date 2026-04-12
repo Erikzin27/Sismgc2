@@ -1,39 +1,57 @@
 {% extends "base.html" %}
+{% load formatting %}
 {% block page_title %}Aplicações de Vacina{% endblock %}
+{% block page_subtitle %}Controle sanitário com filtros úteis, destaque de atrasos e ação rápida para concluir aplicações.{% endblock %}
 {% block content %}
-<div class="list-actions mb-2">
-    <div class="list-actions__left">
-        {% if perms.sanidade.add_aplicacaovacina %}
-            <a class="btn btn-primary" href="{% url 'sanidade:aplicacao_create' %}">Nova aplicação</a>
-        {% endif %}
+<div class="page-panel filter-bar">
+    <div class="list-actions mb-0">
+        <div class="list-actions__left">
+            {% if perms.sanidade.add_aplicacaovacina %}
+                <a class="btn btn-primary" href="{% url 'sanidade:aplicacao_create' %}">Nova aplicação</a>
+            {% endif %}
+        </div>
+        <div class="list-actions__center w-100">
+            <form id="aplicacoes-filters" method="get" class="d-flex gap-2 flex-wrap w-100"
+                  hx-get="{% url 'sanidade:aplicacao_list' %}" hx-target="#aplicacoes-body" hx-push-url="true"
+                  hx-indicator="#aplicacoes-loading" hx-trigger="change, keyup delay:400ms from:input[type=search]">
+                <input class="form-control form-control-sm" type="search" name="q" value="{{ request.GET.q }}" placeholder="Vacina ou observação">
+                <select class="form-select form-select-sm" name="vacina">
+                    <option value="">Vacina</option>
+                    {% for vacina in vacinas_filtro %}
+                        <option value="{{ vacina.pk }}" {% if request.GET.vacina == vacina.pk|stringformat:'s' %}selected{% endif %}>{{ vacina.nome }}</option>
+                    {% endfor %}
+                </select>
+                <select class="form-select form-select-sm" name="status">
+                    <option value="">Status base</option>
+                    {% for val,label in aplicacoes.model.STATUS_CHOICES %}
+                        <option value="{{ val }}" {% if request.GET.status == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <select class="form-select form-select-sm" name="status_visual">
+                    <option value="">Leitura operacional</option>
+                    <option value="atrasada" {% if request.GET.status_visual == 'atrasada' %}selected{% endif %}>Atrasada</option>
+                    <option value="hoje" {% if request.GET.status_visual == 'hoje' %}selected{% endif %}>Prevista para hoje</option>
+                    <option value="proxima" {% if request.GET.status_visual == 'proxima' %}selected{% endif %}>Próxima</option>
+                </select>
+                <select class="form-select form-select-sm" name="lote">
+                    <option value="">Lote</option>
+                    {% for lote in lotes_filtro %}
+                        <option value="{{ lote.pk }}" {% if request.GET.lote == lote.pk|stringformat:'s' %}selected{% endif %}>{{ lote.nome }}</option>
+                    {% endfor %}
+                </select>
+                <input class="form-control form-control-sm" type="date" name="inicio" value="{{ request.GET.inicio }}">
+                <input class="form-control form-control-sm" type="date" name="fim" value="{{ request.GET.fim }}">
+                <input type="hidden" name="page" value="{{ page_obj.number }}">
+                <button class="btn btn-outline-secondary btn-sm" type="submit">Filtrar</button>
+                <a class="btn btn-outline-light btn-sm" href="{% url 'sanidade:aplicacao_list' %}">Limpar</a>
+                <span id="aplicacoes-loading" class="htmx-indicator small text-muted">Atualizando...</span>
+            </form>
+        </div>
+        <div class="list-actions__right">
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'sanidade:aplicacao_print' %}?{{ request.GET.urlencode }}">Imprimir</a>
+        </div>
     </div>
-    <div class="list-actions__center"></div>
-    <div class="list-actions__right"></div>
 </div>
-<div class="table-responsive">
-    <table class="table table-striped table-hover card-table align-middle">
-        <thead><tr><th>Vacina</th><th>Alvo</th><th>Data</th><th>Status</th><th></th></tr></thead>
-        <tbody>
-        {% for a in aplicacoes %}
-            <tr>
-                <td>{{ a.vacina }}</td>
-                <td>{{ a.ave|default_if_none:a.lote }}</td>
-                <td>{{ a.data_programada }}</td>
-                <td>{{ a.get_status_display }}</td>
-                <td class="text-end">
-                    {% if perms.sanidade.change_aplicacaovacina %}
-                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'sanidade:aplicacao_update' a.pk %}">Editar</a>
-                    {% endif %}
-                    {% if perms.sanidade.delete_aplicacaovacina %}
-                        <a class="btn btn-sm btn-outline-danger" href="{% url 'sanidade:aplicacao_delete' a.pk %}">Excluir</a>
-                    {% endif %}
-                </td>
-            </tr>
-        {% empty %}
-            <tr><td colspan="5">Nenhuma aplicação.</td></tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% include "pagination.html" with page_obj=page_obj %}
+
+{% include "sanidade/_aplicacao_body.html" %}
 {% endblock %}

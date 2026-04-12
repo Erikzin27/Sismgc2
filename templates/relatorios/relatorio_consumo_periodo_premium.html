@@ -1,0 +1,252 @@
+{% load relatorio_filters %}
+{% extends "relatorios/print_premium.html" %}
+
+{% block content %}
+    <!-- RELATÓRIO CONSUMO POR PERÍODO PREMIUM -->
+    
+    {% if movimentos %}
+        <!-- RESUMO EXECUTIVO -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Resumo: Análise de Consumo</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Indicador</th>
+                        <th style="width: 30%" class="text-right">Valor</th>
+                        <th style="width: 30%">Análise</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Consumo Total (Período)</td>
+                        <td class="text-right value-number">{{ total_consumo|default:0 }} kg</td>
+                        <td style="font-size: 9px;">Ração saída total</td>
+                    </tr>
+                    <tr>
+                        <td>Consumo Médio Diário</td>
+                        <td class="text-right value-number">{{ consumo_diario|default:0|floatformat:1 }} kg/dia</td>
+                        <td style="font-size: 9px;">Base período</td>
+                    </tr>
+                    <tr>
+                        <td>Desvio Padrão</td>
+                        <td class="text-right value-number">{{ desvio_padrao|default:0|floatformat:2 }} kg</td>
+                        <td style="font-size: 9px;">Variabilidade</td>
+                    </tr>
+                    <tr>
+                        <td>Dia de Máximo Consumo</td>
+                        <td class="text-right value-number">{{ dia_maximo|default:"—" }}</td>
+                        <td style="font-size: 9px;">Pico registrado</td>
+                    </tr>
+                    <tr>
+                        <td>Dia de Mínimo Consumo</td>
+                        <td class="text-right value-number">{{ dia_minimo|default:"—" }}</td>
+                        <td style="font-size: 9px;">Mínima registrada</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- CONSUMO DIÁRIO DETALHADO -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Consumo Diário (Últimos 30 dias)</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 15%">Data</th>
+                        <th style="width: 15%" class="text-right">Consumo (kg)</th>
+                        <th style="width: 20%">Gráfico Relativo</th>
+                        <th style="width: 20%">vs. Média</th>
+                        <th style="width: 30%">Análise</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in movimentos|slice:":30" %}
+                        {% with percentual=mov.quantidade|percentage:consumo_diario variacao=mov.quantidade|add:0|add:"-"|add:consumo_diario %}
+                            <tr>
+                                <td>{{ mov.data|date:"d/m/Y" }}</td>
+                                <td class="text-right value-number">{{ mov.quantidade|floatformat:1 }}</td>
+                                <td>
+                                    <div style="background: linear-gradient(to right, #1fbf91 0%, #1fbf91 {{ percentual|floatformat:0 }}%, #f1f5f9 {{ percentual|floatformat:0 }}%); height: 16px; border-radius: 2px; font-size: 8px;">
+                                        {{ percentual|floatformat:0 }}%
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if variacao > 10 %}
+                                        <span style="color: #fbbf24;">↑ +{{ variacao|floatformat:1 }}%</span>
+                                    {% elif variacao < -10 %}
+                                        <span style="color: #dc3545;">↓ {{ variacao|floatformat:1 }}%</span>
+                                    {% else %}
+                                        <span style="color: #1fbf91;">≈ Normal</span>
+                                    {% endif %}
+                                </td>
+                                <td style="font-size: 9px;">
+                                    {% if variacao > 15 %}
+                                        ⚠️ Consumo Alto - Revisar
+                                    {% elif variacao < -15 %}
+                                        ⚠️ Consumo Baixo - Investigar
+                                    {% else %}
+                                        ✓ Dentro do Padrão
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- DISTRIBUIÇÃO SEMANAL -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Consumo Semanal (Padrões)</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 20%">Semana</th>
+                        <th style="width: 15%" class="text-right">Total (kg)</th>
+                        <th style="width: 15%" class="text-right">Média/Dia</th>
+                        <th style="width: 15%" class="text-right">Mín/Máx</th>
+                        <th style="width: 15%" class="text-right">Variação</th>
+                        <th style="width: 20%">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% regroup movimentos by "data|date:'W'" as movimentos_por_semana %}
+                    {% for semana, items in movimentos_por_semana %}
+                        {% with total_semana=items|sum_values minimo=items|first|get_display:"quantidade" maximo=items|last|get_display:"quantidade" %}
+                            <tr>
+                                <td>Semana {{ semana }}</td>
+                                <td class="text-right value-number">{{ total_semana|floatformat:1 }}</td>
+                                <td class="text-right value-number">
+                                    {% widthratio total_semana 7 1 %}
+                                </td>
+                                <td class="text-right value-number">
+                                    {{ minimo|floatformat:1 }} - {{ maximo|floatformat:1 }}
+                                </td>
+                                <td class="text-right value-number">
+                                    {% widthratio maximo minimo 100 %}%
+                                </td>
+                                <td class="text-center">
+                                    {% if total_semana > consumo_diario|add:"200" %}
+                                        <span style="color: #fbbf24;">⚠️ Alto</span>
+                                    {% elif total_semana < consumo_diario|add:"-200" %}
+                                        <span style="color: #dc3545;">⚠️ Baixo</span>
+                                    {% else %}
+                                        <span style="color: #1fbf91;">✓ Normal</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ANÁLISE DE TENDÊNCIAS -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Análise de Tendências e Padrões</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 30%">Padrão Observado</th>
+                        <th style="width: 20%" class="text-center">Ocorrências</th>
+                        <th style="width: 25%" class="text-center">% do Total</th>
+                        <th style="width: 25%">Implicação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: #e8f5e9;">
+                        <td>
+                            <span class="badge badge--entrada">✓ Consumo Estável</span>
+                        </td>
+                        <td class="text-center value-number">{{ estavel_count|default:0 }}</td>
+                        <td class="text-center value-number">{{ estavel_pct|default:"0" }}%</td>
+                        <td style="font-size: 9px;">Rebanho saudável</td>
+                    </tr>
+                    <tr style="background: #fef3c7;">
+                        <td>
+                            <span class="badge badge--pendente">⚠️ Variação Moderada</span>
+                        </td>
+                        <td class="text-center value-number">{{ moderado_count|default:0 }}</td>
+                        <td class="text-center value-number">{{ moderado_pct|default:"0" }}%</td>
+                        <td style="font-size: 9px;">Monitorar mudanças</td>
+                    </tr>
+                    <tr style="background: #fee2e2;">
+                        <td>
+                            <span class="badge badge--saida">❌ Flutuação Alta</span>
+                        </td>
+                        <td class="text-center value-number">{{ alto_count|default:0 }}</td>
+                        <td class="text-center value-number">{{ alto_pct|default:"0" }}%</td>
+                        <td style="font-size: 9px;">Investigar causas</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- INSIGHTS E RECOMENDAÇÕES -->
+        <div class="pdf-section" style="background: #dbeafe; border-left: 4px solid #4c8dff; padding: 12px; margin: 16px 0;">
+            <h3 style="color: #1e40af; margin: 0 0 8px 0; font-size: 12px;">💡 INSIGHTS DE CONSUMO</h3>
+            <ul style="margin: 0; padding-left: 16px; color: #1e40af; font-size: 10px;">
+                <li><strong>Estabilidade:</strong> Consumo regular indica rebanho saudável</li>
+                <li><strong>Picos:</strong> Investigar dias com consumo >20% acima da média</li>
+                <li><strong>Quedas:</strong> Possível indicador de problemas sanitários/nutricionais</li>
+                <li><strong>Planejamento:</strong> Usar consumo médio + margem (10%) para reposição</li>
+                <li><strong>Seasonal:</strong> Considerar variações por temperatura/luminosidade</li>
+            </ul>
+        </div>
+
+        <!-- RESUMO FINAL -->
+        <div class="pdf-section no-break">
+            <h2 class="pdf-section__title">Recomendações Operacionais</h2>
+            
+            <table>
+                <tbody>
+                    <tr style="background: #dbeafe;">
+                        <td style="width: 50%; font-weight: 600;" colspan="2">
+                            📋 AÇÕES RECOMENDADAS
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; padding: 8px;">
+                            <strong>Consumo Médio Baseline</strong>
+                        </td>
+                        <td style="width: 50%; padding: 8px; text-align: right;">
+                            {{ consumo_diario|default:"0"|floatformat:1 }} kg/dia
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; padding: 8px;">
+                            <strong>Margem Segurança (±10%)</strong>
+                        </td>
+                        <td style="width: 50%; padding: 8px; text-align: right;">
+                            {{ consumo_diario|add:"0"|floatformat:1 }} ± {{ consumo_diario|add:"0"|floatformat:1 }} kg
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; padding: 8px;">
+                            <strong>Próxima Reposição (30 dias)</strong>
+                        </td>
+                        <td style="width: 50%; padding: 8px; text-align: right;">
+                            {{ consumo_diario|add:"0"|floatformat:1 }} kg (aprox.)
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 12px; padding: 12px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px;">
+                <p style="margin: 0; font-size: 10px; color: #64748b;">
+                    <strong>Observação:</strong> Este relatório cobre o período solicitado com base em movimentos de saída de ração. Variações podem ocorrer por diferenças no manejo, clima, saúde do rebanho e qualidade da ração. Revisar regularmente para identificar padrões e anomalias.
+                </p>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="pdf-empty-state">
+            Nenhum movimento de consumo registrado para o período especificado.
+        </div>
+    {% endif %}
+
+{% endblock %}

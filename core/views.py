@@ -14,6 +14,7 @@ from lotes.models import Lote
 from linhagens.models import Linhagem
 from vendas.models import Venda
 from incubacao.models import Incubacao
+from estoque.models import ItemEstoque
 from core.models import ConfiguracaoSistema
 from core.forms import ConfiguracaoForm
 from core.services.config import get_configuracao_sistema
@@ -31,6 +32,7 @@ class GlobalSearchView(AuthenticatedView, generic.TemplateView):
         can_view_linhagens = user_has_role_or_perm(self.request.user, "linhagens.view_linhagem")
         can_view_vendas = user_has_role_or_perm(self.request.user, "vendas.view_venda")
         can_view_incubacoes = user_has_role_or_perm(self.request.user, "incubacao.view_incubacao")
+        can_view_estoque = user_has_role_or_perm(self.request.user, "estoque.view_itemestoque")
         if q:
             ctx["aves"] = (
                 Ave.objects.select_related("linhagem").filter(
@@ -59,17 +61,24 @@ class GlobalSearchView(AuthenticatedView, generic.TemplateView):
                 if can_view_incubacoes
                 else []
             )
+            ctx["estoque"] = (
+                ItemEstoque.objects.filter(Q(nome__icontains=q) | Q(categoria__icontains=q))[:20]
+                if can_view_estoque
+                else []
+            )
         else:
             ctx["aves"] = []
             ctx["lotes"] = []
             ctx["linhagens"] = []
             ctx["vendas"] = []
             ctx["incubacoes"] = []
+            ctx["estoque"] = []
         ctx["can_view_aves"] = can_view_aves
         ctx["can_view_lotes"] = can_view_lotes
         ctx["can_view_linhagens"] = can_view_linhagens
         ctx["can_view_vendas"] = can_view_vendas
         ctx["can_view_incubacoes"] = can_view_incubacoes
+        ctx["can_view_estoque"] = can_view_estoque
         return ctx
 
 

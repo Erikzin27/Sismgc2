@@ -856,7 +856,19 @@ class ExportRelatorioPDFView(SensitiveReportView):
                 from django.shortcuts import redirect
 
                 return redirect(request.META.get("HTTP_REFERER", "relatorios:index"))
-        html_string = render_to_string("relatorios/print.html", {"report": report, **data})
+        
+        # Tenta usar template premium primeiro, fallback para template antigo
+        template_names = [
+            f"relatorios/relatorio_{report}_premium.html",  # Template novo premium
+            "relatorios/print.html",  # Template antigo (fallback)
+        ]
+        
+        try:
+            html_string = render_to_string(template_names, {"report": report, **data})
+        except Exception:
+            # Se nenhum dos templates funcionar, usa o print.html antigo
+            html_string = render_to_string("relatorios/print.html", {"report": report, **data})
+        
         pdf = HTML(string=html_string).write_pdf()
         response = HttpResponse(pdf, content_type="application/pdf")
         response["Content-Disposition"] = f"attachment; filename=relatorio_{report}.pdf"

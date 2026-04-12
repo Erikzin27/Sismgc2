@@ -11,6 +11,34 @@
         </div>
         <span class="badge-soft"><i class="bi bi-flag"></i>{{ lote.get_status_display }}</span>
     </div>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <span class="badge-soft"><i class="bi bi-activity"></i>Mortalidade {{ resumo.mortalidade|num }}%</span>
+        <span class="badge-soft"><i class="bi bi-egg-fried"></i>Eclosão {{ resumo_reproducao.taxa_eclosao|num }}%</span>
+        <span class="badge-soft"><i class="bi bi-cash-coin"></i>Lucro {{ lote.lucro_final|brl }}</span>
+        {% if painel_inteligente.consumo_por_ave > 5 %}
+            <span class="badge bg-danger">Consumo alto por ave</span>
+        {% endif %}
+        {% if painel_inteligente.vacinas_atrasadas %}
+            <span class="badge bg-warning text-dark">Vacinas atrasadas</span>
+        {% endif %}
+    </div>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        {% if atalhos_lote.vacinacao %}
+            <a class="badge-soft text-decoration-none" href="{% url 'sanidade:vacina_lote' lote.pk %}"><i class="bi bi-shield-plus"></i>Calendário vacinal</a>
+        {% endif %}
+        {% if atalhos_lote.tratamentos %}
+            <a class="badge-soft text-decoration-none" href="{% url 'sanidade:tratamento_list' %}?alvo=lote"><i class="bi bi-capsule"></i>Tratamentos</a>
+        {% endif %}
+        {% if atalhos_lote.incubacao %}
+            <a class="badge-soft text-decoration-none" href="{% url 'incubacao:list' %}"><i class="bi bi-egg"></i>Incubação</a>
+        {% endif %}
+        {% if atalhos_lote.vendas %}
+            <a class="badge-soft text-decoration-none" href="{% url 'vendas:list' %}?lote={{ lote.pk }}"><i class="bi bi-cart3"></i>Vendas do lote</a>
+        {% endif %}
+        {% if atalhos_lote.movimentos %}
+            <a class="badge-soft text-decoration-none" href="{% url 'estoque:mov_list' %}?lote={{ lote.pk }}"><i class="bi bi-arrow-left-right"></i>Movimentações</a>
+        {% endif %}
+    </div>
     <div class="info-grid">
         <div class="info-chip">
             <span class="info-chip__label">Quantidade inicial</span>
@@ -37,6 +65,10 @@
             <span class="info-chip__value">{{ resumo.consumo_racao|num }} kg</span>
         </div>
         <div class="info-chip">
+            <span class="info-chip__label">Taxa de eclosão</span>
+            <span class="info-chip__value">{{ resumo_reproducao.taxa_eclosao|num }}%</span>
+        </div>
+        <div class="info-chip">
             <span class="info-chip__label">Conversão alimentar</span>
             <span class="info-chip__value">{{ resumo.conversao|num }}</span>
         </div>
@@ -46,8 +78,22 @@
         </div>
         <div class="info-chip">
             <span class="info-chip__label">Lucro final</span>
-            <span class="info-chip__value">{{ lote.lucro_final|brl }}</span>
+            <span class="info-chip__value {% if lote.lucro_final < 0 %}text-danger{% else %}text-success{% endif %}">
+                {{ lote.lucro_final|brl }}
+            </span>
         </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mt-3">
+        <span class="badge bg-secondary">Vacinas pendentes: {{ painel_inteligente.vacinas_pendentes|int_if_whole }}</span>
+        <span class="badge bg-danger">Vacinas atrasadas: {{ painel_inteligente.vacinas_atrasadas|int_if_whole }}</span>
+        <span class="badge bg-info text-dark">Tratamentos ativos: {{ painel_inteligente.tratamentos_ativos|int_if_whole }}</span>
+        <span class="badge bg-warning text-dark">Carências ativas: {{ painel_inteligente.carencias_ativas|int_if_whole }}</span>
+        {% if painel_inteligente.consumo_por_ave > 5 %}
+            <span class="badge bg-danger">Consumo alto por ave: {{ painel_inteligente.consumo_por_ave|num }} kg</span>
+        {% endif %}
+        <a class="badge bg-primary text-decoration-none" href="{% url 'sanidade:aplicacao_list' %}?lote={{ lote.pk }}&status=pendente&atrasadas=1">
+            Ver vacinas atrasadas
+        </a>
     </div>
 </div>
 
@@ -63,10 +109,69 @@
             <div class="info-grid">
                 <div class="info-chip"><span class="info-chip__label">Aves</span><span class="info-chip__value">{{ painel_operacional.aves|int_if_whole }}</span></div>
                 <div class="info-chip"><span class="info-chip__label">Vacinas pendentes</span><span class="info-chip__value">{{ painel_operacional.vacinas_pendentes|int_if_whole }}</span></div>
+                <div class="info-chip"><span class="info-chip__label">Vacinas atrasadas</span><span class="info-chip__value">{{ painel_operacional.vacinas_atrasadas|int_if_whole }}</span></div>
                 <div class="info-chip"><span class="info-chip__label">Tratamentos</span><span class="info-chip__value">{{ painel_operacional.tratamentos_ativos|int_if_whole }}</span></div>
                 <div class="info-chip"><span class="info-chip__label">Incubações</span><span class="info-chip__value">{{ painel_operacional.incubacoes|int_if_whole }}</span></div>
                 <div class="info-chip"><span class="info-chip__label">Nascimentos</span><span class="info-chip__value">{{ painel_operacional.nascimentos|int_if_whole }}</span></div>
                 <div class="info-chip"><span class="info-chip__label">Movimentações</span><span class="info-chip__value">{{ painel_operacional.movimentos|int_if_whole }}</span></div>
+            </div>
+            <div class="row g-3 mt-3">
+                <div class="col-12">
+                    <div class="surface-muted p-3">
+                        <h6 class="mb-3">Consumo inteligente</h6>
+                        <div class="info-grid">
+                            <div class="info-chip"><span class="info-chip__label">Consumo total</span><span class="info-chip__value">{{ painel_inteligente.consumo_total|num }} kg</span></div>
+                            <div class="info-chip"><span class="info-chip__label">Média/dia</span><span class="info-chip__value">{{ painel_inteligente.consumo_medio_dia|num }} kg</span></div>
+                            <div class="info-chip"><span class="info-chip__label">Consumo por ave</span><span class="info-chip__value">{{ painel_inteligente.consumo_por_ave|num }} kg</span></div>
+                            <div class="info-chip"><span class="info-chip__label">Custo ração</span><span class="info-chip__value">{{ painel_inteligente.custo_racao|brl }}</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="surface-muted p-3">
+                        <h6 class="mb-3">Sanidade inteligente</h6>
+                        <div class="info-grid">
+                            <div class="info-chip"><span class="info-chip__label">Vacinas pendentes</span><span class="info-chip__value">{{ painel_inteligente.vacinas_pendentes|int_if_whole }}</span></div>
+                            <div class="info-chip"><span class="info-chip__label">Vacinas atrasadas</span><span class="info-chip__value">{{ painel_inteligente.vacinas_atrasadas|int_if_whole }}</span></div>
+                            <div class="info-chip"><span class="info-chip__label">Tratamentos ativos</span><span class="info-chip__value">{{ painel_inteligente.tratamentos_ativos|int_if_whole }}</span></div>
+                            <div class="info-chip"><span class="info-chip__label">Carências ativas</span><span class="info-chip__value">{{ painel_inteligente.carencias_ativas|int_if_whole }}</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="surface-muted p-3">
+                        <h6 class="mb-3">Reprodução inteligente</h6>
+                        <div class="info-grid">
+                            <div class="info-chip"><span class="info-chip__label">Incubações</span><span class="info-chip__value">{{ resumo_reproducao.total_incubacoes|int_if_whole }}</span></div>
+                            <div class="info-chip"><span class="info-chip__label">Taxa de eclosão</span><span class="info-chip__value">{{ painel_inteligente.taxa_eclosao|num }}%</span></div>
+                            <div class="info-chip"><span class="info-chip__label">Custo sanitário</span><span class="info-chip__value">{{ painel_inteligente.custo_sanitario|brl }}</span></div>
+                            <div class="info-chip"><span class="info-chip__label">Despesas extras</span><span class="info-chip__value">{{ painel_inteligente.despesas_extras|brl }}</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="surface-muted p-3 mt-3">
+                <h6 class="mb-3">Alertas do lote</h6>
+                <ul class="list-group list-group-flush list-soft">
+                    {% for alerta in alertas_lote %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between gap-2 flex-wrap">
+                                <strong>{{ alerta.tipo }}</strong>
+                                <span class="status-badge {% if alerta.nivel == 'danger' %}status-badge--danger{% elif alerta.nivel == 'warning' %}status-badge--warning{% else %}status-badge--info{% endif %}">
+                                    {{ alerta.nivel|title }}
+                                </span>
+                            </div>
+                            <div class="record-card__meta">{{ alerta.descricao }}</div>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Nenhum alerta operacional importante neste lote.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="surface-muted p-3 mt-3">
+                <h6 class="mb-3">Tendência de consumo</h6>
+                <canvas id="loteConsumoChart" height="140"></canvas>
+                {{ lote_consumo_chart|json_script:"lote-consumo-chart" }}
             </div>
         </div>
     </div>
@@ -280,4 +385,44 @@
         </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const chartEl = document.getElementById("loteConsumoChart");
+    if (!chartEl || typeof Chart === "undefined") return;
+    const payload = JSON.parse(document.getElementById("lote-consumo-chart").textContent || "{}");
+    const data = {
+        labels: payload.labels || [],
+        datasets: [
+            {
+                label: "Consumo (kg)",
+                data: payload.consumo || [],
+                borderColor: "#1bbf91",
+                backgroundColor: "rgba(27,191,145,0.2)",
+                tension: 0.3,
+                fill: true
+            },
+            {
+                label: "Custo (R$)",
+                data: payload.custo || [],
+                borderColor: "#ffb347",
+                backgroundColor: "rgba(255,179,71,0.22)",
+                tension: 0.3,
+                fill: true
+            }
+        ]
+    };
+    new Chart(chartEl, {
+        type: "line",
+        data: data,
+        options: {
+            responsive: true,
+            plugins: { legend: { position: "bottom" } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+});
+</script>
 {% endblock %}

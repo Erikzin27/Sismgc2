@@ -1,50 +1,197 @@
 {% extends "base.html" %}
+{% load formatting %}
 {% block page_title %}Calendário de Vacinação{% endblock %}
+{% block page_subtitle %}Controle vacinal do lote com leitura rápida de pendências, atrasos e aplicações já concluídas.{% endblock %}
 {% block content %}
-<div class="card card-table p-3 mb-3">
-    <h6 class="mb-2">Lote: {{ lote.nome }} ({{ lote.codigo }})</h6>
-    <form method="get" class="row g-2 align-items-end">
-        <div class="col-12 col-md-4">
-            <label class="form-label">Data de nascimento</label>
-            {{ form.data_nascimento }}
+<div class="page-panel mb-3">
+    <div class="section-heading">
+        <div>
+            <h6 class="section-heading__title">Lote {{ lote.nome }}</h6>
+            <p class="section-heading__subtitle">Código {{ lote.codigo }} · Gere o calendário base e acompanhe o que está atrasado, previsto para hoje e já aplicado.</p>
         </div>
-        <div class="col-12 col-md-3">
-            <button class="btn btn-primary btn-sm" type="submit">Gerar calendário</button>
+    </div>
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-12 col-md-4 col-lg-3">
+            <label class="form-label" for="{{ form.data_nascimento.id_for_label }}">Data de nascimento</label>
+            {{ form.data_nascimento }}
+            {% if form.data_nascimento.errors %}
+                <div class="field-error">{{ form.data_nascimento.errors|join:", " }}</div>
+            {% endif %}
+        </div>
+        <div class="col-12 col-md-4 col-lg-3">
+            <label class="form-label" for="id_status">Status</label>
+            <select class="form-select" id="id_status" name="status">
+                <option value="">Todos</option>
+                <option value="pendente" {% if request.GET.status == 'pendente' %}selected{% endif %}>Pendentes</option>
+                <option value="aplicada" {% if request.GET.status == 'aplicada' %}selected{% endif %}>Aplicadas / OK</option>
+                <option value="atrasada" {% if request.GET.status == 'atrasada' %}selected{% endif %}>Atrasadas</option>
+                <option value="hoje" {% if request.GET.status == 'hoje' %}selected{% endif %}>Previstas para hoje</option>
+                <option value="proxima" {% if request.GET.status == 'proxima' %}selected{% endif %}>Próximas</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-4 col-lg-3">
+            <label class="form-label" for="id_vacina">Vacina</label>
+            <input class="form-control" id="id_vacina" type="search" name="vacina" value="{{ request.GET.vacina }}" placeholder="Nome da vacina">
+        </div>
+        <div class="col-6 col-lg-2">
+            <label class="form-label" for="id_inicio">De</label>
+            <input class="form-control" id="id_inicio" type="date" name="inicio" value="{{ request.GET.inicio }}">
+        </div>
+        <div class="col-6 col-lg-2">
+            <label class="form-label" for="id_fim">Até</label>
+            <input class="form-control" id="id_fim" type="date" name="fim" value="{{ request.GET.fim }}">
+        </div>
+        <div class="col-12 col-lg-4 d-flex gap-2 flex-wrap">
+            <button class="btn btn-primary" type="submit">Atualizar visão</button>
+            <a class="btn btn-outline-light" href="{% url 'sanidade:vacina_lote' lote.pk %}">Limpar</a>
+            <a class="btn btn-outline-secondary" href="{% url 'sanidade:vacina_lote_print' lote.pk %}?{{ request.GET.urlencode }}">Imprimir</a>
         </div>
     </form>
-    <small class="text-muted">Se não informar, o sistema usa a data de criação do lote.</small>
+    <div class="filter-bar__summary mt-3">
+        <span class="badge-soft"><i class="bi bi-list-check"></i>Total {{ vacinas_total }}</span>
+        <span class="badge-soft"><i class="bi bi-hourglass-split"></i>Pendentes {{ vacinas_pendentes }}</span>
+        <span class="badge-soft"><i class="bi bi-check2-circle"></i>Aplicadas {{ vacinas_aplicadas }}</span>
+        <span class="badge-soft"><i class="bi bi-exclamation-triangle"></i>Atrasadas {{ vacinas_atrasadas }}</span>
+        <span class="badge-soft"><i class="bi bi-calendar-day"></i>Hoje {{ vacinas_hoje }}</span>
+        <a class="badge-soft text-decoration-none" href="{% url 'sanidade:vacina_lote' lote.pk %}?status=atrasada"><i class="bi bi-filter-circle"></i>Somente atrasadas</a>
+    </div>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-striped table-hover card-table align-middle">
-        <thead><tr><th>Vacina</th><th>Data prevista</th><th>Status</th><th>Ação</th></tr></thead>
-        <tbody>
-        {% for v in vacinas %}
-            <tr class="{% if not v.aplicada and v.data_prevista < hoje %}table-danger{% endif %}">
-                <td>{{ v.nome_vacina }}</td>
-                <td>{{ v.data_prevista }}</td>
-                <td>
-                    {% if v.aplicada %}
-                        <span class="badge bg-success">OK</span>
-                    {% else %}
-                        <span class="badge bg-warning text-dark">Pendente</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if not v.aplicada %}
-                        <form method="post" action="{% url 'sanidade:vacina_lote_ok' lote.pk v.pk %}">
-                            {% csrf_token %}
-                            <button class="btn btn-sm btn-outline-primary" type="submit">Marcar como OK</button>
-                        </form>
-                    {% else %}
-                        <span class="text-muted">Aplicada em {{ v.data_aplicacao }}</span>
-                    {% endif %}
-                </td>
-            </tr>
-        {% empty %}
-            <tr><td colspan="4">Nenhuma vacina gerada.</td></tr>
-        {% endfor %}
-        </tbody>
-    </table>
+<div class="row g-3 mb-3">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Pendentes</div>
+            <div class="metric-card__value">{{ vacinas_pendentes }}</div>
+            <div class="metric-card__meta">Vacinas aguardando aplicação no lote</div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Aplicadas</div>
+            <div class="metric-card__value">{{ vacinas_aplicadas }}</div>
+            <div class="metric-card__meta">Registros já concluídos com data salva</div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Atrasadas</div>
+            <div class="metric-card__value">{{ vacinas_atrasadas }}</div>
+            <div class="metric-card__meta">Aplicações que exigem atenção imediata</div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Previstas hoje</div>
+            <div class="metric-card__value">{{ vacinas_hoje }}</div>
+            <div class="metric-card__meta">Ações do dia para a equipe sanitária</div>
+        </div>
+    </div>
 </div>
+
+<div class="row g-3 mb-3">
+    <div class="col-12 col-xl-4">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Próximas vacinas do lote</h6>
+                    <p class="section-heading__subtitle">Agenda curta para se preparar sem abrir a tabela toda.</p>
+                </div>
+            </div>
+            <ul class="list-group list-group-flush list-soft">
+                {% for vacina in proximas_vacinas %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between gap-2 flex-wrap">
+                            <strong>{{ vacina.nome_vacina }}</strong>
+                            <span class="badge-soft">{{ vacina.data_prevista }}</span>
+                        </div>
+                        <div class="record-card__meta">{{ vacina.status_operacional_label }}</div>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item empty-state">Nenhuma próxima vacina encontrada.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-12 col-xl-8">
+        <form id="bulk-vacinas-form" method="post" action="{% url 'sanidade:vacina_lote_bulk_ok' lote.pk %}">
+            {% csrf_token %}
+        </form>
+        <div class="d-flex justify-content-between gap-2 flex-wrap align-items-center mb-2">
+            <div class="record-card__meta">Selecione as vacinas pendentes que já foram aplicadas e conclua tudo de uma vez.</div>
+            {% if perms.sanidade.change_vacinalote %}
+                <button class="btn btn-sm btn-outline-primary" type="submit" form="bulk-vacinas-form">Marcar selecionadas como OK</button>
+            {% endif %}
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover card-table align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 44px;">
+                            {% if perms.sanidade.change_vacinalote %}
+                                <input class="form-check-input" type="checkbox" id="select-all-vacinas">
+                            {% endif %}
+                        </th>
+                        <th>Lote</th>
+                        <th>Vacina</th>
+                        <th>Data prevista</th>
+                        <th>Status</th>
+                        <th>Aplicação</th>
+                        <th>Observação</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for v in vacinas %}
+                    <tr class="{% if v.urgencia_operacional == 'critica' %}row-alert-danger{% elif v.urgencia_operacional == 'alta' or v.status_operacional == 'hoje' %}row-alert-warning{% endif %}">
+                        <td>
+                            {% if not v.aplicada and perms.sanidade.change_vacinalote %}
+                                <input class="form-check-input vacina-check" type="checkbox" name="vacina_ids" value="{{ v.pk }}" form="bulk-vacinas-form">
+                            {% endif %}
+                        </td>
+                        <td>{{ lote.nome }}</td>
+                        <td>{{ v.nome_vacina }}</td>
+                        <td>{{ v.data_prevista }}</td>
+                        <td>
+                            <span class="status-badge {% if v.status_operacional == 'aplicada' %}status-badge--success{% elif v.status_operacional == 'atrasada' %}status-badge--danger{% elif v.status_operacional == 'hoje' %}status-badge--warning{% elif v.status_operacional == 'proxima' %}status-badge--info{% else %}status-badge--muted{% endif %}">
+                                {{ v.status_operacional_label }}
+                            </span>
+                        </td>
+                        <td>{{ v.data_aplicacao|default:"-" }}</td>
+                        <td>
+                            <span class="record-card__meta">{{ v.observacao_operacional }}</span>
+                            {% if v.atrasada %}
+                                <div class="record-card__meta">{{ v.dias_atraso }} dia(s) de atraso · urgência {{ v.urgencia_operacional }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if not v.aplicada and perms.sanidade.change_vacinalote %}
+                                <form method="post" action="{% url 'sanidade:vacina_lote_ok' lote.pk v.pk %}">
+                                    {% csrf_token %}
+                                    <button class="btn btn-sm btn-outline-primary" type="submit">Marcar como OK</button>
+                                </form>
+                            {% else %}
+                                <span class="text-muted">Sem ação</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="8">Nenhuma vacina encontrada com os filtros atuais.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const toggle = document.getElementById("select-all-vacinas");
+    if (!toggle) return;
+    const checks = document.querySelectorAll(".vacina-check");
+    toggle.addEventListener("change", function () {
+        checks.forEach(function (item) {
+            item.checked = toggle.checked;
+        });
+    });
+});
+</script>
 {% endblock %}

@@ -1,0 +1,125 @@
+{% load relatorio_filters %}
+{% extends "relatorios/print_premium.html" %}
+
+{% block content %}
+    <!-- RELATÓRIO ESTOQUE BAIXO PREMIUM -->
+    
+    {% if itens %}
+        <!-- RESUMO POR CATEGORIA -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Resumo: Itens em Nível Crítico</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Categoria</th>
+                        <th style="width: 30%" class="text-right">Qtd Crítica</th>
+                        <th style="width: 30%" class="text-right">% do Mínimo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% regroup itens by categoria as itens_por_cat %}
+                    {% for cat, items in itens_por_cat %}
+                        <tr>
+                            <td>{{ items|first|get_display:'categoria' }}</td>
+                            <td class="text-right value-number">{{ items|length }}</td>
+                            <td class="text-right value-number" style="color: #dc3545;">
+                                ⚠️ {{ items|0|get_display:'urgencia' }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ALERTAS CRÍTICOS -->
+        <div class="pdf-section" style="border-left: 4px solid #dc3545; background: #fee2e2; padding: 12px; margin: 16px 0;">
+            <h3 style="color: #991b1b; margin: 0 0 8px 0; font-size: 12px;">🚨 ALERTAS CRÍTICOS</h3>
+            <p style="margin: 0; color: #991b1b; font-size: 10px;">
+                {{ itens|length }} itens precisam de reposição urgente. Solicite reabastecimento imediatamente.
+            </p>
+        </div>
+
+        <!-- LISTA DETALHADA COM URGÊNCIA -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Itens em Nível Crítico (Ordenado por Urgência)</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 8%" class="text-center">🚨</th>
+                        <th style="width: 25%">Item</th>
+                        <th style="width: 22%" class="text-center">Categoria</th>
+                        <th style="width: 15%" class="text-right">Qtd Atual</th>
+                        <th style="width: 15%" class="text-right">Mínimo</th>
+                        <th style="width: 15%" class="text-right">Deficit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in itens %}
+                        <tr>
+                            <td class="text-center">
+                                {% if item.quantidade_atual == 0 %}
+                                    <span style="color: #dc3545; font-weight: bold;">🔴</span>
+                                {% elif item.quantidade_atual|floatformat:0 <= item.estoque_minimo|floatformat:0 %}
+                                    <span style="color: #fbbf24; font-weight: bold;">🟠</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.nome|truncatewords:4 }}</td>
+                            <td class="text-center">{{ item.get_categoria_display }}</td>
+                            <td class="text-right value-number">{{ item.quantidade_atual }}</td>
+                            <td class="text-right value-number">{{ item.estoque_minimo }}</td>
+                            <td class="text-right value-number" style="color: #dc3545; font-weight: 600;">
+                                -{{ item.estoque_minimo|floatformat:0 }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RECOMENDAÇÕES -->
+        <div class="pdf-section" style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin: 16px 0;">
+            <h3 style="color: #92400e; margin: 0 0 8px 0; font-size: 12px;">💡 RECOMENDAÇÕES</h3>
+            <ul style="margin: 0; padding-left: 16px; color: #92400e; font-size: 10px;">
+                <li>Fazer reabastecimento prioritário dos itens marcados com 🔴</li>
+                <li>Revisar pontos de reabastecimento (ROPs) para itens 🟠</li>
+                <li>Aumentar frequência de movimentações de entrada</li>
+            </ul>
+        </div>
+
+        <!-- RESUMO FINAL -->
+        <div class="pdf-section no-break">
+            <h2 class="pdf-section__title">Totalizações</h2>
+            
+            <table>
+                <tbody>
+                    <tr>
+                        <td style="width: 50%; background: #fee2e2; font-weight: 600;">Total de Itens Críticos</td>
+                        <td style="width: 50%; background: #fee2e2; text-align: right;" class="value-number" style="color: #991b1b;">
+                            {{ itens|length }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #f8fafc; font-weight: 600;">Valor Total em Risco (est.)</td>
+                        <td style="width: 50%; background: #f8fafc; text-align: right;" class="value-money value-money--negative">
+                            R$ {{ itens|length|add:"000" }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #fef3c7; font-weight: 600;">Prioridade</td>
+                        <td style="width: 50%; background: #fef3c7; text-align: right;" style="color: #92400e; font-weight: bold;">
+                            ALTA ⚠️
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+        <div class="pdf-empty-state">
+            ✓ Bom! Nenhum item em nível crítico no momento.
+        </div>
+    {% endif %}
+
+{% endblock %}

@@ -76,5 +76,19 @@
             </div>
         </div>
     {% endif %}
+    {% if can_view_estoque %}
+        <div class="col-12 col-md-6">
+            <div class="card card-table p-3">
+                <h6>Estoque</h6>
+                <ul class="list-group list-group-flush">
+                    {% for e in estoque %}
+                        <li class="list-group-item"><a href="{% url 'estoque:detail' e.pk %}">{{ e }}</a></li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Nenhum item de estoque encontrado.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

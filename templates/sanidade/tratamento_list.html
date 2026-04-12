@@ -1,25 +1,97 @@
 {% extends "base.html" %}
+{% load formatting %}
 {% block page_title %}Tratamentos{% endblock %}
+{% block page_subtitle %}Acompanhamento de tratamentos, carências e status operacional com filtros práticos.{% endblock %}
 {% block content %}
-<div class="list-actions mb-2">
-    <div class="list-actions__left">
-        {% if perms.sanidade.add_tratamento %}
-            <a class="btn btn-primary" href="{% url 'sanidade:tratamento_create' %}">Novo tratamento</a>
-        {% endif %}
+<div class="page-panel filter-bar">
+    <div class="list-actions mb-0">
+        <div class="list-actions__left">
+            {% if perms.sanidade.add_tratamento %}
+                <a class="btn btn-primary" href="{% url 'sanidade:tratamento_create' %}">Novo tratamento</a>
+            {% endif %}
+        </div>
+        <div class="list-actions__center w-100">
+            <form method="get" class="d-flex gap-2 flex-wrap w-100">
+                <input class="form-control form-control-sm" type="search" name="q" value="{{ request.GET.q }}" placeholder="Doença ou medicamento">
+                <select class="form-select form-select-sm" name="alvo">
+                    <option value="">Alvo</option>
+                    <option value="ave" {% if request.GET.alvo == 'ave' %}selected{% endif %}>Ave</option>
+                    <option value="lote" {% if request.GET.alvo == 'lote' %}selected{% endif %}>Lote</option>
+                </select>
+                <select class="form-select form-select-sm" name="status_tratamento">
+                    <option value="">Status</option>
+                    <option value="ativo" {% if request.GET.status_tratamento == 'ativo' %}selected{% endif %}>Em andamento</option>
+                    <option value="finalizado" {% if request.GET.status_tratamento == 'finalizado' %}selected{% endif %}>Finalizado</option>
+                </select>
+                <select class="form-select form-select-sm" name="carencia">
+                    <option value="">Carência</option>
+                    <option value="ativa" {% if request.GET.carencia == 'ativa' %}selected{% endif %}>Ativa</option>
+                </select>
+                <input class="form-control form-control-sm" type="date" name="inicio" value="{{ request.GET.inicio }}">
+                <input class="form-control form-control-sm" type="date" name="fim" value="{{ request.GET.fim }}">
+                <button class="btn btn-outline-secondary btn-sm" type="submit">Filtrar</button>
+                <a class="btn btn-outline-light btn-sm" href="{% url 'sanidade:tratamento_list' %}">Limpar</a>
+            </form>
+        </div>
+        <div class="list-actions__right"></div>
     </div>
-    <div class="list-actions__center"></div>
-    <div class="list-actions__right"></div>
+    <div class="filter-bar__summary">
+        <span class="badge-soft"><i class="bi bi-heart-pulse"></i>Em andamento {{ tratamentos_ativos_count }}</span>
+        <span class="badge-soft"><i class="bi bi-check2-circle"></i>Finalizados {{ tratamentos_finalizados_count }}</span>
+        <span class="badge-soft"><i class="bi bi-clock-history"></i>Carência ativa {{ tratamentos_carencia_count }}</span>
+    </div>
 </div>
+
+<div class="row g-3 mb-3">
+    <div class="col-12 col-md-4">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Em andamento</div>
+            <div class="metric-card__value">{{ tratamentos_ativos_count }}</div>
+            <div class="metric-card__meta">Tratamentos com acompanhamento atual</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Finalizados</div>
+            <div class="metric-card__value">{{ tratamentos_finalizados_count }}</div>
+            <div class="metric-card__meta">Registros encerrados</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card card-table metric-card">
+            <div class="metric-card__label">Carência ativa</div>
+            <div class="metric-card__value">{{ tratamentos_carencia_count }}</div>
+            <div class="metric-card__meta">Exigem atenção antes de venda/abate</div>
+        </div>
+    </div>
+</div>
+
 <div class="table-responsive">
     <table class="table table-striped table-hover card-table align-middle">
-        <thead><tr><th>Doença</th><th>Medicamento</th><th>Alvo</th><th>Início</th><th></th></tr></thead>
+        <thead><tr><th>Doença</th><th>Medicamento</th><th>Alvo</th><th>Status</th><th>Início</th><th>Carência</th><th></th></tr></thead>
         <tbody>
         {% for t in tratamentos %}
             <tr>
                 <td>{{ t.doenca }}</td>
                 <td>{{ t.medicamento }}</td>
                 <td>{{ t.ave|default_if_none:t.lote }}</td>
+                <td>
+                    {% if t.em_andamento %}
+                        <span class="status-badge status-badge--warning">Em andamento</span>
+                    {% else %}
+                        <span class="status-badge status-badge--muted">Finalizado</span>
+                    {% endif %}
+                </td>
                 <td>{{ t.data_inicio }}</td>
+                <td>
+                    {% if t.carencia_ativa %}
+                        <span class="status-badge status-badge--danger">Até {{ t.data_final_carencia }}</span>
+                    {% elif t.data_final_carencia %}
+                        <span class="record-card__meta">Encerrada em {{ t.data_final_carencia }}</span>
+                    {% else %}
+                        <span class="record-card__meta">-</span>
+                    {% endif %}
+                </td>
                 <td class="text-end">
                     {% if perms.sanidade.change_tratamento %}
                         <a class="btn btn-sm btn-outline-secondary" href="{% url 'sanidade:tratamento_update' t.pk %}">Editar</a>
@@ -30,7 +102,7 @@
                 </td>
             </tr>
         {% empty %}
-            <tr><td colspan="5">Nenhum tratamento.</td></tr>
+            <tr><td colspan="7">Nenhum tratamento encontrado com os filtros atuais.</td></tr>
         {% endfor %}
         </tbody>
     </table>

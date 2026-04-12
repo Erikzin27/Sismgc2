@@ -25,11 +25,22 @@ class AplicacaoVacinaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["vacina"].label = "Vacina"
+        self.fields["ave"].label = "Ave"
+        self.fields["lote"].label = "Lote"
+        self.fields["data_programada"].label = "Data prevista"
+        self.fields["data_aplicacao"].label = "Data de aplicação"
+        self.fields["dose"].label = "Dose aplicada"
+        self.fields["status"].label = "Status"
+        self.fields["observacoes"].label = "Observações"
         self.fields["data_programada"].help_text = "Data prevista para aplicação."
         optional_fields = ["ave", "lote", "data_aplicacao", "dose", "observacoes"]
         for f in optional_fields:
             if f in self.fields:
                 self.fields[f].required = False
+        self.fields["data_programada"].widget = forms.DateInput(attrs={"type": "date"})
+        self.fields["data_aplicacao"].widget = forms.DateInput(attrs={"type": "date"})
+        self.fields["observacoes"].widget = forms.Textarea(attrs={"rows": 3})
 
     def clean(self):
         cleaned = super().clean()

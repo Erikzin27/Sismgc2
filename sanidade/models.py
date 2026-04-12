@@ -75,6 +75,70 @@ class AplicacaoVacina(TimeStampedModel, AuditModel):
         fim = self.data_final_carencia
         return bool(fim and fim >= timezone.localdate())
 
+    @property
+    def atrasada(self):
+        hoje = timezone.localdate()
+        return bool(self.status == self.STATUS_PENDENTE and self.data_programada and self.data_programada < hoje)
+
+    @property
+    def prevista_hoje(self):
+        return bool(
+            self.status == self.STATUS_PENDENTE
+            and self.data_programada
+            and self.data_programada == timezone.localdate()
+        )
+
+    @property
+    def proxima(self):
+        hoje = timezone.localdate()
+        return bool(
+            self.status == self.STATUS_PENDENTE
+            and self.data_programada
+            and hoje < self.data_programada <= hoje + timezone.timedelta(days=7)
+        )
+
+    @property
+    def status_operacional(self):
+        if self.status == self.STATUS_APLICADA:
+            return "aplicada"
+        if self.status == self.STATUS_CANCELADA:
+            return "cancelada"
+        if self.atrasada:
+            return "atrasada"
+        if self.prevista_hoje:
+            return "hoje"
+        if self.proxima:
+            return "proxima"
+        return "pendente"
+
+    @property
+    def status_operacional_label(self):
+        labels = {
+            "aplicada": "Aplicada / OK",
+            "cancelada": "Cancelada",
+            "atrasada": "Atrasada",
+            "hoje": "Prevista para hoje",
+            "proxima": "Próxima",
+            "pendente": "Pendente",
+        }
+        return labels.get(self.status_operacional, self.get_status_display())
+
+    @property
+    def dias_atraso(self):
+        if not self.atrasada:
+            return 0
+        return (timezone.localdate() - self.data_programada).days
+
+    @property
+    def urgencia_operacional(self):
+        if not self.atrasada:
+            return ""
+        if self.dias_atraso >= 7:
+            return "critica"
+        if self.dias_atraso >= 3:
+            return "alta"
+        return "moderada"
+
 
 class Tratamento(TimeStampedModel, AuditModel):
     ave = models.ForeignKey("aves.Ave", on_delete=models.SET_NULL, null=True, blank=True, related_name="tratamentos")
@@ -107,6 +171,13 @@ class Tratamento(TimeStampedModel, AuditModel):
         fim = self.data_final_carencia
         return bool(fim and fim >= timezone.localdate())
 
+    @property
+    def em_andamento(self):
+        hoje = timezone.localdate()
+        if self.data_fim and self.data_fim < hoje:
+            return False
+        return self.data_inicio <= hoje
+
 
 class VacinaLote(TimeStampedModel, AuditModel):
     lote = models.ForeignKey("lotes.Lote", on_delete=models.CASCADE, related_name="vacinas_lote")
@@ -128,3 +199,67 @@ class VacinaLote(TimeStampedModel, AuditModel):
 
     def __str__(self):
         return f"{self.lote} - {self.nome_vacina} ({self.data_prevista})"
+
+    @property
+    def atrasada(self):
+        return bool(not self.aplicada and self.data_prevista and self.data_prevista < timezone.localdate())
+
+    @property
+    def prevista_hoje(self):
+        return bool(not self.aplicada and self.data_prevista == timezone.localdate())
+
+    @property
+    def proxima(self):
+        hoje = timezone.localdate()
+        return bool(not self.aplicada and self.data_prevista and hoje < self.data_prevista <= hoje + timezone.timedelta(days=7))
+
+    @property
+    def status_operacional(self):
+        if self.aplicada:
+            return "aplicada"
+        if self.atrasada:
+            return "atrasada"
+        if self.prevista_hoje:
+            return "hoje"
+        if self.proxima:
+            return "proxima"
+        return "pendente"
+
+    @property
+    def status_operacional_label(self):
+        labels = {
+            "aplicada": "Aplicada / OK",
+            "atrasada": "Atrasada",
+            "hoje": "Prevista para hoje",
+            "proxima": "Próxima",
+            "pendente": "Pendente",
+        }
+        return labels.get(self.status_operacional, "Pendente")
+
+    @property
+    def observacao_operacional(self):
+        if self.aplicada and self.data_aplicacao:
+            return f"Aplicada em {self.data_aplicacao}"
+        if self.atrasada:
+            return f"Aplicação em atraso há {self.dias_atraso} dia(s)."
+        if self.prevista_hoje:
+            return "Aplicação prevista para hoje."
+        if self.proxima:
+            return "Aplicação próxima dentro da janela de 7 dias."
+        return "Aguardando a data prevista."
+
+    @property
+    def dias_atraso(self):
+        if not self.atrasada:
+            return 0
+        return (timezone.localdate() - self.data_prevista).days
+
+    @property
+    def urgencia_operacional(self):
+        if not self.atrasada:
+            return ""
+        if self.dias_atraso >= 7:
+            return "critica"
+        if self.dias_atraso >= 3:
+            return "alta"
+        return "moderada"

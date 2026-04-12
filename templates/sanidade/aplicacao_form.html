@@ -4,12 +4,58 @@
 {% block content %}
 <form method="post" class="page-panel form-shell">{% csrf_token %}
     {% if form.errors %}
-        <div class="alert alert-danger"><strong>Não foi possível salvar.</strong> Verifique os campos abaixo.</div>
+        <div class="alert alert-danger">
+            <strong>Não foi possível salvar.</strong> Verifique os campos destacados.
+            {% if form.non_field_errors %}
+                <div class="small mt-2">{{ form.non_field_errors|join:", " }}</div>
+            {% endif %}
+        </div>
     {% endif %}
     <div class="form-section">
-        {% include "includes/section_header.html" with title="Dados da aplicação" subtitle="Associe a vacina à ave ou lote e registre programação, dose e observações." %}
+        {% include "includes/section_header.html" with title="Dados da aplicação" subtitle="Associe a vacina à ave ou ao lote e registre programação, dose, status e observações." %}
         <div class="row g-3 mt-1">
-            {{ form.as_p }}
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="{{ form.vacina.id_for_label }}">{{ form.vacina.label }}</label>
+                {{ form.vacina }}
+                {% if form.vacina.help_text %}<small class="field-help">{{ form.vacina.help_text }}</small>{% endif %}
+                {% if form.vacina.errors %}<div class="field-error">{{ form.vacina.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+                {{ form.status }}
+                {% if form.status.errors %}<div class="field-error">{{ form.status.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="{{ form.ave.id_for_label }}">{{ form.ave.label }}</label>
+                {{ form.ave }}
+                {% if form.ave.errors %}<div class="field-error">{{ form.ave.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="{{ form.lote.id_for_label }}">{{ form.lote.label }}</label>
+                {{ form.lote }}
+                {% if form.lote.errors %}<div class="field-error">{{ form.lote.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="{{ form.data_programada.id_for_label }}">{{ form.data_programada.label }}</label>
+                {{ form.data_programada }}
+                {% if form.data_programada.help_text %}<small class="field-help">{{ form.data_programada.help_text }}</small>{% endif %}
+                {% if form.data_programada.errors %}<div class="field-error">{{ form.data_programada.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="{{ form.data_aplicacao.id_for_label }}">{{ form.data_aplicacao.label }}</label>
+                {{ form.data_aplicacao }}
+                {% if form.data_aplicacao.errors %}<div class="field-error">{{ form.data_aplicacao.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="{{ form.dose.id_for_label }}">{{ form.dose.label }}</label>
+                {{ form.dose }}
+                {% if form.dose.errors %}<div class="field-error">{{ form.dose.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+                <label class="form-label" for="{{ form.observacoes.id_for_label }}">{{ form.observacoes.label }}</label>
+                {{ form.observacoes }}
+                {% if form.observacoes.errors %}<div class="field-error">{{ form.observacoes.errors|join:", " }}</div>{% endif %}
+            </div>
         </div>
     </div>
     <div class="action-bar">

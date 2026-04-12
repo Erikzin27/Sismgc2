@@ -1,0 +1,210 @@
+{% load relatorio_filters %}
+{% extends "relatorios/print_premium.html" %}
+
+{% block content %}
+    <!-- RELATÓRIO INCUBAÇÃO PREMIUM -->
+    
+    {% if incubacoes %}
+        <!-- RESUMO EXECUTIVO -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Resumo: Incubações Monitoradas</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 25%">Métrica</th>
+                        <th style="width: 25%" class="text-right">Valor</th>
+                        <th style="width: 50%">Observação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total Incubações</td>
+                        <td class="text-right value-number">{{ incubacoes|length }}</td>
+                        <td style="font-size: 9px;">Períodos monitorados</td>
+                    </tr>
+                    <tr>
+                        <td>Total Ovos</td>
+                        <td class="text-right value-number">{{ total_ovos|default:0 }}</td>
+                        <td style="font-size: 9px;">Quantidade total entrada</td>
+                    </tr>
+                    <tr>
+                        <td>Total Nascidos</td>
+                        <td class="text-right value-number">{{ total_nascidos|default:0 }}</td>
+                        <td style="font-size: 9px;">Pintos ecindindo</td>
+                    </tr>
+                    <tr>
+                        <td>Taxa Eclosão</td>
+                        <td class="text-right value-number" style="color: #1fbf91; font-weight: bold;">{{ taxa_media|default:"0" }}%</td>
+                        <td style="font-size: 9px;">Média geral de eclosão</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RESUMO POR STATUS INCUBAÇÃO -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Incubações por Status</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Status</th>
+                        <th style="width: 30%" class="text-right">Quantidade</th>
+                        <th style="width: 30%" class="text-right">% Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% regroup incubacoes by status as incubacoes_por_status %}
+                    {% for status, items in incubacoes_por_status %}
+                        <tr>
+                            <td>
+                                {% if status == 'em_andamento' %}
+                                    <span class="badge badge--pendente">⏳ Em Andamento</span>
+                                {% elif status == 'concluida' %}
+                                    <span class="badge badge--entrada">✓ Concluída</span>
+                                {% else %}
+                                    <span class="badge badge--saida">✗ {{ status|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right value-number">{{ items|length }}</td>
+                            <td class="text-right value-number">
+                                {% widthratio items|length incubacoes|length 100 %}%
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- LISTA DETALHADA DE INCUBAÇÕES -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Incubações Detalhadadas (Histórico)</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%">Código</th>
+                        <th style="width: 12%" class="text-right">Ovos</th>
+                        <th style="width: 12%" class="text-right">Nascidos</th>
+                        <th style="width: 15%" class="text-right">Taxa %</th>
+                        <th style="width: 12%">Status</th>
+                        <th style="width: 15%" class="text-right">Entrada</th>
+                        <th style="width: 22%" class="text-right">Previsão</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inc in incubacoes %}
+                        {% with taxa_inc=inc.quantidade_nascida|percentage:inc.quantidade_ovos %}
+                            <tr>
+                                <td><strong>{{ inc.codigo }}</strong></td>
+                                <td class="text-right value-number">{{ inc.quantidade_ovos }}</td>
+                                <td class="text-right value-number">{{ inc.quantidade_nascida|default:0 }}</td>
+                                <td class="text-right value-number" style="color: #1fbf91; font-weight: 600;">
+                                    {{ taxa_inc }}%
+                                </td>
+                                <td>
+                                    {% if inc.status == 'em_andamento' %}
+                                        <span class="badge badge--pendente">⏳</span>
+                                    {% elif inc.status == 'concluida' %}
+                                        <span class="badge badge--entrada">✓</span>
+                                    {% else %}
+                                        <span class="badge badge--saida">✗</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-right" style="font-size: 9px;">
+                                    {{ inc.data_entrada|date:"d/m/Y" }}
+                                </td>
+                                <td class="text-right" style="font-size: 9px;">
+                                    {{ inc.previsao_eclosao|date:"d/m/Y"|default:"—" }}
+                                </td>
+                            </tr>
+                        {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ANÁLISE DE PERDAS -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Análise de Perdas na Incubação</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Métrica</th>
+                        <th style="width: 30%" class="text-right">Total</th>
+                        <th style="width: 30%" class="text-right">% dos Ovos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total de Perdas</td>
+                        <td class="text-right value-number" style="color: #dc3545;">{{ total_perdas|default:0 }}</td>
+                        <td class="text-right value-number" style="color: #dc3545;">
+                            {% if total_ovos != 0 %}
+                                {% widthratio total_perdas total_ovos 100 %}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Taxa Média de Sucesso</td>
+                        <td class="text-right value-number" style="color: #1fbf91; font-weight: 600;">
+                            {{ taxa_media|default:"0" }}%
+                        </td>
+                        <td class="text-right value-number" style="color: #1fbf91;">
+                            {{ taxa_media|default:"0" }}%
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RECOMENDAÇÕES -->
+        <div class="pdf-section" style="background: #dbeafe; border-left: 4px solid #4c8dff; padding: 12px; margin: 16px 0;">
+            <h3 style="color: #1e40af; margin: 0 0 8px 0; font-size: 12px;">💡 RECOMENDAÇÕES</h3>
+            <ul style="margin: 0; padding-left: 16px; color: #1e40af; font-size: 10px;">
+                <li>Manter temperatura controlada em {{ temperatura_ideal|default:"37,5°C" }}</li>
+                <li>Revisar umidade relativa: Mínimo 40%, Máximo 70%</li>
+                <li>Realizar inspeção de ovos no dia 7 da incubação</li>
+                <li>Aumentar ventilação na fase final (após dia 18)</li>
+            </ul>
+        </div>
+
+        <!-- RESUMO FINAL -->
+        <div class="pdf-section no-break">
+            <h2 class="pdf-section__title">Totalizações Gerais</h2>
+            
+            <table>
+                <tbody>
+                    <tr>
+                        <td style="width: 50%; background: #dbeafe; font-weight: 600;">Incubações Ativas</td>
+                        <td style="width: 50%; background: #dbeafe; text-align: right;" class="value-number">
+                            {{ incubacoes_ativas|default:0 }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #e8f5e9; font-weight: 600;">Incubações Finalizadas</td>
+                        <td style="width: 50%; background: #e8f5e9; text-align: right;" class="value-number">
+                            {{ incubacoes_finalizadas|default:0 }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #f8fafc; font-weight: 600;">Eficiência Média</td>
+                        <td style="width: 50%; background: #f8fafc; text-align: right;" class="value-number" style="color: #1fbf91; font-weight: bold;">
+                            {{ taxa_media|default:"0" }}%
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+        <div class="pdf-empty-state">
+            Nenhuma incubação encontrada para o período especificado.
+        </div>
+    {% endif %}
+
+{% endblock %}

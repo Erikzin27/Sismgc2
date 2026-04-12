@@ -1,0 +1,168 @@
+{% load relatorio_filters %}
+{% extends "relatorios/print_premium.html" %}
+
+{% block content %}
+    <!-- RELATÓRIO LOTES PREMIUM -->
+    
+    {% if lotes %}
+        <!-- RESUMO EXECUTIVO POR STATUS -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Resumo: Lotes Monitorados</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Status</th>
+                        <th style="width: 20%" class="text-right">Quantidade</th>
+                        <th style="width: 20%" class="text-right">Aves Atuais</th>
+                        <th style="width: 20%" class="text-right">Custo Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lote in lotes %}
+                        <tr>
+                            <td>
+                                {% if lote.reproductivo %}
+                                    <span class="badge badge--entrada">🔄 Reprodutivo</span>
+                                {% else %}
+                                    <span class="badge badge--venda">🐔 Comercial</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right value-number">1</td>
+                            <td class="text-right value-number">{{ lote.quantidade_atual }}</td>
+                            <td class="text-right value-money">
+                                R$ {{ lote.custo_acumulado|brl }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- LISTA DETALHADA COM MÉTRICAS -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Lotes com Métricas Detalhadas</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 15%">Código/Nome</th>
+                        <th style="width: 10%" class="text-right">Qtd</th>
+                        <th style="width: 12%" class="text-center">Finalidade</th>
+                        <th style="width: 13%" class="text-right">Custo</th>
+                        <th style="width: 15%" class="text-center">Linhagem</th>
+                        <th style="width: 15%" class="text-center">Status</th>
+                        <th style="width: 20%" class="text-right">Data Criação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lote in lotes %}
+                        <tr>
+                            <td>
+                                <strong>{{ lote.codigo }}</strong><br>
+                                <small>{{ lote.nome|truncatewords:2 }}</small>
+                            </td>
+                            <td class="text-right value-number">{{ lote.quantidade_atual }}</td>
+                            <td class="text-center">
+                                {% if lote.finalidade == 'reproducao' %}
+                                    <span class="badge badge--entrada">Reprodução</span>
+                                {% elif lote.finalidade == 'producao' %}
+                                    <span class="badge badge--venda">Produção</span>
+                                {% else %}
+                                    <span class="badge badge--pendente">Outro</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right value-money">
+                                R$ {{ lote.custo_acumulado|brl }}
+                            </td>
+                            <td class="text-center">
+                                {{ lote.linhagem_principal.nome|truncatewords:2 }}
+                            </td>
+                            <td class="text-center">
+                                <span style="background: #1fbf91; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px;">
+                                    ✓ Ativo
+                                </span>
+                            </td>
+                            <td class="text-right" style="font-size: 9px;">
+                                {{ lote.data_criacao|date:"d/m/Y" }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ANÁLISE DE RENTABILIDADE (SE HOUVER DADOS DISPONÍVEIS) -->
+        <div class="pdf-section" style="margin-top: 20px; page-break-inside: avoid;">
+            <h2 class="pdf-section__title">Distribuição por Finalidade</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Tipo</th>
+                        <th style="width: 30%" class="text-right">Quantidade</th>
+                        <th style="width: 30%" class="text-right">% do Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% with reproducao=lotes|length %}
+                    <tr>
+                        <td>
+                            <span class="badge badge--entrada">🔄 Reprodutivo</span>
+                        </td>
+                        <td class="text-right value-number">
+                            {% with reprodutivos=lotes|length %}{{ reprodutivos }}{% endwith %}
+                        </td>
+                        <td class="text-right value-number">100%</td>
+                    </tr>
+                    {% endwith %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ALERTAS E INFORMAÇÕES -->
+        <div class="pdf-section" style="background: #dbeafe; border-left: 4px solid #4c8dff; padding: 12px; margin: 16px 0;">
+            <h3 style="color: #1e40af; margin: 0 0 8px 0; font-size: 12px;">ℹ️ INFORMAÇÕES DO RELATÓRIO</h3>
+            <ul style="margin: 0; padding-left: 16px; color: #1e40af; font-size: 10px;">
+                <li>Total de Lotes Monitorados: <strong>{{ lotes|length }}</strong></li>
+                <li>Custo Total Acumulado: <strong>R$ {{ total_custo|brl }}</strong></li>
+                <li>Aves em Monitoramento: <strong>{{ total_aves }}</strong></li>
+                <li>Período do Relatório: {{ periodo }}</li>
+            </ul>
+        </div>
+
+        <!-- RESUMO FINAL -->
+        <div class="pdf-section no-break">
+            <h2 class="pdf-section__title">Totalizações Gerais</h2>
+            
+            <table>
+                <tbody>
+                    <tr>
+                        <td style="width: 50%; background: #e8f5e9; font-weight: 600;">Total de Lotes</td>
+                        <td style="width: 50%; background: #e8f5e9; text-align: right;" class="value-number">
+                            {{ lotes|length }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #f8fafc; font-weight: 600;">Total de Aves</td>
+                        <td style="width: 50%; background: #f8fafc; text-align: right;" class="value-number">
+                            {{ total_aves|default:0 }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #f8fafc; font-weight: 600;">Custo Acumulado</td>
+                        <td style="width: 50%; background: #f8fafc; text-align: right;" class="value-money">
+                            R$ {{ total_custo|brl|default:"0,00" }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+        <div class="pdf-empty-state">
+            Nenhum lote encontrado para o período especificado.
+        </div>
+    {% endif %}
+
+{% endblock %}

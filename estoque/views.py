@@ -39,12 +39,7 @@ class ItemListView(AdminManagerOrPermMixin, SearchFilterMixin, AuthenticatedView
             qs = qs.filter(quantidade_atual__lte=models.F("estoque_minimo"))
         venc = self.request.GET.get("vencimento", "").strip()
         hoje = timezone.localdate()
-        try:
-            from core.models import ConfiguracaoSistema
-            cfg = ConfiguracaoSistema.objects.first()
-            dias = cfg.dias_alerta_vencimento if cfg else 30
-        except Exception:
-            dias = 30
+        dias = _dias_alerta_vencimento()
         vencendo_ate = hoje + timedelta(days=int(dias))
         if venc == "vencido":
             qs = qs.filter(validade__lt=hoje)
@@ -64,12 +59,7 @@ class ItemListView(AdminManagerOrPermMixin, SearchFilterMixin, AuthenticatedView
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         hoje = timezone.localdate()
-        try:
-            from core.models import ConfiguracaoSistema
-            cfg = ConfiguracaoSistema.objects.first()
-            dias = cfg.dias_alerta_vencimento if cfg else 30
-        except Exception:
-            dias = 30
+        dias = _dias_alerta_vencimento()
         vencendo_ate = hoje + timedelta(days=int(dias))
         ctx["itens_baixos"] = ItemEstoque.objects.filter(quantidade_atual__lte=models.F("estoque_minimo")).count()
         ctx["itens_vencidos"] = ItemEstoque.objects.filter(validade__lt=hoje).count()

@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% load formatting %}
+{% block page_title %}Dashboard de Reprodução{% endblock %}
+{% block page_subtitle %}Visão geral da reprodução e dados genéticos.{% endblock %}
+{% block content %}
+<style>
+    .dashboard-card {
+        background: linear-gradient(135deg, rgba(76, 141, 255, 0.1) 0%, rgba(76, 141, 255, 0.05) 100%);
+        border: 1px solid rgba(76, 141, 255, 0.2);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    body[data-bs-theme="light"] .dashboard-card {
+        background: linear-gradient(135deg, rgba(13, 110, 253, 0.08) 0%, rgba(13, 110, 253, 0.02) 100%);
+        border-color: rgba(13, 110, 253, 0.15);
+    }
+    .dashboard-card h6 {
+        font-size: 2rem;
+        margin: 0.5rem 0;
+        color: #4c8dff;
+    }
+    .dashboard-card p {
+        margin: 0;
+        font-size: 0.875rem;
+        opacity: 0.7;
+    }
+</style>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="dashboard-card">
+            <i class="bi bi-feather" style="font-size: 1.75rem; opacity: 0.6;"></i>
+            <h6>{{ reprodutores_total }}</h6>
+            <p>Reprodutores Cadastrados</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="dashboard-card">
+            <i class="bi bi-heart-handshake" style="font-size: 1.75rem; opacity: 0.6;"></i>
+            <h6>{{ casais_total }}</h6>
+            <p>Casais Registrados</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="dashboard-card">
+            <i class="bi bi-check-circle" style="font-size: 1.75rem; opacity: 0.6;"></i>
+            <h6>{{ casais_ativos }}</h6>
+            <p>Casais Ativos</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="dashboard-card">
+            <i class="bi bi-star" style="font-size: 1.75rem; opacity: 0.6;"></i>
+            <h6>{{ reprodutores_superior }}</h6>
+            <p>Qualidade Superior</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- Reprodutores Ativos -->
+    <div class="col-12 col-lg-6">
+        <div class="card card-table">
+            <div class="card-header bg-transparent border-bottom border-secondary">
+                <div class="d-flex justify-content-between align-items-center mb-0">
+                    <h6 class="mb-0">♂ Reprodutores Destacados</h6>
+                    <a href="{% url 'reprodutores:list' %}?tipo=reprodutor" class="btn btn-sm btn-outline-primary">Ver Todos</a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if reprodutores_destacados %}
+                <div class="list-group list-group-flush">
+                    {% for r in reprodutores_destacados %}
+                    <a href="{% url 'reprodutores:detail' r.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ r.ave.codigo_interno }}</h6>
+                                <small class="text-muted">{{ r.ave.nome|default:"-" }}</small>
+                                {% if r.qualidade_genetica == "superior" %}
+                                    <br><span class="badge bg-warning text-dark">★ Superior</span>
+                                {% endif %}
+                            </div>
+                            <small class="badge bg-info">{{ r.get_casais_ativos|length }} casais</small>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Sem reprodutores cadastrados</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Matrizes Ativas -->
+    <div class="col-12 col-lg-6">
+        <div class="card card-table">
+            <div class="card-header bg-transparent border-bottom border-secondary">
+                <div class="d-flex justify-content-between align-items-center mb-0">
+                    <h6 class="mb-0">♀ Matrizes Destacadas</h6>
+                    <a href="{% url 'reprodutores:list' %}?tipo=matriz" class="btn btn-sm btn-outline-primary">Ver Todos</a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if matrizes_destacadas %}
+                <div class="list-group list-group-flush">
+                    {% for m in matrizes_destacadas %}
+                    <a href="{% url 'reprodutores:detail' m.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ m.ave.codigo_interno }}</h6>
+                                <small class="text-muted">{{ m.ave.nome|default:"-" }}</small>
+                                {% if m.qualidade_genetica == "superior" %}
+                                    <br><span class="badge bg-warning text-dark">★ Superior</span>
+                                {% endif %}
+                            </div>
+                            <small class="badge bg-info">{{ m.get_casais_ativos|length }} casais</small>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Sem matrizes cadastradas</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Casais Ativos -->
+<div class="card card-table">
+    <div class="card-header bg-transparent border-bottom border-secondary">
+        <div class="d-flex justify-content-between align-items-center mb-0">
+            <h6 class="mb-0">Casais em Produção (Últimos 30 dias)</h6>
+            <a href="{% url 'reprodutores:casal_list' %}?status=ativo" class="btn btn-sm btn-outline-primary">Ver Todos</a>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if casais_recentes %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Casal</th>
+                        <th>Início</th>
+                        <th>Status</th>
+                        <th>Filhotes</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in casais_recentes %}
+                    <tr>
+                        <td>
+                            ♂ {{ c.reprodutor_macho.ave.codigo_interno }} × ♀ {{ c.matriz_femea.ave.codigo_interno }}
+                        </td>
+                        <td>{{ c.data_inicio|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if c.status == "ativo" %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% elif c.status == "pausado" %}
+                                <span class="badge bg-warning text-dark">Pausado</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Finalizado</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ c.get_filhotes_count }}</strong></td>
+                        <td><a href="{% url 'reprodutores:casal_detail' c.pk %}" class="btn btn-sm btn-outline-info">Ver</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">Nenhum casal ativo nos últimos 30 dias</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-3 mt-4">
+    {% if perms.reprodutores.add_reprodutor %}
+    <div class="col-12 col-sm-6 col-lg-4">
+        <a href="{% url 'reprodutores:create' %}" class="btn btn-outline-primary w-100 h-100 p-4 text-center">
+            <div>
+                <i class="bi bi-plus-lg" style="font-size: 1.75rem; display: block; margin-bottom: 0.5rem;"></i>
+                <div style="font-weight: 500;">Novo Reprodutor</div>
+            </div>
+        </a>
+    </div>
+    {% endif %}
+    {% if perms.reprodutores.add_casal %}
+    <div class="col-12 col-sm-6 col-lg-4">
+        <a href="{% url 'reprodutores:casal_create' %}" class="btn btn-outline-primary w-100 h-100 p-4 text-center">
+            <div>
+                <i class="bi bi-heart-handshake" style="font-size: 1.75rem; display: block; margin-bottom: 0.5rem;"></i>
+                <div style="font-weight: 500;">Novo Casal</div>
+            </div>
+        </a>
+    </div>
+    {% endif %}
+    <div class="col-12 col-sm-6 col-lg-4">
+        <a href="{% url 'reprodutores:list' %}" class="btn btn-outline-secondary w-100 h-100 p-4 text-center">
+            <div>
+                <i class="bi bi-list-ul" style="font-size: 1.75rem; display: block; margin-bottom: 0.5rem;"></i>
+                <div style="font-weight: 500;">Ver Reprodutores</div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

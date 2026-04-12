@@ -1,0 +1,493 @@
+{% load formatting %}
+<style>
+    /* === PREMIUM TABLE & CARD STYLING === */
+    
+    /* Desktop Table Premium */
+    .table-premium {
+        border-collapse: collapse;
+        line-height: 1.6;
+    }
+    
+    .table-premium thead {
+        background: rgba(76, 141, 255, 0.1);
+        border-top: 2px solid rgba(76, 141, 255, 0.2);
+        border-bottom: 2px solid rgba(76, 141, 255, 0.2);
+    }
+    body[data-bs-theme="light"] .table-premium thead {
+        background: rgba(13, 110, 253, 0.06);
+        border-color: rgba(13, 110, 253, 0.15);
+    }
+    
+    .table-premium thead th {
+        padding: 0.875rem 1rem;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.8;
+    }
+    
+    .table-premium tbody tr {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.15s ease;
+    }
+    body[data-bs-theme="light"] .table-premium tbody tr {
+        border-bottom-color: rgba(0, 0, 0, 0.04);
+    }
+    
+    .table-premium tbody tr:hover {
+        background: rgba(76, 141, 255, 0.06);
+    }
+    body[data-bs-theme="light"] .table-premium tbody tr:hover {
+        background: rgba(13, 110, 253, 0.04);
+    }
+    
+    .table-premium tbody td {
+        padding: 0.875rem 1rem;
+        vertical-align: middle;
+    }
+    
+    /* Badge Styles - Premium */
+    .badge-type-entrada {
+        background: rgba(31, 191, 145, 0.15);
+        color: #1fbf91;
+        border: 1px solid rgba(31, 191, 145, 0.3);
+        padding: 0.4rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        display: inline-block;
+    }
+    
+    .badge-type-saida {
+        background: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+        padding: 0.4rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        display: inline-block;
+    }
+    
+    .badge-origem-venda {
+        background: rgba(13, 110, 253, 0.15);
+        color: #0d6efd;
+        border: 1px solid rgba(13, 110, 253, 0.3);
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .badge-origem-manual {
+        background: rgba(108, 117, 125, 0.15);
+        color: #6c757d;
+        border: 1px solid rgba(108, 117, 125, 0.3);
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    /* Mobile Cards Premium */
+    .mobile-card-premium {
+        background: rgba(18, 27, 47, 0.8);
+        border: 1px solid rgba(30, 42, 69, 0.8);
+        border-radius: 14px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    body[data-bs-theme="light"] .mobile-card-premium {
+        background: #ffffff;
+        border-color: #e5e7eb;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    
+    .mobile-card-premium:active {
+        transform: translateY(1px);
+    }
+    
+    /* Card Header */
+    .card-header-premium {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    body[data-bs-theme="light"] .card-header-premium {
+        border-bottom-color: rgba(0, 0, 0, 0.06);
+    }
+    
+    .card-title-premium {
+        flex: 1;
+    }
+    
+    .card-title-premium h6 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem 0;
+        line-height: 1.3;
+    }
+    
+    .card-title-premium h6 a {
+        color: inherit;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .card-title-premium h6 a:hover {
+        color: #4c8dff;
+        text-decoration: underline;
+    }
+    
+    .card-meta-premium {
+        font-size: 0.75rem;
+        opacity: 0.6;
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .card-meta-premium i {
+        opacity: 0.5;
+    }
+    
+    /* Card Body */
+    .card-body-premium {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .card-field-premium {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .card-field-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        opacity: 0.5;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.35rem;
+    }
+    
+    .card-field-value {
+        font-size: 0.95rem;
+        font-weight: 500;
+        line-height: 1.4;
+    }
+    
+    .card-field-value-primary {
+        font-size: 1.35rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    
+    .card-field-value-entrada {
+        color: #1fbf91;
+    }
+    
+    .card-field-value-saida {
+        color: #dc3545;
+    }
+    
+    /* Card Actions */
+    .card-actions-premium {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .card-actions-premium .btn {
+        flex: 1;
+        min-width: 80px;
+        padding: 0.6rem 0.75rem;
+        font-size: 0.8rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+    }
+    
+    .card-actions-premium .btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    /* Empty State */
+    .empty-state-premium {
+        text-align: center;
+        padding: 4rem 1rem;
+        opacity: 0.5;
+    }
+    
+    .empty-state-premium i {
+        font-size: 3.5rem;
+        opacity: 0.3;
+        display: block;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state-premium p {
+        font-size: 1.1rem;
+        margin: 0.5rem 0;
+    }
+    
+    .empty-state-premium small {
+        opacity: 0.6;
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 576px) {
+        .card-body-premium {
+            grid-template-columns: 1fr;
+        }
+        
+        .mobile-card-premium {
+            padding: 1rem;
+            border-radius: 12px;
+        }
+    }
+</style>
+
+<!-- Main Financial Body -->
+<div id="financeiro-body" hx-boost="true" hx-target="#financeiro-body" hx-indicator="#financeiro-loading">
+    
+    <!-- DESKTOP TABLE (XL+) -->
+    <div class="d-none d-xl-block">
+        <div class="table-responsive" style="border-radius: 12px; overflow: hidden;">
+            <table class="table table-hover table-premium align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 90px;">
+                            <i class="bi bi-calendar3"></i> Data
+                        </th>
+                        <th style="width: 100px;">
+                            <i class="bi bi-diagram-3"></i> Tipo
+                        </th>
+                        <th style="width: 120px;">
+                            <i class="bi bi-tag"></i> Categoria
+                        </th>
+                        <th style="flex: 1;">
+                            <i class="bi bi-file-text"></i> Descrição
+                        </th>
+                        <th style="width: 110px;">
+                            <i class="bi bi-credit-card"></i> Pagamento
+                        </th>
+                        <th style="width: 90px;">
+                            <i class="bi bi-link-45deg"></i> Origem
+                        </th>
+                        <th style="width: 100px; text-align: right;">
+                            <i class="bi bi-cash-coin"></i> Valor
+                        </th>
+                        <th style="width: 60px;">
+                            <i class="bi bi-paperclip"></i>
+                        </th>
+                        <th style="width: 140px; text-align: right;">
+                            <i class="bi bi-sliders"></i> Ações
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in lancamentos %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'financeiro:detail' l.pk %}" style="text-decoration: none; color: inherit; font-weight: 500;">
+                                {{ l.data|date:"d/m/y" }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge-type-{% if l.tipo == 'entrada' %}entrada{% else %}saida{% endif %}">
+                                {% if l.tipo == 'entrada' %}<i class="bi bi-arrow-down"></i>{% else %}<i class="bi bi-arrow-up"></i>{% endif %} 
+                                {{ l.get_tipo_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <small style="opacity: 0.8;">{{ l.get_categoria_display }}</small>
+                        </td>
+                        <td>
+                            <strong>{{ l.descricao|truncatewords:6 }}</strong>
+                            {% if l.venda %}
+                                <br><small style="opacity: 0.6;"><i class="bi bi-link-45deg"></i> Venda #{{ l.venda.pk }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small>{{ l.forma_pagamento|default:"—" }}</small>
+                        </td>
+                        <td>
+                            {% if l.venda %}
+                                <span class="badge-origem-venda">
+                                    <i class="bi bi-cart-check"></i> Venda
+                                </span>
+                            {% else %}
+                                <span class="badge-origem-manual">
+                                    <i class="bi bi-pencil-square"></i> Manual
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right; font-weight: 700; font-size: 1.05rem;">
+                            <span style="color: {% if l.tipo == 'entrada' %}#1fbf91{% else %}#dc3545{% endif %};">
+                                {{ l.valor|brl }}
+                            </span>
+                        </td>
+                        <td style="text-align: center;">
+                            {% if l.comprovante %}
+                                <a href="{{ l.comprovante.url }}" target="_blank" rel="noopener" 
+                                   class="btn btn-sm btn-link" style="padding: 0; color: #4c8dff;" title="Baixar comprovante">
+                                    <i class="bi bi-file-earmark-arrow-down"></i>
+                                </a>
+                            {% else %}
+                                <span style="opacity: 0.3;">—</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                                <a href="{% url 'financeiro:detail' l.pk %}" class="btn btn-sm btn-outline-info" 
+                                   title="Ver detalhes" style="padding: 0.35rem 0.6rem;">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if perms.financeiro.change_lancamentofinanceiro %}
+                                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'financeiro:update' l.pk %}" 
+                                       title="Editar" style="padding: 0.35rem 0.6rem;">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                {% endif %}
+                                {% if perms.financeiro.delete_lancamentofinanceiro %}
+                                    <a class="btn btn-sm btn-outline-danger" href="{% url 'financeiro:delete' l.pk %}" 
+                                       title="Excluir" style="padding: 0.35rem 0.6rem;">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 3rem 1rem;">
+                            <div class="empty-state-premium">
+                                <i class="bi bi-inbox"></i>
+                                <p>Nenhum lançamento encontrado</p>
+                                <small>Tente ajustar os filtros acima</small>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MOBILE CARDS (XS-LG) -->
+    <div class="d-xl-none">
+        {% for l in lancamentos %}
+        <div class="mobile-card-premium">
+            <!-- Header -->
+            <div class="card-header-premium">
+                <div class="card-title-premium">
+                    <h6>
+                        <a href="{% url 'financeiro:detail' l.pk %}">{{ l.descricao|truncatewords:5 }}</a>
+                    </h6>
+                    <div class="card-meta-premium">
+                        <span><i class="bi bi-calendar3"></i> {{ l.data|date:"d/m/Y" }}</span>
+                        <span style="opacity: 0.4;">•</span>
+                        <span><i class="bi bi-tag"></i> {{ l.get_categoria_display }}</span>
+                    </div>
+                </div>
+                <span class="badge-type-{% if l.tipo == 'entrada' %}entrada{% else %}saida{% endif %}" style="white-space: nowrap;">
+                    {% if l.tipo == 'entrada' %}<i class="bi bi-arrow-down"></i>{% else %}<i class="bi bi-arrow-up"></i>{% endif %} 
+                    {{ l.get_tipo_display }}
+                </span>
+            </div>
+
+            <!-- Body -->
+            <div class="card-body-premium">
+                <div class="card-field-premium">
+                    <div class="card-field-label"><i class="bi bi-cash-coin"></i> Valor</div>
+                    <div class="card-field-value card-field-value-primary {% if l.tipo == 'entrada' %}card-field-value-entrada{% else %}card-field-value-saida{% endif %}">
+                        {{ l.valor|brl }}
+                    </div>
+                </div>
+                
+                <div class="card-field-premium">
+                    <div class="card-field-label"><i class="bi bi-credit-card"></i> Pagamento</div>
+                    <div class="card-field-value">{{ l.forma_pagamento|default:"Não informada" }}</div>
+                </div>
+                
+                <div class="card-field-premium">
+                    <div class="card-field-label"><i class="bi bi-link-45deg"></i> Origem</div>
+                    <div class="card-field-value">
+                        {% if l.venda %}
+                            <span class="badge-origem-venda">
+                                <i class="bi bi-cart-check"></i> Venda #{{ l.venda.pk }}
+                            </span>
+                        {% else %}
+                            <span class="badge-origem-manual">
+                                <i class="bi bi-pencil-square"></i> Manual
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-field-premium">
+                    <div class="card-field-label"><i class="bi bi-paperclip"></i> Arquivo</div>
+                    <div class="card-field-value">
+                        {% if l.comprovante %}
+                            <a href="{{ l.comprovante.url }}" target="_blank" rel="noopener" 
+                               class="text-primary" style="text-decoration: none;">
+                                <i class="bi bi-file-earmark-arrow-down"></i> Download
+                            </a>
+                        {% else %}
+                            <span style="opacity: 0.5;">Sem arquivo</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card-actions-premium">
+                <a href="{% url 'financeiro:detail' l.pk %}" class="btn btn-outline-primary" title="Ver detalhes">
+                    <i class="bi bi-eye"></i> Ver
+                </a>
+                {% if perms.financeiro.change_lancamentofinanceiro %}
+                    <a class="btn btn-outline-secondary" href="{% url 'financeiro:update' l.pk %}" title="Editar">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                {% endif %}
+                {% if perms.financeiro.delete_lancamentofinanceiro %}
+                    <a class="btn btn-outline-danger" href="{% url 'financeiro:delete' l.pk %}" title="Excluir">
+                        <i class="bi bi-trash"></i> Excluir
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state-premium">
+            <i class="bi bi-inbox"></i>
+            <p>Nenhum lançamento encontrado</p>
+            <small>Tente ajustar os filtros acima</small>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <div style="margin-top: 2rem;">
+        {% include "pagination.html" with page_obj=page_obj %}
+    </div>
+</div>

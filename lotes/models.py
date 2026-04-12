@@ -1,10 +1,11 @@
 from django.db import models
 
 from core.models import TimeStampedModel, AtivoInativoModel, AuditModel
+from core.state_machines import LoteStateMachine, LoteReproducaoStateMachine
 from linhagens.models import Linhagem
 
 
-class Lote(TimeStampedModel, AtivoInativoModel, AuditModel):
+class Lote(LoteStateMachine, TimeStampedModel, AtivoInativoModel, AuditModel):
     FINALIDADE_CHOICES = [
         ("corte", "Corte"),
         ("postura", "Postura"),
@@ -64,7 +65,22 @@ class Lote(TimeStampedModel, AtivoInativoModel, AuditModel):
             self.data_inicio_reproducao = None
             self.status_reprodutivo = ""
             self.observacoes_reproducao = ""
+        # Validar estados antes de salvar
+        self.full_clean()
         super().save(*args, **kwargs)
+
+    def clean(self):
+        """Valida transições de estado para status e status_reprodutivo"""
+        super().clean()
+        
+        # Validar status_reprodutivo se reprodutivo=True
+        if self.reprodutivo and self.status_reprodutivo:
+            repro_validator = LoteReproducaoStateMachine()
+            repro_validator.reprodutivo = True
+            repro_validator.status_reprodutivo = self.status_reprodutivo
+            repro_validator.pk = self.pk
+            repro_validator.__class__ = Lote  # Type para get transitions correto
+            repro_validator.validate_state_transition()
 
     @property
     def custo_por_ave(self):

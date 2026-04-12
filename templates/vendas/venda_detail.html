@@ -4,13 +4,32 @@
 {% block page_subtitle %}Detalhe da venda com cliente, valor, status de pagamento e vínculo financeiro em destaque.{% endblock %}
 {% block content %}
 <div class="page-panel page-panel--hero">
-    {% include "includes/section_header.html" with title=venda.produto subtitle=venda.cliente %}
+    <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-3">
+        <div>
+            <h6 class="section-heading__title mb-1">{{ venda.produto }}</h6>
+            <p class="section-heading__subtitle">{{ venda.cliente }}</p>
+        </div>
+        <span class="status-badge {% if venda.status_pagamento == 'pago' %}status-badge--success{% elif venda.status_pagamento == 'pendente' %}status-badge--warning{% else %}status-badge--muted{% endif %}">
+            {{ venda.get_status_pagamento_display }}
+        </span>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        {% if venda.lote %}
+            <span class="badge-soft"><i class="bi bi-boxes"></i>Lote {{ venda.lote }}</span>
+        {% endif %}
+        {% if venda.ave %}
+            <span class="badge-soft"><i class="bi bi-feather"></i>Ave {{ venda.ave }}</span>
+        {% endif %}
+        {% if venda.forma_pagamento %}
+            <span class="badge-soft"><i class="bi bi-credit-card"></i>{{ venda.forma_pagamento }}</span>
+        {% endif %}
+    </div>
     <div class="info-grid">
         <div class="info-chip"><span class="info-chip__label">Data</span><span class="info-chip__value">{{ venda.data }}</span></div>
         <div class="info-chip"><span class="info-chip__label">Cliente</span><span class="info-chip__value">{{ venda.cliente }}</span></div>
         <div class="info-chip"><span class="info-chip__label">Produto</span><span class="info-chip__value">{{ venda.produto }}</span></div>
-        <div class="info-chip"><span class="info-chip__label">Valor total</span><span class="info-chip__value">{{ venda.valor_total|brl }}</span></div>
-        <div class="info-chip"><span class="info-chip__label">Status</span><span class="info-chip__value">{{ venda.get_status_pagamento_display }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Valor total</span><span class="info-chip__value fw-semibold">{{ venda.valor_total|brl }}</span></div>
+        <div class="info-chip"><span class="info-chip__label">Quantidade</span><span class="info-chip__value">{{ venda.quantidade|int_if_whole }}</span></div>
         <div class="info-chip" style="grid-column: 1 / -1;">
             <span class="info-chip__label">Financeiro</span>
             <span class="info-chip__value">
@@ -29,4 +48,139 @@
         </div>
     </div>
 </div>
+    <div class="row g-3">
+        <div class="col-12 col-lg-7">
+            <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Observações</h6>
+                    <p class="section-heading__subtitle">Notas internas e detalhes importantes da venda.</p>
+                </div>
+            </div>
+            {% if venda.observacoes %}
+                <div class="surface-muted p-3">{{ venda.observacoes }}</div>
+            {% else %}
+                <div class="empty-state p-3">Nenhuma observação cadastrada.</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-12 col-lg-5">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Ações rápidas</h6>
+                    <p class="section-heading__subtitle">Atalhos para editar ou revisar o financeiro.</p>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                {% if perms.vendas.change_venda %}
+                    <a class="btn btn-outline-secondary" href="{% url 'vendas:update' venda.pk %}">Editar venda</a>
+                {% endif %}
+                {% if venda.lancamento_financeiro and perms.financeiro.view_lancamentofinanceiro %}
+                    <a class="btn btn-outline-secondary" href="{% url 'financeiro:detail' venda.lancamento_financeiro.pk %}">Ver financeiro</a>
+                {% endif %}
+                {% if perms.vendas.delete_venda %}
+                    <a class="btn btn-outline-danger" href="{% url 'vendas:delete' venda.pk %}">Excluir</a>
+                {% endif %}
+            </div>
+        </div>
+        </div>
+    </div>
+    <div class="row g-3 mt-1">
+        <div class="col-12 col-lg-4">
+            <div class="page-panel h-100">
+                <div class="section-heading">
+                    <div>
+                        <h6 class="section-heading__title">Insights rápidos</h6>
+                        <p class="section-heading__subtitle">Resumo da venda para leitura imediata.</p>
+                    </div>
+                </div>
+                <div class="info-grid">
+                    <div class="info-chip"><span class="info-chip__label">Status</span><span class="info-chip__value">{{ venda.get_status_pagamento_display }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Forma</span><span class="info-chip__value">{{ venda.forma_pagamento|default:"-" }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Lote</span><span class="info-chip__value">{{ venda.lote|default:"-" }}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Financeiro</span><span class="info-chip__value">{% if venda.lancamento_financeiro %}Gerado{% else %}Pendente{% endif %}</span></div>
+                    <div class="info-chip"><span class="info-chip__label">Impacto no caixa</span><span class="info-chip__value fw-semibold">{{ impacto_caixa|brl }}</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-8">
+            <div class="page-panel h-100">
+                <div class="section-heading">
+                    <div>
+                        <h6 class="section-heading__title">Ações</h6>
+                        <p class="section-heading__subtitle">Atalhos agrupados para manter a operação fluida.</p>
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Ações rápidas
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% if perms.vendas.change_venda %}
+                            <li><a class="dropdown-item" href="{% url 'vendas:update' venda.pk %}">Editar venda</a></li>
+                        {% endif %}
+                        {% if venda.lancamento_financeiro and perms.financeiro.view_lancamentofinanceiro %}
+                            <li><a class="dropdown-item" href="{% url 'financeiro:detail' venda.lancamento_financeiro.pk %}">Ver financeiro</a></li>
+                        {% endif %}
+                        {% if perms.vendas.delete_venda %}
+                            <li><a class="dropdown-item text-danger" href="{% url 'vendas:delete' venda.pk %}">Excluir</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% if sugestoes_venda %}
+                    <div class="surface-muted p-3 mt-3">
+                        <div class="metric-card__label mb-2">Sugestões inteligentes</div>
+                        <ul class="list-group list-group-flush list-soft">
+                            {% for s in sugestoes_venda %}
+                                <li class="list-group-item">{{ s }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="row g-3 mt-1">
+        <div class="col-12">
+            <div class="page-panel">
+                <div class="section-heading">
+                    <div>
+                        <h6 class="section-heading__title">Tendência de vendas</h6>
+                        <p class="section-heading__subtitle">Evolução das vendas nos últimos meses.</p>
+                    </div>
+                </div>
+                <div class="surface-muted p-3">
+                    <canvas id="vendaChart" height="140"></canvas>
+                    {{ venda_chart|json_script:"venda-chart-data" }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const chartEl = document.getElementById("vendaChart");
+    if (!chartEl || typeof Chart === "undefined") return;
+    const payload = JSON.parse(document.getElementById("venda-chart-data").textContent || "{}");
+    const data = {
+        labels: payload.labels || [],
+        datasets: [{
+            label: "Vendas (R$)",
+            data: payload.series || [],
+            borderColor: "#1bbf91",
+            backgroundColor: "rgba(27,191,145,0.2)",
+            tension: 0.3,
+            fill: true
+        }]
+    };
+    new Chart(chartEl, {
+        type: "line",
+        data: data,
+        options: { responsive: true, plugins: { legend: { position: "bottom" } }, scales: { y: { beginAtZero: true } } }
+    });
+});
+</script>
 {% endblock %}

@@ -1,0 +1,268 @@
+{% load relatorio_filters %}
+{% extends "relatorios/print_premium.html" %}
+
+{% block content %}
+    <!-- RELATÓRIO LUCRO POR LOTE PREMIUM -->
+    
+    {% if linhas_lote %}
+        <!-- RESUMO EXECUTIVO FINANCEIRO -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Resumo: Análise Financeira</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Indicador Financeiro</th>
+                        <th style="width: 30%" class="text-right">Valor Total</th>
+                        <th style="width: 30%">Status/Meta</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Receita Bruta Total</td>
+                        <td class="text-right value-money value-money--positive">
+                            R$ {{ total_receita|brl|default:"0,00" }}
+                        </td>
+                        <td class="text-center">✓ Arrecadado</td>
+                    </tr>
+                    <tr>
+                        <td>Custo Total Operacional</td>
+                        <td class="text-right value-money value-money--negative">
+                            R$ {{ total_custo|brl|default:"0,00" }}
+                        </td>
+                        <td class="text-center">⚠️ Fixo</td>
+                    </tr>
+                    <tr>
+                        <td>LUCRO LÍQUIDO TOTAL</td>
+                        <td class="text-right value-money value-money--positive" style="font-weight: bold; font-size: 12px;">
+                            R$ {{ total_lucro|brl|default:"0,00" }}
+                        </td>
+                        <td class="text-center" style="font-weight: bold;">
+                            {% if total_lucro > 0 %}
+                                ✓ POSITIVO
+                            {% else %}
+                                ❌ NEGATIVO
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr style="background: #f1f5f9;">
+                        <td><strong>Margem Média</strong></td>
+                        <td class="text-right value-number" style="font-weight: bold;">{{ margem_media|default:"0" }}%</td>
+                        <td class="text-center">
+                            {% if margem_media >= 20 %}
+                                <span style="color: #1fbf91;">EXCELENTE</span>
+                            {% elif margem_media >= 10 %}
+                                <span style="color: #fbbf24;">BOM</span>
+                            {% else %}
+                                <span style="color: #dc3545;">REVISAR</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ANÁLISE DE LUCRO POR LOTE -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Lucratividade por Lote (Detalhado)</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 10%">Lote</th>
+                        <th style="width: 12%" class="text-right">Receita</th>
+                        <th style="width: 12%" class="text-right">Custo Ração</th>
+                        <th style="width: 12%" class="text-right">Despesas</th>
+                        <th style="width: 12%" class="text-right">Custo Total</th>
+                        <th style="width: 12%" class="text-right">Lucro</th>
+                        <th style="width: 10%" class="text-right">Margem %</th>
+                        <th style="width: 10%">Ranking</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for linha in linhas_lote %}
+                        {% with custo_total=linha.custo_racao|add:linha.despesas_extras margem=linha.lucro_final|percentage:linha.receita_vendas %}
+                            <tr>
+                                <td><strong>{{ linha.lote.codigo }}</strong></td>
+                                <td class="text-right value-money value-money--positive">R$ {{ linha.receita_vendas|brl }}</td>
+                                <td class="text-right value-money">R$ {{ linha.custo_racao|brl }}</td>
+                                <td class="text-right value-money value-money--negative">-R$ {{ linha.despesas_extras|brl }}</td>
+                                <td class="text-right value-money value-money--negative">-R$ {{ custo_total|brl }}</td>
+                                <td class="text-right value-money {% if linha.lucro_final > 0 %}value-money--positive{% else %}value-money--negative{% endif %}" style="font-weight: bold;">
+                                    {% if linha.lucro_final > 0 %}
+                                        R$ {{ linha.lucro_final|brl }}
+                                    {% else %}
+                                        -R$ {{ linha.lucro_final|add:"0"|brl }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-right value-number" style="font-weight: bold;">{{ margem }}%</td>
+                                <td style="text-align: center;">
+                                    {% if margem >= 20 %}
+                                        🥇
+                                    {% elif margem >= 10 %}
+                                        🥈
+                                    {% elif margem >= 0 %}
+                                        🥉
+                                    {% else %}
+                                        ❌
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- BREAKDOWN DE CUSTOS POR LOTE -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Composição de Custos (% por Categoria)</h2>
+            
+            <table style="margin-bottom: 12px;">
+                <thead>
+                    <tr>
+                        <th style="width: 12%">Lote</th>
+                        <th style="width: 15%" class="text-right">Ração %</th>
+                        <th style="width: 15%" class="text-right">Sanitário %</th>
+                        <th style="width: 15%" class="text-right">Extras %</th>
+                        <th style="width: 15%" class="text-right">Total Custo</th>
+                        <th style="width: 18%" class="text-right">Custo/Ave</th>
+                        <th style="width: 10%">Eficiência</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for linha in linhas_lote %}
+                        {% with total_custo=linha.custo_racao|add:linha.despesas_extras %}
+                            <tr>
+                                <td><strong>{{ linha.lote.codigo }}</strong></td>
+                                <td class="text-right value-number">
+                                    {% if total_custo > 0 %}
+                                        {% widthratio linha.custo_racao total_custo 100 %}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </td>
+                                <td class="text-right value-number">
+                                    {% if total_custo > 0 %}
+                                        {% widthratio linha.custo_sanitario total_custo 100 %}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </td>
+                                <td class="text-right value-number">
+                                    {% if total_custo > 0 %}
+                                        {% widthratio linha.despesas_extras total_custo 100 %}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </td>
+                                <td class="text-right value-money">R$ {{ total_custo|brl }}</td>
+                                <td class="text-right value-money">
+                                    R$ {% if linha.quantidade_atual > 0 %}{% widthratio total_custo linha.quantidade_atual 1 %}{% else %}0,00{% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if linha.conversao_alimentar < 2.0 %}
+                                        ✓ Ótimo
+                                    {% elif linha.conversao_alimentar < 2.5 %}
+                                        ✓ Bom
+                                    {% else %}
+                                        ⚠️ Revisar
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ROI E PAYBACK -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Retorno sobre Investimento (ROI)</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 15%">Lote</th>
+                        <th style="width: 17%" class="text-right">Invest. Inicial</th>
+                        <th style="width: 17%" class="text-right">Retorno</th>
+                        <th style="width: 17%" class="text-right">ROI %</th>
+                        <th style="width: 17%" class="text-right">Payback (dias)</th>
+                        <th style="width: 17%">Análise</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for linha in linhas_lote %}
+                        {% with custo_total=linha.custo_racao|add:linha.despesas_extras roi=linha.lucro_final|percentage:custo_total %}
+                            <tr>
+                                <td><strong>{{ linha.lote.codigo }}</strong></td>
+                                <td class="text-right value-money">R$ {{ custo_total|brl }}</td>
+                                <td class="text-right value-money value-money--positive">R$ {{ linha.receita_vendas|brl }}</td>
+                                <td class="text-right value-number" style="font-weight: bold; {% if roi > 20 %}color: #1fbf91;{% elif roi > 0 %}color: #fbbf24;{% else %}color: #dc3545;{% endif %}">
+                                    {{ roi }}%
+                                </td>
+                                <td class="text-right value-number">{{ payback_dias|default:"—" }}</td>
+                                <td>
+                                    {% if roi >= 30 %}
+                                        <span class="badge badge--entrada">Excelente</span>
+                                    {% elif roi >= 15 %}
+                                        <span class="badge badge--venda">Bom</span>
+                                    {% elif roi >= 0 %}
+                                        <span class="badge badge--pendente">Marginal</span>
+                                    {% else %}
+                                        <span class="badge badge--saida">Negativo</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RECOMENDAÇÕES -->
+        <div class="pdf-section" style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin: 16px 0;">
+            <h3 style="color: #92400e; margin: 0 0 8px 0; font-size: 12px;">💡 RECOMENDAÇÕES FINANCEIRAS</h3>
+            <ul style="margin: 0; padding-left: 16px; color: #92400e; font-size: 10px;">
+                <li>Lotes com lucro <10%: Revisar custos variáveis e mix de produtos</li>
+                <li>Lotes com prejuízo: Analisar causas (mortalidade, preço, volume)</li>
+                <li>Melhorar conversão alimentar em lotes ineficientes</li>
+                <li>Replicar práticas dos lotes mais lucrativos</li>
+            </ul>
+        </div>
+
+        <!-- RESUMO FINAL -->
+        <div class="pdf-section no-break">
+            <h2 class="pdf-section__title">Totalizações e Prognóstico</h2>
+            
+            <table>
+                <tbody>
+                    <tr>
+                        <td style="width: 50%; background: #e8f5e9; font-weight: 600;">Resultado Operacional</td>
+                        <td style="width: 50%; background: #e8f5e9; text-align: right;" class="value-money value-money--positive" style="font-weight: bold;">
+                            R$ {{ total_lucro|brl|default:"0,00" }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #f8fafc; font-weight: 600;">Lotes Lucrativos</td>
+                        <td style="width: 50%; background: #f8fafc; text-align: right;" class="value-number">
+                            {{ lucrativo_count|default:0 }}/{{ linhas_lote|length }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #dbeafe; font-weight: 600;">Prognóstico Mensal</td>
+                        <td style="width: 50%; background: #dbeafe; text-align: right;" class="value-money value-money--positive">
+                            R$ {{ total_lucro|add:"0"|brl|default:"0,00" }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+        <div class="pdf-empty-state">
+            Nenhum dado de lucro por lote encontrado para o período especificado.
+        </div>
+    {% endif %}
+
+{% endblock %}

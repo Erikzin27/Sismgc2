@@ -136,12 +136,62 @@
                 <span class="badge-soft"><i class="bi bi-dash-circle"></i>Saídas no mês: {{ saidas_mes|brl }}</span>
                 <span class="badge-soft"><i class="bi bi-wallet"></i>Saldo do mês: {{ saldo_mes|brl }}</span>
                 <span class="badge-soft"><i class="bi bi-bank"></i>Caixa atual: {{ caixa_atual|brl }}</span>
+                {% if alerta_saldo_baixo %}
+                    <span class="badge-soft text-danger"><i class="bi bi-exclamation-triangle"></i>Saldo baixo ou negativo</span>
+                {% endif %}
+                <span class="badge-soft"><i class="bi bi-arrow-left-right"></i>Mês anterior: {{ saldo_mes_anterior|brl }}</span>
             </div>
         </div>
     </div>
 </div>
 
 <div class="row g-3">
+    <div class="col-12 col-lg-6">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Maiores entradas</h6>
+                    <p class="section-heading__subtitle">Receitas de maior impacto no recorte atual.</p>
+                </div>
+            </div>
+            <ul class="list-group list-group-flush list-soft">
+                {% for item in maiores_entradas %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between gap-2 flex-wrap">
+                            <strong>{{ item.descricao }}</strong>
+                            <span class="badge-soft">{{ item.valor|brl }}</span>
+                        </div>
+                        <div class="record-card__meta">{{ item.data }} · {{ item.get_categoria_display }}</div>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item empty-state">Nenhuma entrada no período.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6">
+        <div class="page-panel h-100">
+            <div class="section-heading">
+                <div>
+                    <h6 class="section-heading__title">Maiores saídas</h6>
+                    <p class="section-heading__subtitle">Despesas que mais pesaram no caixa no recorte atual.</p>
+                </div>
+            </div>
+            <ul class="list-group list-group-flush list-soft">
+                {% for item in maiores_saidas %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between gap-2 flex-wrap">
+                            <strong>{{ item.descricao }}</strong>
+                            <span class="badge-soft">{{ item.valor|brl }}</span>
+                        </div>
+                        <div class="record-card__meta">{{ item.data }} · {{ item.get_categoria_display }}</div>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item empty-state">Nenhuma saída no período.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
     <div class="col-12 col-lg-6">
         <div class="page-panel h-100">
             <div class="section-heading">

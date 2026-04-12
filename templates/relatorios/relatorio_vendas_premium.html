@@ -1,0 +1,153 @@
+{% load relatorio_filters %}
+{% extends "relatorios/print_premium.html" %}
+
+{% block content %}
+    <!-- RELATÓRIO VENDAS PREMIUM -->
+    
+    {% if lancamentos %}
+        <!-- RESUMO POR STATUS -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Resumo de Vendas</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Status</th>
+                        <th style="width: 30%" class="text-right">Quantidade</th>
+                        <th style="width: 30%" class="text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% regroup lancamentos by tipo as vendas_por_tipo %}
+                    {% for tipo, items in vendas_por_tipo %}
+                        <tr>
+                            <td>
+                                {% if tipo == 1 %}
+                                    <span class="badge badge--venda">🛒 Venda</span>
+                                {% else %}
+                                    <span class="badge badge--pendente">⏳ Pendente</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right value-number">{{ items|length }}</td>
+                            <td class="text-right value-money value-money--positive">
+                                R$ {{ items|sum_values|brl }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RESUMO POR CLIENTE -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Vendas por Cliente</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 35%">Cliente</th>
+                        <th style="width: 15%" class="text-center">Qtd</th>
+                        <th style="width: 25%" class="text-right">Total</th>
+                        <th style="width: 25%" class="text-right">Ticket Médio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% regroup lancamentos by cliente as vendas_por_cliente %}
+                    {% for cliente, items in vendas_por_cliente %}
+                        {% with total=items|sum_values %}
+                            <tr>
+                                <td>{{ cliente }}</td>
+                                <td class="text-center value-number">{{ items|length }}</td>
+                                <td class="text-right value-money value-money--positive">
+                                    R$ {{ total|brl }}
+                                </td>
+                                <td class="text-right value-money">
+                                    R$ {% widthratio total items|length 1 %}
+                                </td>
+                            </tr>
+                        {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- LISTA DETALHADA DE VENDAS -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Vendas Detalhadadas</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%">Data</th>
+                        <th style="width: 15%">Cliente</th>
+                        <th style="width: 25%">Produto</th>
+                        <th style="width: 15%" class="text-center">Qtd</th>
+                        <th style="width: 18%" class="text-right">Valor</th>
+                        <th style="width: 15%" class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in lancamentos %}
+                        <tr>
+                            <td>{{ v.data|date:"d/m/Y" }}</td>
+                            <td>{{ v.cliente|truncatewords:2 }}</td>
+                            <td>{{ v.produto }}</td>
+                            <td class="text-center value-number">{{ v.quantidade }}</td>
+                            <td class="text-right value-money value-money--positive">
+                                R$ {{ v.valor_total|brl }}
+                            </td>
+                            <td class="text-center">
+                                {% if v.pago %}
+                                    <span class="badge badge--entrada">✓ Pago</span>
+                                {% else %}
+                                    <span class="badge badge--pendente">⏳ Pendente</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- KPIs FINAIS -->
+        <div class="pdf-section no-break">
+            <h2 class="pdf-section__title">Indicadores-Chave de Desempenho (KPIs)</h2>
+            
+            <table>
+                <tbody>
+                    <tr>
+                        <td style="width: 50%; background: #dbeafe; font-weight: 600;">Total de Vendas</td>
+                        <td style="width: 50%; background: #dbeafe; text-align: right;" class="value-money value-money--positive">
+                            R$ {{ lancamentos|sum_values|brl }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #f8fafc; font-weight: 600;">Quantidade de Transações</td>
+                        <td style="width: 50%; background: #f8fafc; text-align: right;" class="value-number">
+                            {{ lancamentos|length }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #f8fafc; font-weight: 600;">Ticket Médio</td>
+                        <td style="width: 50%; background: #f8fafc; text-align: right;" class="value-money">
+                            R$ {% widthratio lancamentos|sum_values lancamentos|length 1 %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #f1f5f9; font-weight: 600;">Clientes Únicos</td>
+                        <td style="width: 50%; background: #f1f5f9; text-align: right;" class="value-number">
+                            <!-- Será contado pelo distinct em views -->
+                            {{ clientes_unicos|default:0 }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+        <div class="pdf-empty-state">
+            Nenhuma venda encontrada para o período especificado.
+        </div>
+    {% endif %}
+
+{% endblock %}

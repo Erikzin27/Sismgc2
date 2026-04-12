@@ -43,15 +43,40 @@
 {% endif %}
 <div class="table-responsive">
     <table class="table table-striped table-hover card-table align-middle">
-        <thead><tr><th>Nome</th><th>Código</th><th>Finalidade</th><th>Quantidade</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Nome</th><th>Código</th><th>Finalidade</th><th>Quantidade</th><th>Status</th><th>Alertas</th><th></th></tr></thead>
         <tbody>
         {% for l in lotes %}
-            <tr>
+            <tr class="{% if l.mortalidade_percentual >= 10 %}row-alert-danger{% elif l.reprodutivo and l.status_reprodutivo == l.REPRO_STATUS_PAUSADO %}row-alert-warning{% endif %}">
                 <td><a href="{% url 'lotes:detail' l.pk %}">{{ l.nome }}</a></td>
                 <td>{{ l.codigo }}</td>
                 <td>{{ l.get_finalidade_display }}</td>
                 <td>{{ l.quantidade_atual|int_if_whole }}</td>
-                <td>{{ l.get_status_display }}</td>
+                <td class="fw-semibold">{{ l.get_status_display }}</td>
+                <td>
+                    {% with atrasadas=vacinas_atrasadas_map|get_item:l.pk %}
+                        {% if atrasadas %}
+                            <span class="badge bg-danger">Vacinas atrasadas: {{ atrasadas }}</span>
+                        {% else %}
+                            <span class="badge bg-success">OK</span>
+                        {% endif %}
+                    {% endwith %}
+                    {% with incub=incubacoes_atrasadas_map|get_item:l.pk %}
+                        {% if incub %}
+                            <span class="badge bg-danger ms-1">Incubação atrasada: {{ incub }}</span>
+                        {% endif %}
+                    {% endwith %}
+                    {% with carencia=carencias_ativas_map|get_item:l.pk %}
+                        {% if carencia %}
+                            <span class="badge bg-warning text-dark ms-1">Carência ativa: {{ carencia }}</span>
+                        {% endif %}
+                    {% endwith %}
+                    {% if l.reprodutivo and l.status_reprodutivo == l.REPRO_STATUS_PAUSADO %}
+                        <span class="badge bg-warning text-dark ms-1">Reprodução pausada</span>
+                    {% endif %}
+                    {% if l.mortalidade_percentual >= 10 %}
+                        <span class="badge bg-warning text-dark ms-1">Mortalidade alta</span>
+                    {% endif %}
+                </td>
                 <td class="text-end">
                     {% if perms.lotes.change_lote %}
                         <a class="btn btn-sm btn-outline-secondary" href="{% url 'lotes:update' l.pk %}">Editar</a>

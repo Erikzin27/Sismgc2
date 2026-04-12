@@ -1,0 +1,140 @@
+{% load formatting %}
+<div id="aplicacoes-body" hx-boost="true" hx-target="#aplicacoes-body" hx-indicator="#aplicacoes-loading">
+    <div class="filter-bar__summary">
+        <span class="badge-soft"><i class="bi bi-hourglass-split"></i>Pendentes {{ total_pendentes }}</span>
+        <span class="badge-soft"><i class="bi bi-check2-circle"></i>Aplicadas {{ total_aplicadas }}</span>
+        <span class="badge-soft"><i class="bi bi-exclamation-triangle"></i>Atrasadas {{ total_atrasadas }}</span>
+        <span class="badge-soft"><i class="bi bi-calendar-day"></i>Hoje {{ total_hoje }}</span>
+        <a class="badge-soft text-decoration-none" href="{% url 'sanidade:aplicacao_list' %}?status_visual=atrasada"><i class="bi bi-filter-circle"></i>Somente atrasadas</a>
+    </div>
+
+    <div class="row g-3 mb-3 mt-1">
+        <div class="col-12 col-md-3">
+            <div class="card card-table metric-card">
+                <div class="metric-card__label">Pendentes</div>
+                <div class="metric-card__value">{{ total_pendentes }}</div>
+                <div class="metric-card__meta">Aplicacoes ainda aguardando confirmacao</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="card card-table metric-card">
+                <div class="metric-card__label">Aplicadas</div>
+                <div class="metric-card__value">{{ total_aplicadas }}</div>
+                <div class="metric-card__meta">Aplicacoes ja concluidas e registradas</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="card card-table metric-card">
+                <div class="metric-card__label">Atrasadas</div>
+                <div class="metric-card__value">{{ total_atrasadas }}</div>
+                <div class="metric-card__meta">Pendencias que precisam de atencao mais forte</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="card card-table metric-card">
+                <div class="metric-card__label">Hoje</div>
+                <div class="metric-card__value">{{ total_hoje }}</div>
+                <div class="metric-card__meta">Aplicacoes previstas para execucao imediata</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-xl-8">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover card-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Vacina</th>
+                            <th>Alvo</th>
+                            <th>Lote</th>
+                            <th>Data prevista</th>
+                            <th>Status</th>
+                            <th>Aplicacao</th>
+                            <th>Carencia</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for a in aplicacoes %}
+                        <tr class="{% if a.urgencia_operacional == 'critica' %}row-alert-danger{% elif a.urgencia_operacional == 'alta' or a.status_operacional == 'hoje' %}row-alert-warning{% endif %}">
+                            <td>
+                                <strong>{{ a.vacina }}</strong>
+                                {% if a.dose %}
+                                    <div class="record-card__meta">Dose {{ a.dose }}</div>
+                                {% endif %}
+                            </td>
+                            <td>{{ a.ave|default:"-" }}</td>
+                            <td>{{ a.lote|default:"-" }}</td>
+                            <td>{{ a.data_programada }}</td>
+                            <td>
+                                <span class="status-badge {% if a.status_operacional == 'aplicada' %}status-badge--success{% elif a.status_operacional == 'atrasada' %}status-badge--danger{% elif a.status_operacional == 'hoje' %}status-badge--warning{% elif a.status_operacional == 'proxima' %}status-badge--info{% elif a.status_operacional == 'cancelada' %}status-badge--muted{% else %}status-badge--muted{% endif %}">
+                                    {{ a.status_operacional_label }}
+                                </span>
+                                {% if a.atrasada %}
+                                    <div class="record-card__meta">
+                                        {{ a.dias_atraso }} dia(s) de atraso · urgencia {{ a.urgencia_operacional }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>{{ a.data_aplicacao|default:"-" }}</td>
+                            <td>
+                                {% if a.carencia_ativa %}
+                                    <span class="status-badge status-badge--danger">Ate {{ a.data_final_carencia }}</span>
+                                {% elif a.data_final_carencia %}
+                                    <span class="record-card__meta">Encerrada em {{ a.data_final_carencia }}</span>
+                                {% else %}
+                                    <span class="record-card__meta">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if a.status == 'pendente' and perms.sanidade.change_aplicacaovacina %}
+                                    <form method="post" action="{% url 'sanidade:aplicacao_ok' a.pk %}" class="d-inline"
+                                          hx-post="{% url 'sanidade:aplicacao_ok' a.pk %}" hx-target="#aplicacoes-body" hx-swap="outerHTML"
+                                          hx-include="#aplicacoes-filters" hx-indicator="#aplicacoes-loading">
+                                        {% csrf_token %}
+                                        <button class="btn btn-sm btn-outline-primary" type="submit">Marcar como OK</button>
+                                    </form>
+                                {% endif %}
+                                {% if perms.sanidade.change_aplicacaovacina %}
+                                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'sanidade:aplicacao_update' a.pk %}">Editar</a>
+                                {% endif %}
+                                {% if perms.sanidade.delete_aplicacaovacina %}
+                                    <a class="btn btn-sm btn-outline-danger" href="{% url 'sanidade:aplicacao_delete' a.pk %}">Excluir</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="8">Nenhuma aplicacao encontrada com os filtros atuais.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-12 col-xl-4">
+            <div class="page-panel h-100">
+                <div class="section-heading">
+                    <div>
+                        <h6 class="section-heading__title">Mini resumo por lote</h6>
+                        <p class="section-heading__subtitle">Leitura curta para entender onde estao as pendencias e atrasos.</p>
+                    </div>
+                </div>
+                <ul class="list-group list-group-flush list-soft">
+                    {% for item in resumo_por_lote %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between gap-2 flex-wrap">
+                                <strong>{{ item.nome }}</strong>
+                                <span class="badge-soft">{{ item.atrasadas }} atrasadas</span>
+                            </div>
+                            <div class="record-card__meta">Pendentes {{ item.pendentes }} · Aplicadas {{ item.aplicadas }}</div>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item empty-state">Sem dados suficientes para resumir por lote.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {% include "pagination.html" with page_obj=page_obj %}
+</div>

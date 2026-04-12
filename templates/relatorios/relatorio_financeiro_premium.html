@@ -1,0 +1,164 @@
+{% load relatorio_filters %}
+{% extends "relatorios/print_premium.html" %}
+
+{% block content %}
+    <!-- RELATÓRIO FINANCEIRO PREMIUM -->
+    
+    <!-- RESUMO POR TIPO: Entradas vs Saídas -->
+    {% if lancamentos %}
+        <!-- Separar entradas e saídas -->
+        {% regroup lancamentos by tipo as lancamentos_por_tipo %}
+        
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Resumo por Tipo</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Tipo</th>
+                        <th style="width: 30%" class="text-right">Quantidade</th>
+                        <th style="width: 30%" class="text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tipo, items in lancamentos_por_tipo %}
+                        <tr>
+                            <td>
+                                {% if tipo == 1 %}
+                                    <span class="badge badge--entrada">✓ Entrada</span>
+                                {% else %}
+                                    <span class="badge badge--saida">❌ Saída</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right value-number">{{ items|length }}</td>
+                            <td class="text-right value-money {% if tipo == 1 %}value-money--positive{% else %}value-money--negative{% endif %}">
+                                {% if tipo == 1 %}
+                                    R$ {{ lancamentos|total_by_type:1|brl }}
+                                {% else %}
+                                    -R$ {{ lancamentos|total_by_type:2|brl }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RESUMO POR CATEGORIA -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Detalhamento por Categoria</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 30%">Categoria</th>
+                        <th style="width: 20%" class="text-center">Tipo</th>
+                        <th style="width: 20%" class="text-right">Qtd</th>
+                        <th style="width: 30%" class="text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% regroup lancamentos by categoria as lancamentos_por_categoria %}
+                    {% for categoria, items in lancamentos_por_categoria %}
+                        {% regroup items by tipo as items_por_tipo %}
+                        
+                        {% for tipo, tipo_items in items_por_tipo %}
+                            <tr>
+                                <td>{{ items|first|get_categoria_display }}</td>
+                                <td class="text-center">
+                                    {% if tipo == 1 %}
+                                        <span class="badge badge--entrada">Entrada</span>
+                                    {% else %}
+                                        <span class="badge badge--saida">Saída</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-right value-number">{{ tipo_items|length }}</td>
+                                <td class="text-right value-money {% if tipo == 1 %}value-money--positive{% else %}value-money--negative{% endif %}">
+                                    {% if tipo == 1 %}
+                                        R$ {{ tipo_items|sum_values|brl }}
+                                    {% else %}
+                                        -R$ {{ tipo_items|sum_values|brl }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- LISTA COMPLETA DE LANÇAMENTOS -->
+        <div class="pdf-section">
+            <h2 class="pdf-section__title">Lançamentos Detalhados</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%">Data</th>
+                        <th style="width: 12%">Tipo</th>
+                        <th style="width: 20%">Categoria</th>
+                        <th style="width: 30%">Descrição</th>
+                        <th style="width: 26%" class="text-right">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in lancamentos %}
+                        <tr>
+                            <td>{{ l.data|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if l.tipo == 1 %}
+                                    <span class="badge badge--entrada">Entrada</span>
+                                {% else %}
+                                    <span class="badge badge--saida">Saída</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ l.get_categoria_display }}</td>
+                            <td>{{ l.descricao|truncatewords:6 }}</td>
+                            <td class="text-right value-money {% if l.tipo == 1 %}value-money--positive{% else %}value-money--negative{% endif %}">
+                                {% if l.tipo == 1 %}
+                                    R$ {{ l.valor|brl }}
+                                {% else %}
+                                    -R$ {{ l.valor|brl }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RESUMO FINAL -->
+        <div class="pdf-section no-break">
+            <h2 class="pdf-section__title">Totalizações</h2>
+            
+            <table>
+                <tbody>
+                    <tr>
+                        <td style="width: 50%; background: #dcfce7; font-weight: 600;">Total Entradas</td>
+                        <td style="width: 50%; background: #dcfce7; text-align: right;" class="value-money value-money--positive">
+                            R$ {{ lancamentos|total_by_type:1|brl }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #fee2e2; font-weight: 600;">Total Saídas</td>
+                        <td style="width: 50%; background: #fee2e2; text-align: right;" class="value-money value-money--negative">
+                            R$ {{ lancamentos|total_by_type:2|brl }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; background: #dbeafe; font-weight: 600; font-size: 12px;">Saldo</td>
+                        <td style="width: 50%; background: #dbeafe; text-align: right; font-weight: 600; font-size: 12px;" class="value-money">
+                            R$ {{ lancamentos|calculate_saldo|brl }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+        <div class="pdf-empty-state">
+            Nenhum lançamento encontrado para o período especificado.
+        </div>
+    {% endif %}
+
+{% endblock %}

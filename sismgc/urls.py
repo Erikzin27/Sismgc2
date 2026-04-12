@@ -14,6 +14,7 @@ urlpatterns = [
     path("aves/", include("aves.urls")),
     path("lotes/", include("lotes.urls")),
     path("genetica/", include("genetica.urls")),
+    path("reprodutores/", include("reprodutores.urls")),
     path("incubacao/", include("incubacao.urls")),
     path("nascimentos/", include("nascimentos.urls")),
     path("estoque/", include("estoque.urls")),
